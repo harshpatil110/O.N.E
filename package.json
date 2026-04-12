@@ -1,0 +1,37 @@
+{
+  "name": "o.n.e",
+  "version": "1.0.0",
+  "description": "This project proposes O.N.E (Onboarding Navigation Environment), an Autonomous Developer Onboarding Agent powered by Agentic AI and Retrieval-Augmented Generation (RAG) to automate and streamline the developer onboarding process.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshpatil110/O.N.E.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/harshpatil110/O.N.E/issues"
+  },
+  "homepage": "https://github.com/harshpatil110/O.N.E#readme",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "dotenv": "^17.4.1",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^0.31.10",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}
