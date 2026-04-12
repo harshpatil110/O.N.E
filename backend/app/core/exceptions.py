@@ -9,3 +9,7 @@ class LLMRateLimitError(LLMError):
 class LLMParseError(LLMError):
     """Exception raised when failing to parse the structured output from the LLM."""
     pass
+
+class InvalidTransitionError(Exception):
+    """Exception raised for invalid FSM state transitions."""
+    pass
