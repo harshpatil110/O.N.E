@@ -42,9 +42,7 @@ All 22 tasks are organized across 6 sprints (weeks), matching the sprint plan in
 
 ## T-01 · Project Scaffolding and Repository Setup
 
-**Sprint:** 1 — Week 1  
-**Estimated Effort:** 4–5 hours  
-**Owner:** All team members  
+
 **Dependencies:** None (first task)
 
 ### Purpose
