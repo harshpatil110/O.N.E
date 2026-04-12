@@ -1,0 +1,156 @@
+import os
+import json
+import logging
+import asyncio
+import re
+from typing import List, Dict, Any, Optional
+
+import google.generativeai as genai
+from google.api_core.exceptions import ResourceExhausted
+
+from app.core.exceptions import LLMError, LLMRateLimitError, LLMParseError
+
+logger = logging.getLogger(__name__)
+
+MAX_RETRIES = 3
+RETRY_DELAY_SECONDS = 4
+
+class LLMService:
+    def __init__(self):
+        """Initialize the LLM service with Google Gemini API."""
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            logger.warning("GEMINI_API_KEY not found in environment.")
+            
+        genai.configure(api_key=api_key)
+        self.model_name = "gemini-2.0-flash"
+        self.generation_config = genai.types.GenerationConfig(
+            temperature=0.3,
+            max_output_tokens=2048
+        )
+        self.model = genai.GenerativeModel(
+            model_name=self.model_name,
+            generation_config=self.generation_config
+        )
+
+    async def _call_with_retry(self, fn, *args, **kwargs):
+        """Execute the function with exponential backoff on rate limits."""
+        for attempt in range(MAX_RETRIES):
+            try:
+                return await fn(*args, **kwargs)
+            except ResourceExhausted:
+                logger.warning(f"Rate limit hit. Attempt {attempt + 1}/{MAX_RETRIES} failed.")
+                if attempt < MAX_RETRIES - 1:
+                    await asyncio.sleep(RETRY_DELAY_SECONDS * (attempt + 1))
+                else:
+                    raise LLMRateLimitError("Gemini rate limit exceeded after retries")
+            except Exception as e:
+                # Wrap all other exceptions in LLMError
+                # Checking name of exception directly just in case it is google specific but not wrapped
+                if "429" in str(e):
+                    if attempt < MAX_RETRIES - 1:
+                        await asyncio.sleep(RETRY_DELAY_SECONDS * (attempt + 1))
+                        continue
+                    raise LLMRateLimitError("Gemini rate limit exceeded after retries")
+                raise LLMError(f"LLM API error: {str(e)}")
+
+    async def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
+        """Generate text from a prompt, optionally using a system prompt."""
+        model = self.model
+        if system_prompt:
+            model = genai.GenerativeModel(
+                model_name=self.model_name,
+                generation_config=self.generation_config,
+                system_instruction=system_prompt
+            )
+            
+        async def _generate():
+            resp = await model.generate_content_async(prompt)
+            # handle cases where parts can be blocked
+            if not resp.parts:
+                return ""
+            return resp.text
+            
+        return await self._call_with_retry(_generate)
+
+    async def generate_with_tools(self, messages: List[Dict[str, Any]], tools: list, system_prompt: str) -> Dict[str, Any]:
+        """Generate a response using tools, returning both text and extracted tool calls."""
+        model = genai.GenerativeModel(
+            model_name=self.model_name,
+            generation_config=self.generation_config,
+            system_instruction=system_prompt,
+            tools=tools
+        )
+        
+        async def _generate():
+            # Format messages based on Gemini expectations
+            formatted_history = []
+            for msg in messages:
+                role = msg.get("role", "user")
+                if role == "assistant":
+                    role = "model"
+                content = msg.get("content", "")
+                
+                # Omit empty content if needed
+                formatted_history.append({"role": role, "parts": [content]})
+                    
+            resp = await model.generate_content_async(formatted_history)
+            
+            result = {
+                "text": "",
+                "tool_calls": []
+            }
+            
+            if resp.parts:
+                for part in resp.parts:
+                    if hasattr(part, "text") and part.text:
+                        result["text"] += part.text
+                        
+                    if hasattr(part, "function_call") and part.function_call:
+                        # Map struct arguments to a simple dict
+                        args_dict = type(part.function_call.args)(part.function_call.args) if type(part.function_call.args) is dict else dict(part.function_call.args)
+                        
+                        result["tool_calls"].append({
+                            "name": part.function_call.name,
+                            "args": args_dict
+                        })
+                        
+            return result
+            
+        return await self._call_with_retry(_generate)
+
+    async def extract_structured(self, prompt: str, output_schema: dict) -> dict:
+        """Prompt to get valid JSON matching a schema."""
+        instruction = "Respond ONLY with valid JSON exactly matching the following schema:\n"
+        instruction += json.dumps(output_schema, indent=2)
+        instruction += "\nDo not include code blocks or markdown, just the raw JSON object."
+        
+        full_prompt = f"{instruction}\n\nInput to process:\n{prompt}"
+        
+        # Override to json response mime type
+        model = genai.GenerativeModel(
+            model_name=self.model_name,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.0,
+                max_output_tokens=2048,
+                response_mime_type="application/json"
+            )
+        )
+        
+        async def _generate():
+            resp = await model.generate_content_async(full_prompt)
+            if not resp.parts:
+                 return "{}"
+            return resp.text
+            
+        text_resp = await self._call_with_retry(_generate)
+        
+        try:
+            # Strip markdown block if model ignored the instruction
+            cleaned_text = re.sub(r'^```json\s*', '', text_resp.strip())
+            cleaned_text = re.sub(r'^```\s*', '', cleaned_text)
+            cleaned_text = re.sub(r'\s*```$', '', cleaned_text)
+            
+            return json.loads(cleaned_text.strip())
+        except json.JSONDecodeError as e:
+            raise LLMParseError(f"Failed to parse LLM structured output as JSON: {e}. Output was: {text_resp}")
