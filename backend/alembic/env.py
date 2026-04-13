@@ -17,7 +17,8 @@ from app.models import User, OnboardingSession, ChecklistItem, ConversationLog, 
 config = context.config
 
 # Override sqlalchemy.url from our .env settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# configparser treats '%' as interpolation — must escape to '%%'
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
