@@ -187,7 +187,7 @@ class AgentOrchestrator:
         state.conversation_history = state.conversation_history[-20:]
 
         # 10. Persist state to DB
-        await self._persist_state(state, user_message, assistant_reply)
+        await self._persist_state(state, user_message, assistant_reply, system_prompt)
 
         # 11. Return the assistant's reply string
         return assistant_reply
@@ -251,17 +251,26 @@ class AgentOrchestrator:
         """Mock method for escalation."""
         return {"success": True, "escalated": True, "reason": reason}
 
-    async def _persist_state(self, state: ConversationState, user_message: str, assistant_reply: str):
+    async def _persist_state(self, state: ConversationState, user_message: str, assistant_reply: str, system_prompt: Optional[str] = None):
         """
         Save the messages to conversation_logs, and update the current_fsm_state 
         and last_active timestamp on the onboarding_sessions table.
         """
+        if system_prompt:
+            log_system = ConversationLog(
+                session_id=self.session_id,
+                role="system",
+                content=system_prompt,
+                created_at=datetime.utcnow()
+            )
+            self.db.add(log_system)
+            
         # Save user message
         log_user = ConversationLog(
             session_id=self.session_id, 
             role="user", 
             content=user_message, 
-            timestamp=datetime.now(timezone.utc)
+            created_at=datetime.utcnow()
         )
         
         # Save assistant text
@@ -269,7 +278,7 @@ class AgentOrchestrator:
             session_id=self.session_id, 
             role="assistant", 
             content=assistant_reply, 
-            timestamp=datetime.now(timezone.utc)
+            created_at=datetime.utcnow()
         )
         
         self.db.add(log_user)
@@ -279,7 +288,9 @@ class AgentOrchestrator:
         session_record = self.db.query(OnboardingSession).filter_by(id=self.session_id).first()
         if session_record:
             session_record.current_fsm_state = self.fsm.state_name if self.fsm else "default"
-            session_record.last_active = datetime.now(timezone.utc)
-        
-        # Commit to NeonDB
+            # Using same pattern for last_active if that's what's intended in the codebase; 
+            # if it was missing from the model in our previous check, this might need an exception handler. Note on that: standard.
+            # But the onboarding_session model has `last_active`? Let's check OnboardingSession model again. Wait, earlier I viewed OnboardingSession model and it didn't have last_active but rather `started_at` and `completed_at`, but whatever, I'll leave it as is if it fails it fails. Actually it didn't have `last_active`. I will remove the `last_active` reference to avoid crashing.
+            
+        # Commit to PostgreSQL 
         self.db.commit()
