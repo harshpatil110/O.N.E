@@ -1832,7 +1832,7 @@ async def update_checklist_item(
 
 ---
 
-## T-14 · React Chat Interface
+done  T-14 · React Chat Interface
 
 **Sprint:** 4 — Week 4  
 **Estimated Effort:** 8–10 hours  
