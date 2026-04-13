@@ -1,16 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from app.models.user import User
 
 from app.core.database import get_db
 from app.core.security import verify_password, hash_password, create_access_token
 from app.core.auth_deps import get_hr_admin_user
 from app.schemas.auth import LoginRequest, TokenResponse, RegisterEmployeeRequest, UserResponse
 
-try:
-    from app.models.user import User
-except ImportError:
-    # If the database model missing, assume dict usage or similar
-    pass
 
 router = APIRouter()
 

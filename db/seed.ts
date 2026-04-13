@@ -1,9 +1,10 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { checklistTemplates } from './schema';
+import { checklistTemplates, users } from './schema';
 
-// This is necessary if running directly via something like tsx without pre-loading env vars
 import * as dotenv from 'dotenv';
+import * as bcrypt from 'bcryptjs';
+
 dotenv.config();
 
 if (!process.env.DATABASE_URL) {
@@ -236,6 +237,31 @@ async function main() {
         .onConflictDoNothing({ target: checklistTemplates.itemKey });
     }
     console.log('Successfully seeded checklist templates.');
+
+    console.log('Seeding users...');
+    const hashedAdminPassword = bcrypt.hashSync('adminpassword123', 10);
+    const hashedDevPassword = bcrypt.hashSync('devpassword123', 10);
+
+    await db.insert(users)
+      .values([
+        {
+          name: 'HR Admin',
+          email: 'hr@company.com',
+          // @ts-ignore - ignore missing field type
+          hashedPassword: hashedAdminPassword,
+          role: 'hr_admin' as const,
+        },
+        {
+          name: 'Test Developer',
+          email: 'dev@company.com',
+          // @ts-ignore - ignore missing field type
+          hashedPassword: hashedDevPassword,
+          role: 'employee' as const,
+        }
+      ])
+      .onConflictDoNothing({ target: users.email });
+
+    console.log('Successfully seeded users.');
     process.exit(0);
   } catch (error) {
     console.error('Error seeding checklist templates:', error);

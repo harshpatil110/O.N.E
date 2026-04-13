@@ -20,6 +20,7 @@ export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
+  hashedPassword: varchar('hashed_password', { length: 255 }).notNull(),
   role: userRoleEnum('role').default('employee').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
