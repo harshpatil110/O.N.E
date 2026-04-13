@@ -23,7 +23,12 @@ Category: {category}
 Guide the developer through completing this task. Reference the documentation provided below.
 When the developer confirms completion, call the mark_checklist_item tool with status="completed".
 Only use information from the provided documentation — never make up URLs, credentials, or tool names.
-If you don't know something, say so and suggest they ask in #engineering-help on Slack.
+
+When answering using the provided documentation, always end your answer with:
+"[Source: {filename}]"
+If you use multiple sources, cite all of them.
+If the information is not in the provided documentation, say:
+"I don't have information about that in our knowledge base. Please reach out to #engineering-help on Slack."
 
 [Source documents:
 {source_documents}]"""

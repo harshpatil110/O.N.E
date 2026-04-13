@@ -21,3 +21,17 @@ class GeminiEmbeddingFunction:
             )
             embeddings.append(result["embedding"])
         return embeddings
+
+def embed_query(text: str) -> list[float]:
+    """Embed a query string using RETRIEVAL_QUERY task type."""
+    # API Key should be set with genai.configure before calling this or inside here
+    api_key = os.getenv("GEMINI_API_KEY")
+    if api_key:
+        genai.configure(api_key=api_key)
+        
+    result = genai.embed_content(
+        model="models/text-embedding-004",
+        content=text,
+        task_type="retrieval_query"  # Different task type for queries vs documents
+    )
+    return result["embedding"]
