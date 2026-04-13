@@ -1,9 +1,11 @@
-from sqlalchemy import Column, String, DateTime, Boolean
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
 
+from sqlalchemy import Column, String, DateTime, Boolean
+from sqlalchemy.dialects.postgresql import UUID
+
 from app.core.database import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -14,4 +16,6 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     role = Column(String(50), default="employee", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    is_active = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<User {self.email} ({self.role})>"
