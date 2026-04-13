@@ -13,8 +13,18 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    role: str
 
 class RegisterEmployeeRequest(BaseModel):
     name: str
     email: EmailStr
+    password: str
     role: UserRole = UserRole.EMPLOYEE
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: EmailStr
+    role: str
+    
+    model_config = {"from_attributes": True}
