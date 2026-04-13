@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any, List
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
-from backend.app.agents.tools import AGENT_TOOLS
+from app.agents.tools import AGENT_TOOLS
 
 # Mock DB models for conversation and session state (Assume these bind with SQLAlchemy DeclarativeBase)
 class ConversationLog:
