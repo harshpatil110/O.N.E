@@ -32,3 +32,4 @@ class ChecklistItemResponse(BaseModel):
 
 class UpdateChecklistRequest(BaseModel):
     status: ItemStatus
+    notes: Optional[str] = None
