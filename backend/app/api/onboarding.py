@@ -11,7 +11,7 @@ from app.services.checklist_service import ChecklistService
 
 # Attempt to import models if they exist, else provide fallback
 try:
-    from app.models.session import OnboardingSession
+    from app.models.onboarding_session import OnboardingSession
 except ImportError:
     # Placeholder class if missing
     class OnboardingSession:

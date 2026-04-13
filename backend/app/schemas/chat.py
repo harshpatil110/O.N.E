@@ -21,3 +21,12 @@ class ChatMessageResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class MessageResponse(BaseModel):
+    role: str
+    content: str
+    created_at: datetime
+
+class ConversationHistoryResponse(BaseModel):
+    session_id: str
+    messages: list[MessageResponse]

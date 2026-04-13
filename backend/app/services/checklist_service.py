@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import asc
 from app.schemas.persona import DeveloperPersona
-from app.models.checklist import ChecklistTemplate, ChecklistItem
+from app.models.checklist_item import ChecklistItem
+from app.models.checklist_template import ChecklistTemplate
 
 class ChecklistService:
     def __init__(self, db: Session):
@@ -96,21 +97,22 @@ class ChecklistService:
         return item
 
     async def get_progress(self, session_id: str) -> dict:
-        items = self.db.query(ChecklistItem).filter(ChecklistItem.session_id == session_id).all()
+        items = await self.get_checklist(session_id)
         total_items = len(items)
         
-        completed = sum(1 for item in items if item.status == "completed")
+        completed_count = sum(1 for item in items if item.status == "completed")
         pending = sum(1 for item in items if item.status in ["pending", "in_progress"])
         skipped = sum(1 for item in items if item.status == "skipped")
         
-        percent_complete = (completed / total_items * 100) if total_items > 0 else 0.0
+        percent_complete = (completed_count / total_items * 100) if total_items > 0 else 0.0
         
         return {
             "total_items": total_items,
-            "completed": completed,
+            "completed_count": completed_count,
             "pending": pending,
             "skipped": skipped,
-            "percent_complete": round(percent_complete, 2)
+            "percent_complete": round(percent_complete, 2),
+            "items": items
         }
 
     async def all_required_complete(self, session_id: str) -> bool:

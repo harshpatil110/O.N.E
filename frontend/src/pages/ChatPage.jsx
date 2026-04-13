@@ -3,19 +3,26 @@ import { useChat } from '../hooks/useChat';
 import { startSession } from '../api/chat';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatInput } from '../components/ChatInput';
+import { ChecklistSidebar } from '../components/ChecklistSidebar';
 
 export const ChatPage = () => {
   const [sessionId, setSessionId] = useState(null);
   const [initError, setInitError] = useState(null);
-  const { messages, isLoading, sendMessage, appendInitialMessage } = useChat(sessionId);
+  const { messages, isLoading, sendMessage, appendInitialMessage, loadHistory } = useChat(sessionId);
   const endOfMessagesRef = useRef(null);
 
   useEffect(() => {
     const initializeSession = async () => {
       try {
         const data = await startSession();
-        setSessionId(data.session_id);
-        if (data.message) {
+        const sid = data.session_id;
+        setSessionId(sid);
+        
+        // Try loading previous history
+        const history = await loadHistory(sid);
+        
+        // Only append the initial greeting if there was no history loaded
+        if (data.message && (!history || history.length === 0)) {
             appendInitialMessage(data.message);
         }
       } catch (err) {
@@ -24,7 +31,7 @@ export const ChatPage = () => {
       }
     };
     initializeSession();
-  }, [appendInitialMessage]);
+  }, [appendInitialMessage, loadHistory]);
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -73,19 +80,8 @@ export const ChatPage = () => {
 
       </div>
 
-      {/* RIGHT PANEL: Checklist Placeholder (30%) */}
-      <div className="w-[30%] flex flex-col bg-[#F7F5F0]">
-        <div className="h-16 px-8 flex items-center border-b border-zinc-200">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Progress Tracker</h3>
-        </div>
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="border border-zinc-200 bg-white p-6 shadow-sm">
-             <div className="text-xs text-zinc-400 uppercase tracking-widest mb-4 border-b border-zinc-100 pb-2">Status overview</div>
-             {/* To be implemented in T-15/T-16 */}
-             <p className="text-sm text-zinc-500 italic">Checklist mapping pending initialization...</p>
-          </div>
-        </div>
-      </div>
+      {/* RIGHT PANEL: Checklist Sidebar (30%) */}
+      <ChecklistSidebar sessionId={sessionId} />
 
     </div>
   );

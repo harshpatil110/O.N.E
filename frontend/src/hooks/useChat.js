@@ -1,9 +1,23 @@
 import { useState, useCallback } from 'react';
-import { sendMessage as apiSendMessage } from '../api/chat';
+import { sendMessage as apiSendMessage, getChatHistory } from '../api/chat';
 
 export const useChat = (sessionId) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const loadHistory = useCallback(async (sid) => {
+    try {
+      const history = await getChatHistory(sid);
+      const historyArray = Array.isArray(history) ? history : history.data || [];
+      if (historyArray.length > 0) {
+        setMessages(historyArray.map((msg, i) => ({ ...msg, tempId: `hist-${i}` })));
+      }
+      return historyArray;
+    } catch (error) {
+      console.error("Failed to load history", error);
+      return [];
+    }
+  }, []);
 
   const sendMessage = useCallback(async (text) => {
     if (!text.trim() || !sessionId) return;
@@ -41,5 +55,5 @@ export const useChat = (sessionId) => {
       });
   }, []);
 
-  return { messages, isLoading, sendMessage, appendInitialMessage };
+  return { messages, isLoading, sendMessage, appendInitialMessage, loadHistory };
 };
