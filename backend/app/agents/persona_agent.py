@@ -30,7 +30,12 @@ Conversation history:
 """
 
 class PersonaAgent:
+    """
+    Agent specialized in extracting developer persona information from a conversation.
+    Uses LLM structured extraction to identify role, level, and tech stack.
+    """
     def __init__(self, llm_service: LLMService):
+        """Initializes with an LLM service instance."""
         self.llm = llm_service
         self.output_schema = {
             "type": "object",
@@ -46,6 +51,15 @@ class PersonaAgent:
         }
 
     async def extract_persona(self, conversation_history: list) -> dict:
+        """
+        Parses conversation history to extract structured persona details.
+
+        Args:
+            conversation_history (list): List of message objects.
+
+        Returns:
+            dict: The extracted persona data matching output_schema.
+        """
         # Format conversation history as readable text
         history_text = ""
         for msg in conversation_history:
@@ -61,12 +75,14 @@ class PersonaAgent:
         return extracted
 
     async def check_profiling_complete(self, persona: dict) -> bool:
+        """Determines if all necessary profiling fields have been collected."""
         # Check if all required fields are non-null
         # Required: name, email, role, experience_level, tech_stack
         required_fields = ["name", "email", "role", "experience_level", "tech_stack"]
         return all(persona.get(field) for field in required_fields)
 
     async def get_next_profiling_question(self, persona: dict) -> str:
+        """Determines the next logical question to ask based on missing persona data."""
         # Return the next question to ask based on what's missing
         if not persona.get("name") or not persona.get("email"):
             return "What's your name and email address?"

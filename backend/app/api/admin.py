@@ -92,11 +92,17 @@ async def get_metrics(db: Session = Depends(get_db)):
         func.avg(OnboardingSession.completed_at - OnboardingSession.started_at)
     ).filter(OnboardingSession.status == "completed").scalar()
     
-    # convert interval to hours
     avg_duration_hours = 0.0
     if avg_duration_query:
-        # avg_duration_query is a timedelta in Python when using SQLAlchemy with PG
-        avg_duration_hours = avg_duration_query.total_seconds() / 3600.0
+        # avg_duration_query is typically a timedelta object in SQLAlchemy/Postgres
+        try:
+            if hasattr(avg_duration_query, "total_seconds"):
+                avg_duration_hours = avg_duration_query.total_seconds() / 3600.0
+            else:
+                # Fallback for unexpected types
+                logger.warning(f"Unexpected type for avg_duration_query: {type(avg_duration_query)}")
+        except Exception as e:
+            logger.error(f"Error calculating average duration: {str(e)}")
         
     # Completions this week (last 7 days)
     seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
