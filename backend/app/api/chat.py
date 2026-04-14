@@ -9,16 +9,16 @@ from app.models.conversation_log import ConversationLog
 from app.models.onboarding_session import OnboardingSession
 from app.agents.orchestrator import AgentOrchestrator
 from app.schemas.auth import UserResponse
-from app.schemas.chat import ConversationHistoryResponse, MessageResponse
+from app.schemas.chat import (
+    ConversationHistoryResponse, 
+    MessageResponse, 
+    ChatMessageRequest, 
+    ChatMessageResponse
+)
 
 router = APIRouter()
 
-class ChatMessageRequest(BaseModel):
-    message: str
-
-class ChatMessageResponse(BaseModel):
-    reply: str
-    session_id: str
+# Sub-task 21.3: Ensured response_model is present for all routes
 
 @router.post("/chat/{session_id}/message", response_model=ChatMessageResponse)
 async def send_message(

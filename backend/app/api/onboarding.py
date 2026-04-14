@@ -9,19 +9,13 @@ from app.core.database import get_db
 from app.core.auth_deps import get_current_user
 from app.services.checklist_service import ChecklistService
 
-# Attempt to import models if they exist, else provide fallback
-try:
-    from app.models.onboarding_session import OnboardingSession
-except ImportError:
-    # Placeholder class if missing
-    class OnboardingSession:
-        pass
-
+from app.models.onboarding_session import OnboardingSession
 from app.schemas.auth import UserResponse
+from app.schemas.onboarding import SessionStartResponse, SessionDetailResponse, SessionProgressResponse
 
 router = APIRouter()
 
-@router.post("/onboarding/start")
+@router.post("/onboarding/start", response_model=SessionStartResponse)
 async def start_session(
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user)
@@ -31,22 +25,20 @@ async def start_session(
     If an active session already exists, returns the existing one.
     """
     # Check for existing active session
-    # (Using hasattr check just in case the real model isn't hooked up yet)
-    if hasattr(OnboardingSession, 'user_id'):
-        existing_session = db.query(OnboardingSession).filter(
-            OnboardingSession.user_id == str(current_user.id),
-            OnboardingSession.status == "in_progress"
-        ).first()
-        
-        if existing_session:
-            return {
-                "session_id": str(existing_session.id),
-                "message": "Hi! I'm O.N.E — your Onboarding Navigation Environment. "
-                           "I'm here to guide you through your first days at the company. "
-                           "Let's start with the basics — what's your full name and email address?"
-            }
+    existing_session = db.query(OnboardingSession).filter(
+        OnboardingSession.user_id == str(current_user.id),
+        OnboardingSession.status == "in_progress"
+    ).first()
+    
+    if existing_session:
+        return SessionStartResponse(
+            session_id=str(existing_session.id),
+            message="Hi! I'm O.N.E — your Onboarding Navigation Environment. "
+                       "I'm here to guide you through your first days at the company. "
+                       "Let's start with the basics — what's your full name and email address?"
+        )
 
-    # Generate a unique ID (if model uses string IDs or just omit if auto-increment)
+    # Generate a unique ID
     new_session_id = str(uuid.uuid4())
     
     # Create a new session object
@@ -55,21 +47,21 @@ async def start_session(
         user_id=str(current_user.id),
         status="in_progress",
         current_fsm_state="WELCOME",
-        started_at=datetime.utcnow()
+        started_at=datetime.now(timezone.utc)
     )
     
     db.add(new_session)
     db.commit()
     db.refresh(new_session)
     
-    return {
-        "session_id": str(new_session.id),
-        "message": "Hi! I'm O.N.E — your Onboarding Navigation Environment. "
+    return SessionStartResponse(
+        session_id=str(new_session.id),
+        message="Hi! I'm O.N.E — your Onboarding Navigation Environment. "
                    "I'm here to guide you through your first days at the company. "
                    "Let's start with the basics — what's your full name and email address?"
-    }
+    )
 
-@router.get("/onboarding/{session_id}")
+@router.get("/onboarding/{session_id}", response_model=SessionDetailResponse)
 async def get_session(
     session_id: str,
     db: Session = Depends(get_db),
@@ -93,16 +85,9 @@ async def get_session(
             detail="Forbidden: Cannot access another user's session unless you are an HR Admin"
         )
         
-    # Using dictionary format or response schema, returning as a dict fallback due to dynamic properties
-    return {
-        "id": getattr(session_obj, "id", None),
-        "user_id": getattr(session_obj, "user_id", None),
-        "persona": getattr(session_obj, "persona", None),
-        "status": getattr(session_obj, "status", None),
-        "current_fsm_state": getattr(session_obj, "current_fsm_state", None)
-    }
+    return session_obj
 
-@router.get("/onboarding/{session_id}/progress")
+@router.get("/onboarding/{session_id}/progress", response_model=SessionProgressResponse)
 async def get_progress(
     session_id: str,
     db: Session = Depends(get_db),
@@ -111,8 +96,6 @@ async def get_progress(
     """
     Retrieve onboarding checklist progress summary for a given session.
     """
-    # Assuming the specific user-session auth context is verified here similar to above
-    # or inside the service itself. Let's do a basic check here if OnboardingSession is accessible:
     session_obj = db.query(OnboardingSession).filter(OnboardingSession.id == session_id).first()
     if not session_obj:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -121,6 +104,4 @@ async def get_progress(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     checklist_service = ChecklistService(db)
-    progress_dict = await checklist_service.get_progress(session_id)
-    
-    return progress_dict
+    return await checklist_service.get_progress(session_id)

@@ -3,8 +3,13 @@ import chromadb
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 
+import logging
+
 # Force load variables
 load_dotenv(override=True)
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 persist_dir = os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_db")
 collection_name = os.getenv("CHROMA_COLLECTION_NAME", "one_knowledge_base")
@@ -14,10 +19,10 @@ collection_name = os.getenv("CHROMA_COLLECTION_NAME", "one_knowledge_base")
 KNOWLEDGE_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../knowledge_base"))
 
 def ingest_directory():
-    print(f"Looking for markdown files in: {KNOWLEDGE_BASE_DIR}")
+    logger.info(f"Looking for markdown files in: {KNOWLEDGE_BASE_DIR}")
     
     if not os.path.exists(KNOWLEDGE_BASE_DIR):
-        print("Error: Could not find the knowledge_base directory. Please check the path.")
+        logger.error("Error: Could not find the knowledge_base directory. Please check the path.")
         return
 
     # Initialize Chroma client
@@ -56,10 +61,10 @@ def ingest_directory():
                 ids.append(doc_id)
 
     if not documents:
-        print("No .md files found to ingest.")
+        logger.info("No .md files found to ingest.")
         return
 
-    print(f"Found {len(documents)} files. Embedding and inserting into ChromaDB...")
+    logger.info(f"Found {len(documents)} files. Embedding and inserting into ChromaDB...")
     
     # Upsert into database
     collection.upsert(
@@ -68,7 +73,7 @@ def ingest_directory():
         ids=ids
     )
     
-    print(f"Successfully ingested {len(documents)} real documents into '{collection_name}'!")
+    logger.info(f"Successfully ingested {len(documents)} real documents into '{collection_name}'!")
 
 if __name__ == "__main__":
     ingest_directory()
