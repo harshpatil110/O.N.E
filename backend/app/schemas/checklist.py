@@ -1,35 +1,26 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional, List
 from datetime import datetime
-from enum import Enum
+from uuid import UUID
 
-class ItemCategory(str, Enum):
-    ACCESS = "access"
-    TOOLING = "tooling"
-    DOCUMENTATION = "documentation"
-    COMPLIANCE = "compliance"
-    TEAM = "team"
-
-class ItemStatus(str, Enum):
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    SKIPPED = "skipped"
 
 class ChecklistItemResponse(BaseModel):
-    id: str
-    session_id: str
+    """Schema for a single checklist item returned by the API."""
+    id: UUID
+    session_id: UUID
     item_key: str
     title: str
     description: Optional[str] = None
-    category: ItemCategory
+    category: str  # Free-form string from DB (e.g. "General", "Access", "Tooling")
     required: bool
     sort_order: int
-    status: ItemStatus
+    status: str  # Free-form string from DB (e.g. "pending", "completed", "skipped")
     completed_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class UpdateChecklistRequest(BaseModel):
-    status: ItemStatus
+    """Schema for updating a checklist item's status."""
+    status: str
     notes: Optional[str] = None

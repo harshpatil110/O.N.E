@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any, List
 from datetime import datetime
+from uuid import UUID
 from app.schemas.checklist import ChecklistItemResponse
 
 class SessionStartResponse(BaseModel):
@@ -19,8 +20,8 @@ class SessionStartResponse(BaseModel):
 
 class SessionDetailResponse(BaseModel):
     """Detailed view of an onboarding session."""
-    id: str
-    user_id: str
+    id: UUID
+    user_id: UUID
     persona: Optional[Dict[str, Any]] = None
     status: str
     current_fsm_state: Optional[str] = None
@@ -31,8 +32,8 @@ class SessionDetailResponse(BaseModel):
         from_attributes=True,
         json_schema_extra={
             "example": {
-                "id": "sess-123",
-                "user_id": "user-456",
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "user_id": "550e8400-e29b-41d4-a716-446655440001",
                 "status": "in_progress",
                 "current_fsm_state": "PLAN_GENERATION"
             }

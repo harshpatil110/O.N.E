@@ -28,27 +28,29 @@ class FSMController:
     def get_system_prompt_for_state(self, **kwargs) -> str:
         prompt_template = SYSTEM_PROMPTS.get(self.state.current_fsm_state, "")
         
-        if getattr(self.state, "current_fsm_state", None) == FSMState.ONBOARDING_EXECUTION:
-            return prompt_template.format(
-                developer_name=kwargs.get("developer_name", "Developer"),
-                role=kwargs.get("role", "Unknown"),
-                experience_level=kwargs.get("experience_level", "Unknown"),
-                current_task_title=kwargs.get("current_task_title", "Task"),
-                current_task_description=kwargs.get("current_task_description", ""),
-                category=kwargs.get("category", "General"),
-                source_documents=kwargs.get("source_documents", "None")
-            )
-        elif getattr(self.state, "current_fsm_state", None) == FSMState.CHECKLIST_REVIEW:
-            return prompt_template.format(
-                completed_count=kwargs.get("completed_count", 0),
-                total_count=kwargs.get("total_count", 0)
-            )
-        elif getattr(self.state, "current_fsm_state", None) == FSMState.FREE_QA:
-             return prompt_template.format(
-                source_documents=kwargs.get("source_documents", "None")
-            )
-            
-        return prompt_template
+        # Master defaults for every known placeholder across all prompt templates.
+        # This prevents KeyError crashes when a template references a variable
+        # that the caller didn't supply (e.g. {filename} in citation instructions).
+        safe_args = {
+            "developer_name": "Developer",
+            "role": "Unknown",
+            "experience_level": "Unknown",
+            "current_task_title": "Task",
+            "current_task_description": "",
+            "category": "General",
+            "source_documents": "None",
+            "filename": "company documents",
+            "completed_count": 0,
+            "total_count": 0,
+        }
+        # Overlay caller-provided values on top of defaults
+        safe_args.update(kwargs)
+        
+        try:
+            return prompt_template.format(**safe_args)
+        except KeyError as e:
+            logger.warning(f"Missing prompt placeholder {e} for state {self.state.current_fsm_state.value}. Returning raw template.")
+            return prompt_template
 
     def should_transition(self, agent_response: str, context: Dict[str, Any]) -> Optional[FSMState]:
         current = self.state.current_fsm_state
