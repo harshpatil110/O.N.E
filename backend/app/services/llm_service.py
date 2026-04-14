@@ -10,7 +10,25 @@ from openai import AsyncOpenAI
 import openai
 
 from app.core.exceptions import LLMError, LLMRateLimitError, LLMParseError
+import os
+from dotenv import load_dotenv
+from openai import AsyncOpenAI
 
+# 1. FORCE the environment variables to load immediately
+load_dotenv()
+
+class LLMService:
+    def __init__(self):
+        # 2. Grab the key and explicitly check if it exists
+        api_key = os.getenv("NVIDIA_API_KEY") 
+        
+        if not api_key:
+            print("🚨 URGENT: NVIDIA_API_KEY is missing or empty!")
+            
+        self.client = AsyncOpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=api_key
+        )
 logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 3

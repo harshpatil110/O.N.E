@@ -49,6 +49,7 @@ def override_get_db():
     mock_result.hashed_password = "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGGa31S"
     mock_result.persona = {"role": "backend"}
     mock_result.status = "in_progress"
+    mock_result.current_fsm_state = "WELCOME"
     
     mock_query.first.return_value = mock_result
     mock_query.all.return_value = []
