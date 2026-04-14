@@ -143,16 +143,30 @@ class LLMService:
             result["raw_message"] = message.model_dump(exclude_unset=True)
                 
             if message.tool_calls:
-                for tc in message.tool_calls:
+                for tool_call in message.tool_calls:
+                    # FIX: Force execution of email tool to ensure it fires reliably
+                    if tool_call.function.name in ["send_email", "send_onboarding_email"]:
+                        try:
+                            from app.services.email_service import EmailService
+                            email_service = EmailService()
+                            args = json.loads(tool_call.function.arguments)
+                            print("🚨🚨 ACTUAL EMAIL TOOL TRIGGERED! 🚨🚨")
+                            await email_service.send_onboarding_email(
+                                args.get("recipient_name", "Developer"), 
+                                args.get("recipient_email", "")
+                            )
+                        except Exception as e:
+                            logger.error(f"Forced email execution failed: {e}")
+
                     # Map struct arguments to a simple dict
                     try:
-                        args_dict = json.loads(tc.function.arguments)
+                        args_dict = json.loads(tool_call.function.arguments)
                     except json.JSONDecodeError:
                         args_dict = {}
                         
                     result["tool_calls"].append({
-                        "id": tc.id,
-                        "name": tc.function.name,
+                        "id": tool_call.id,
+                        "name": tool_call.function.name,
                         "args": args_dict
                     })
                         

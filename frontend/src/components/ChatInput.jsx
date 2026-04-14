@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useChecklist } from '../context/ChecklistContext';
 
 export const ChatInput = ({ onSendMessage, disabled }) => {
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
+  const { markCurrentTaskDone, loading: isActionLoading } = useChecklist();
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -33,13 +35,27 @@ export const ChatInput = ({ onSendMessage, disabled }) => {
   };
 
   const quickActions = [
-    { label: 'Mark as done', fill: 'I have completed this task.' },
+    { label: 'Mark as done', action: markCurrentTaskDone },
     { label: 'Ask for help', fill: 'Can you explain this in more detail?' },
     { label: 'Skip this', fill: 'Can I skip this task?' }
   ];
 
-  const handleQuickAction = (fillContent) => {
-    if (!disabled) {
+  const handleQuickAction = (actionLabel, action, fillContent) => {
+    if (disabled || isActionLoading) return;
+    
+    if (actionLabel === 'Ask for help' || actionLabel === 'Skip this') {
+      console.log(`Action triggered: ${actionLabel}`);
+      // Send the message immediately for better demo experience
+      if (fillContent) {
+        onSendMessage(fillContent);
+      }
+      return;
+    }
+
+    if (action) {
+      console.log(`Action triggered: ${actionLabel}`);
+      action();
+    } else if (fillContent) {
       setText(fillContent);
       if (textareaRef.current) textareaRef.current.focus();
     }
@@ -51,9 +67,9 @@ export const ChatInput = ({ onSendMessage, disabled }) => {
         {quickActions.map((action, idx) => (
           <button
             key={idx}
-            onClick={() => handleQuickAction(action.fill)}
+            onClick={() => handleQuickAction(action.label, action.action, action.fill)}
             className="px-3 py-1.5 border border-zinc-300 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors uppercase tracking-wider text-[10px] font-medium"
-            disabled={disabled}
+            disabled={disabled || isActionLoading}
           >
             {action.label}
           </button>

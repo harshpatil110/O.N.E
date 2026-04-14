@@ -74,5 +74,21 @@ AGENT_TOOLS = [
                 "additionalProperties": False
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "send_onboarding_email",
+            "description": "Send a welcome onboarding email to the developer with their next steps.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "recipient_name": {"type": "string", "description": "The full name of the developer"},
+                    "recipient_email": {"type": "string", "description": "The email address of the developer"}
+                },
+                "required": ["recipient_name", "recipient_email"],
+                "additionalProperties": False
+            }
+        }
     }
 ]

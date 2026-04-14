@@ -78,8 +78,8 @@ class HRNotificationService:
         )
 
         # 6. Send to HR email, CC developer email
-        subject = f"✅ Onboarding Completed — {user.name} ({user.role})"
-        success = self.email_service.send_email(
+        subject = f"Onboarding Completed - {user.name} ({user.role})"
+        success = await self.email_service.send_email(
             to=self.email_service.hr_email,
             subject=subject,
             html_body=html_body,

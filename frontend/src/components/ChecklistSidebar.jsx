@@ -1,70 +1,53 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ProgressBar } from './ProgressBar';
 import { ChecklistItem } from './ChecklistItem';
-import { getProgress } from '../api/checklist';
+import { useChecklist } from '../context/ChecklistContext';
 
-export const ChecklistSidebar = ({ sessionId }) => {
-  const [progressData, setProgressData] = useState(null);
+export const ChecklistSidebar = () => {
+  const { progress, loading } = useChecklist();
 
-  useEffect(() => {
-    if (!sessionId) return;
-    
-    let isMounted = true;
-    let intervalId = null;
-
-    const fetchProgress = async () => {
-      try {
-        const data = await getProgress(sessionId);
-        if (isMounted) {
-          setProgressData(data);
-          if (data.session_status === 'completed' && intervalId) {
-            clearInterval(intervalId);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch progress", err);
-      }
-    };
-
-    // Initial fetch
-    fetchProgress();
-
-    // Poll every 3 seconds
-    intervalId = setInterval(fetchProgress, 3000);
-
-    return () => {
-      isMounted = false;
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [sessionId]);
-
-  if (!progressData) {
+  if (loading) {
     return (
       <div className="w-[30%] flex-shrink-0 flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
         <div className="h-16 px-8 flex items-center border-b border-zinc-200">
           <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Progress Tracker</h3>
         </div>
-        <div className="flex-1 overflow-y-auto p-8 animate-pulse">
-           <div className="h-6 bg-zinc-200 w-full mb-6 relative"></div>
-           <div className="h-24 bg-white border border-zinc-200 mb-3"></div>
-           <div className="h-24 bg-white border border-zinc-200 mb-3"></div>
+        <div className="flex-1 flex items-center justify-center p-8 animate-pulse text-center text-zinc-400 text-xs">
+           Initializing checklist...
         </div>
       </div>
     );
   }
 
-  const { percent_complete, completed_count, items } = progressData;
-  const total_count = items?.length || 0;
+  if (!progress || !progress.items || progress.items.length === 0) {
+    return (
+      <div className="w-[30%] flex-shrink-0 flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
+        <div className="h-16 px-8 flex items-center border-b border-zinc-200 bg-white">
+          <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-800">Progress Tracker</h3>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500 text-xs">
+          <svg className="w-12 h-12 mb-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 13l4 4L19 7" />
+          </svg>
+          <p className="text-sm font-semibold text-zinc-600 mb-1">All caught up!</p>
+          <p>No tasks assigned yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { percent_complete, completed_count, items } = progress;
+  const total_count = items.length;
 
   // Group items by category
-  const groups = items?.reduce((acc, item) => {
+  const groups = items.reduce((acc, item) => {
     const cat = item.category || 'general';
     if (!acc[cat]) {
       acc[cat] = [];
     }
     acc[cat].push(item);
     return acc;
-  }, {}) || {};
+  }, {});
 
   return (
     <div className="w-[30%] flex-shrink-0 flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
@@ -104,7 +87,6 @@ export const ChecklistSidebar = ({ sessionId }) => {
             );
           })}
         </div>
-
       </div>
     </div>
   );

@@ -1,8 +1,10 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_serializer
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
+from uuid import UUID
+
 class SessionSummary(BaseModel):
-    session_id: str
+    session_id: Any  # Accept UUID objects from SQLAlchemy
     employee_name: str
     employee_email: str
     role: str
@@ -11,8 +13,13 @@ class SessionSummary(BaseModel):
     completed_at: Optional[datetime] = None
     percent_complete: int
 
+    @field_serializer('session_id')
+    def serialize_session_id(self, v):
+        return str(v)
+
     model_config = ConfigDict(
         from_attributes=True,
+        arbitrary_types_allowed=True,
         json_schema_extra={
             "example": {
                 "session_id": "550e8400-e29b-41d4-a716-446655440000",

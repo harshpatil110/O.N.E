@@ -4,6 +4,7 @@ import { startSession } from '../api/chat';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatInput } from '../components/ChatInput';
 import { ChecklistSidebar } from '../components/ChecklistSidebar';
+import { ChecklistProvider } from '../context/ChecklistContext';
 
 export const ChatPage = () => {
   const [sessionId, setSessionId] = useState(null);
@@ -38,51 +39,53 @@ export const ChatPage = () => {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex h-screen bg-[#F7F5F0] overflow-hidden font-sans">
-      
-      {/* LEFT PANEL: Chat Interface (70%) */}
-      <div className="w-[70%] flex flex-col border-r border-zinc-200 bg-white shadow-xl z-10">
+    <ChecklistProvider sessionId={sessionId}>
+      <div className="flex h-screen bg-[#F7F5F0] overflow-hidden font-sans">
         
-        {/* Header */}
-        <div className="h-16 px-8 flex items-center border-b border-zinc-200">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-800">O.N.E. Identity Agent</h2>
-          <div className="ml-auto flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-green-600"></span>
-            <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">Active</span>
+        {/* LEFT PANEL: Chat Interface (70%) */}
+        <div className="w-[70%] flex flex-col border-r border-zinc-200 bg-white shadow-xl z-10">
+          
+          {/* Header */}
+          <div className="h-16 px-8 flex items-center border-b border-zinc-200">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-800">O.N.E. Identity Agent</h2>
+            <div className="ml-auto flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-green-600"></span>
+              <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">Active</span>
+            </div>
           </div>
+
+          {/* Messages Container */}
+          <div className="flex-1 overflow-y-auto p-8 space-y-8">
+            {initError ? (
+               <div className="text-center text-red-600 text-sm mt-10">{initError}</div>
+            ) : messages.length === 0 && !isLoading ? (
+               <div className="text-center text-zinc-400 text-sm mt-10 tracking-wide">Initializing secure connection...</div>
+            ) : (
+              messages.map((msg, idx) => (
+                <MessageBubble 
+                  key={msg.id || msg.tempId || idx} 
+                  role={msg.role} 
+                  content={msg.content} 
+                />
+              ))
+            )}
+            {isLoading && (
+              <MessageBubble role="agent" content="" isLoadingIndicator={true} />
+            )}
+            <div ref={endOfMessagesRef} />
+          </div>
+
+          {/* Input Area */}
+          <div className="px-8 pb-8 pt-4 bg-white">
+            <ChatInput onSendMessage={sendMessage} disabled={isLoading || !sessionId} />
+          </div>
+
         </div>
 
-        {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
-          {initError ? (
-             <div className="text-center text-red-600 text-sm mt-10">{initError}</div>
-          ) : messages.length === 0 && !isLoading ? (
-             <div className="text-center text-zinc-400 text-sm mt-10 tracking-wide">Initializing secure connection...</div>
-          ) : (
-            messages.map((msg, idx) => (
-              <MessageBubble 
-                key={msg.id || msg.tempId || idx} 
-                role={msg.role} 
-                content={msg.content} 
-              />
-            ))
-          )}
-          {isLoading && (
-            <MessageBubble role="agent" content="" isLoadingIndicator={true} />
-          )}
-          <div ref={endOfMessagesRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="px-8 pb-8 pt-4 bg-white">
-          <ChatInput onSendMessage={sendMessage} disabled={isLoading || !sessionId} />
-        </div>
+        {/* RIGHT PANEL: Checklist Sidebar (30%) */}
+        <ChecklistSidebar />
 
       </div>
-
-      {/* RIGHT PANEL: Checklist Sidebar (30%) */}
-      <ChecklistSidebar sessionId={sessionId} />
-
-    </div>
+    </ChecklistProvider>
   );
 };

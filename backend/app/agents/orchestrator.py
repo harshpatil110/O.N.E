@@ -9,6 +9,7 @@ from app.agents.fsm_controller import FSMController
 from app.services.hr_notification_service import HRNotificationService
 from app.services.llm_service import LLMService
 from app.services.checklist_service import ChecklistService
+from app.services.email_service import EmailService
 from app.rag.rag_service import RAGService
 from app.core.state import ConversationState
 from app.core.fsm import FSMState
@@ -37,6 +38,7 @@ class AgentOrchestrator:
         self.llm = LLMService()
         self.rag = RAGService()
         self.checklist_service = ChecklistService(db)
+        self.email_service = EmailService()
         self.fsm: Optional[FSMController] = None
 
     async def load_or_create_state(self) -> ConversationState:
@@ -261,6 +263,18 @@ class AgentOrchestrator:
             
         elif name == "escalate_to_human":
             return {"success": True, "escalated": True, "reason": args.get("reason", "Unknown")}
+        
+        elif name == "send_onboarding_email":
+            email = args.get("recipient_email")
+            name = args.get("recipient_name", "Developer")
+            print(f"FIRE EXECUTING REAL EMAIL TOOL TO: {email}")
+            logger.info(f"LLM triggered send_onboarding_email for {email}")
+            
+            success = await self.email_service.send_onboarding_email(name, email)
+            if success:
+                return {"status": "success", "message": f"Welcome email sent to {email}"}
+            else:
+                return {"status": "error", "message": "Failed to dispatch email — check server SMTP logs"}
         
         return {"error": f"Unknown tool: {name}"}
 

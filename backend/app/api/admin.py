@@ -1,8 +1,11 @@
+import logging
 from typing import Optional, List
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, select, and_
+
+logger = logging.getLogger(__name__)
 
 from app.core.database import get_db
 from app.core.auth_deps import get_hr_admin_user
@@ -52,10 +55,10 @@ async def list_sessions(
         percent_complete = round((completed_items / total_items) * 100) if total_items > 0 else 0
         
         items.append(SessionSummary(
-            session_id=session_record.id,
-            employee_name=user_record.name,
-            employee_email=user_record.email,
-            role=user_record.role,
+            session_id=str(session_record.id),
+            employee_name=user_record.name or "Unknown",
+            employee_email=user_record.email or "",
+            role=user_record.role or "employee",
             status=session_record.status,
             started_at=session_record.started_at,
             completed_at=session_record.completed_at,

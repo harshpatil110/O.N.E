@@ -36,9 +36,11 @@ export const AdminDashboardPage = () => {
       setLoadingSessions(true);
       try {
         const data = await getAdminSessions(page, 20, roleFilter, statusFilter);
-        setSessionsData(data);
+        setSessionsData(data || { items: [], total: 0 });
       } catch (err) {
         console.error('Failed to load sessions', err);
+        setError(`Failed to load sessions: ${err?.response?.data?.detail || err.message}`);
+        setSessionsData({ items: [], total: 0 });
       } finally {
         setLoadingSessions(false);
       }
