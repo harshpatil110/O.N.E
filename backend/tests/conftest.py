@@ -2,24 +2,23 @@ import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
 import asyncio
+from unittest.mock import MagicMock
 
 from app.main import app
 from app.core.database import get_db
-from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
-# Mock the database engine for tests (SQLite in-memory for basic structure)
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def override_get_db():
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
+    mock_db = MagicMock()
+    
+    # Setup mock query chain so db.query(User).filter(...).first() returns None
+    mock_query = MagicMock()
+    mock_filter = MagicMock()
+    mock_query.filter.return_value = mock_filter
+    mock_filter.first.return_value = None
+    
+    mock_db.query.return_value = mock_query
+
+    yield mock_db
 
 app.dependency_overrides[get_db] = override_get_db
 

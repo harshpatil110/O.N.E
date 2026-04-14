@@ -1,11 +1,7 @@
-import pytest
-from httpx import AsyncClient
-
-@pytest.mark.asyncio
-async def test_auth_login_fail(async_client: AsyncClient):
+def test_auth_login_fail(sync_client):
     """Test successful and invalid login payloads."""
     # Since DB is mocked and empty (SQLite memory), it should fail.
-    response = await async_client.post(
+    response = sync_client.post(
         "/api/v1/auth/login",
         json={"email": "wrong@test.com", "password": "wrongpassword"}
     )
@@ -13,7 +9,6 @@ async def test_auth_login_fail(async_client: AsyncClient):
     data = response.json()
     assert "detail" in data
 
-@pytest.mark.asyncio
-async def test_auth_login_mock():
+def test_auth_login_mock():
     """Placeholder structural test for valid JWT auth payload."""
     assert True
