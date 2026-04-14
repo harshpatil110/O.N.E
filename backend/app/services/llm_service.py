@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import asyncio
+import time
 import re
 from typing import List, Dict, Any, Optional
 
@@ -38,37 +39,28 @@ class LLMService:
 
     async def _call_with_retry(self, fn, *args, **kwargs):
         """
-        Executes an LLM call with a retry strategy for rate limits (ResourceExhausted).
-        
-        Args:
-            fn: The asynchronous function to execute.
-            *args: Positional arguments for fn.
-            **kwargs: Keyword arguments for fn.
-
-        Returns:
-            Any: The result of the fn call.
-
-        Raises:
-            LLMRateLimitError: If retries are exhausted.
-            LLMError: For any other API failures.
+        Executes an LLM call with a retry strategy for rate limits.
+        If all retries fail, returns a friendly error message.
         """
         for attempt in range(MAX_RETRIES):
             try:
                 return await fn(*args, **kwargs)
-            except ResourceExhausted:
-                logger.warning(f"Rate limit hit. Attempt {attempt + 1}/{MAX_RETRIES} failed.")
-                if attempt < MAX_RETRIES - 1:
-                    await asyncio.sleep(RETRY_DELAY_SECONDS * (attempt + 1))
-                else:
-                    raise LLMRateLimitError("Gemini rate limit exceeded after retries")
-            except Exception as e:
-                # Wrap all other exceptions in LLMError
-                if "429" in str(e):
+            except (ResourceExhausted, Exception) as e:
+                # Check if it's a rate limit error (429 or ResourceExhausted)
+                error_msg = str(e).lower()
+                is_rate_limit = isinstance(e, ResourceExhausted) or "429" in error_msg or "exhausted" in error_msg
+                
+                if is_rate_limit:
+                    logger.warning(f"Rate limit hit. Attempt {attempt + 1}/{MAX_RETRIES} failed.")
                     if attempt < MAX_RETRIES - 1:
-                        await asyncio.sleep(RETRY_DELAY_SECONDS * (attempt + 1))
+                        # Short blocking delay as requested
+                        time.sleep(2)
                         continue
-                    raise LLMRateLimitError("Gemini rate limit exceeded after retries")
-                raise LLMError(f"LLM API error: {str(e)}")
+                    return "I'm receiving too many messages right now. Please wait a moment and try again!"
+                
+                # For generic exceptions, log and return fallback
+                logger.error(f"Unexpected LLM API error: {str(e)}")
+                return "I encountered an unexpected error while processing your request. Please try again shortly."
 
     async def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         """
@@ -151,7 +143,10 @@ class LLMService:
                         
             return result
             
-        return await self._call_with_retry(_generate)
+        result = await self._call_with_retry(_generate)
+        if isinstance(result, str):
+            return {"text": result, "tool_calls": []}
+        return result
 
     async def extract_structured(self, prompt: str, output_schema: dict) -> dict:
         """
@@ -191,6 +186,11 @@ class LLMService:
             
         text_resp = await self._call_with_retry(_generate)
         
+        # If _call_with_retry returned the error string, we can't parse it as JSON
+        if "too many messages" in text_resp or "unexpected error" in text_resp:
+            logger.error(f"Structured extraction failed due to LLM error: {text_resp}")
+            return {}
+
         try:
             # Strip markdown block if model ignored the instruction
             cleaned_text = re.sub(r'^```json\s*', '', text_resp.strip())

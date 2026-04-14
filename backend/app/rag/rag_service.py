@@ -55,12 +55,15 @@ class RAGService:
             return []
 
         # 3. Semantic search
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=min(10, collection_count),
-            where=where,
-            include=["documents", "metadatas", "distances"]
-        )
+        query_kwargs = {
+            "query_embeddings": [query_embedding],
+            "n_results": min(10, collection_count),
+            "include": ["documents", "metadatas", "distances"]
+        }
+        if where:
+            query_kwargs["where"] = where
+            
+        results = self.collection.query(**query_kwargs)
         
         # 4. Format results
         documents = []
