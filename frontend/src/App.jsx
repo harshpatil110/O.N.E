@@ -1,27 +1,10 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { ChatPage } from './pages/ChatPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
-
-const ProtectedRoute = ({ children, requiredRole = null }) => {
-  const { isAuthenticated, role } = useAuth();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (requiredRole && role !== requiredRole && role !== 'superadmin') {
-    // If they aren't an admin but try to access admin panel, send to chat
-    if (requiredRole === 'hr_admin' && role === 'employee') {
-       return <Navigate to="/chat" replace />;
-    }
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-};
+import { SessionDetailPage } from './pages/SessionDetailPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const App = () => {
   return (
@@ -43,6 +26,15 @@ const App = () => {
         element={
           <ProtectedRoute requiredRole="hr_admin">
             <AdminDashboardPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/dashboard/sessions/:sessionId" 
+        element={
+          <ProtectedRoute requiredRole="hr_admin">
+            <SessionDetailPage />
           </ProtectedRoute>
         } 
       />
