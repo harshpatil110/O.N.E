@@ -7,28 +7,13 @@ import re
 from typing import List, Dict, Any, Optional
 
 from openai import AsyncOpenAI
-import openai
 
 from app.core.exceptions import LLMError, LLMRateLimitError, LLMParseError
-import os
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
 
 # 1. FORCE the environment variables to load immediately
 load_dotenv()
 
-class LLMService:
-    def __init__(self):
-        # 2. Grab the key and explicitly check if it exists
-        api_key = os.getenv("NVIDIA_API_KEY") 
-        
-        if not api_key:
-            print("🚨 URGENT: NVIDIA_API_KEY is missing or empty!")
-            
-        self.client = AsyncOpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=api_key
-        )
 logger = logging.getLogger(__name__)
 
 MAX_RETRIES = 3
@@ -39,15 +24,18 @@ class LLMService:
         """
         Initializes the LLM service using OpenAI SDK for Nvidia NIM.
         """
-        api_key = os.getenv("NVIDIA_API_KEY")
+        # 2. Grab the key and explicitly check if it exists
+        api_key = os.getenv("NVIDIA_API_KEY") 
         if not api_key:
+            print("🚨 URGENT: NVIDIA_API_KEY is missing or empty!")
             logger.warning("NVIDIA_API_KEY not found in environment.")
             
         self.client = AsyncOpenAI(
             base_url="https://integrate.api.nvidia.com/v1",
             api_key=api_key or "dummy-key"
         )
-        self.model_name = os.getenv("NVIDIA_MODEL_NAME", "meta/llama3-70b-instruct")
+        # We explicitly hardcode the model name here but do not use it in the client calls as per instruction.
+        self.model_name = "meta/llama3-70b-instruct"
 
     async def _call_with_retry(self, fn, *args, **kwargs):
         """
@@ -92,7 +80,7 @@ class LLMService:
             messages.append({"role": "user", "content": prompt})
             
             resp = await self.client.chat.completions.create(
-                model=self.model_name,
+                model="meta/llama3-70b-instruct",
                 messages=messages,
                 temperature=0.3,
                 max_tokens=2048
@@ -135,7 +123,7 @@ class LLMService:
                 formatted_history.append(formatted_msg)
                 
             resp = await self.client.chat.completions.create(
-                model=self.model_name,
+                model="meta/llama3-70b-instruct",
                 messages=formatted_history,
                 tools=tools,
                 temperature=0.3,
@@ -199,7 +187,7 @@ class LLMService:
             # Nvidia NIM supports JSON output format if supported by the model
             # We'll use standard generation with a strong prompt
             resp = await self.client.chat.completions.create(
-                model=self.model_name,
+                model="meta/llama3-70b-instruct",
                 messages=[{"role": "user", "content": full_prompt}],
                 temperature=0.0,
                 max_tokens=2048,

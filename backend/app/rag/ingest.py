@@ -14,7 +14,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")
 from app.rag.document_loader import load_knowledge_base
 from app.rag.chunker import chunk_documents
 from app.rag.chroma_client import get_collection
-from app.rag.embeddings import GeminiEmbeddingFunction
+from app.rag.embeddings import NvidiaEmbeddingFunction
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -48,7 +48,7 @@ async def ingest_knowledge_base(kb_directory: Optional[str] = None):
     
     logger.info("Storing in ChromaDB...")
     collection = get_collection()
-    embedding_fn = GeminiEmbeddingFunction()
+    embedding_fn = NvidiaEmbeddingFunction()
     
     # Process in batches of 10 to respect rate limits
     batch_size = 10

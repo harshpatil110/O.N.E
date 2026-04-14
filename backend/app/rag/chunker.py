@@ -1,4 +1,4 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from typing import List, Dict, Any
 
 def chunk_documents(documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

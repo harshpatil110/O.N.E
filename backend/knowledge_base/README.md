@@ -36,7 +36,7 @@ last_updated: "YYYY-MM-DD"
 Because the O.N.E RAG pipeline relies on static vector embeddings, updating a document requires the system to regenerate chunk embeddings.
 1. Once your PR is merged into the `main` branch, an automated GitHub Action will trigger.
 2. The pipeline fires a webhook referencing the `backend/rag/ingest.py` script.
-3. The script sweeps the entire `knowledge_base/` tree, parses the markdown, evaluates the front-matter payloads, recalculates the specialized embeddings (via Google Gemini), and updates the persistent `chroma_db/` disk configuration natively. 
+3. The script sweeps the entire `knowledge_base/` tree, parses the markdown, evaluates the front-matter payloads, recalculates the specialized embeddings (via Nvidia NV-EmbedQA), and updates the persistent `chroma_db/` disk configuration natively.
 
 If you are running the agent locally and need to force the re-ingestion, execute the following from the root `backend` directory:
 ```bash

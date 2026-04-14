@@ -1,37 +1,41 @@
 import os
-import google.generativeai as genai
+import openai
 
-class GeminiEmbeddingFunction:
-    """ChromaDB-compatible embedding function using Gemini text-embedding-004."""
+class NvidiaEmbeddingFunction:
+    """ChromaDB-compatible embedding function using Nvidia NV-EmbedQA."""
 
     def __init__(self):
-        # API Key should be set with genai.configure before calling this or inside here
-        api_key = os.getenv("GEMINI_API_KEY")
-        if api_key:
-            genai.configure(api_key=api_key)
-        self.model_name = "models/text-embedding-004"
+        api_key = os.getenv("NVIDIA_API_KEY")
+        self.client = openai.OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=api_key or "dummy-key"
+        )
+        self.model_name = "nvidia/nv-embedqa-e5-v5"
 
     def __call__(self, input: list[str]) -> list[list[float]]:
         embeddings = []
-        for text in input:
-            result = genai.embed_content(
+        # Process in batches if necessary, though ingest handles small batches natively
+        batch_size = 50
+        for i in range(0, len(input), batch_size):
+            batch = input[i:i + batch_size]
+            response = self.client.embeddings.create(
+                input=batch,
                 model=self.model_name,
-                content=text,
-                task_type="retrieval_document"
+                extra_body={"input_type": "passage", "truncate": "END"}
             )
-            embeddings.append(result["embedding"])
+            for data in response.data:
+                embeddings.append(data.embedding)
         return embeddings
 
 def embed_query(text: str) -> list[float]:
-    """Embed a query string using RETRIEVAL_QUERY task type."""
-    # API Key should be set with genai.configure before calling this or inside here
-    api_key = os.getenv("GEMINI_API_KEY")
-    if api_key:
-        genai.configure(api_key=api_key)
-        
-    result = genai.embed_content(
-        model="models/text-embedding-004",
-        content=text,
-        task_type="retrieval_query"  # Different task type for queries vs documents
+    """Embed a query string using NV-EmbedQA."""
+    client = openai.OpenAI(
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=os.getenv("NVIDIA_API_KEY") or "dummy-key"
     )
-    return result["embedding"]
+    response = client.embeddings.create(
+        input=[text],
+        model="nvidia/nv-embedqa-e5-v5",
+        extra_body={"input_type": "query", "truncate": "END"}
+    )
+    return response.data[0].embedding
