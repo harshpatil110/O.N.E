@@ -1,8 +1,9 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    # Google Gemini API
-    GEMINI_API_KEY: str
+    # Nvidia NIM / OpenAI
+    NVIDIA_API_KEY: str
+    NVIDIA_MODEL_NAME: str = "meta/llama3-70b-instruct"
 
     # PostgreSQL
     DATABASE_URL: str
