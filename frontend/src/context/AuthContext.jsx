@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-
-const AuthContext = createContext(null);
+import React, { useState, useEffect } from 'react';
+import { AuthContext } from './AuthContextObject';
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => sessionStorage.getItem('token'));
@@ -38,5 +37,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

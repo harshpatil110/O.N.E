@@ -23,7 +23,7 @@ export const getChatHistory = async (sessionId) => {
   try {
     const response = await authAxios.get(`/api/v1/chat/${sessionId}/history`);
     return response.data;
-  } catch (err) {
+  } catch {
     return [];
   }
 };

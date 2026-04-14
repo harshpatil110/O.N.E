@@ -59,9 +59,9 @@ export const ChatPage = () => {
           ) : messages.length === 0 && !isLoading ? (
              <div className="text-center text-zinc-400 text-sm mt-10 tracking-wide">Initializing secure connection...</div>
           ) : (
-            messages.map((msg) => (
+            messages.map((msg, idx) => (
               <MessageBubble 
-                key={msg.tempId || Math.random()} 
+                key={msg.id || msg.tempId || idx} 
                 role={msg.role} 
                 content={msg.content} 
               />
