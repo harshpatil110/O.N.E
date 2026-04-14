@@ -2395,7 +2395,7 @@ Document a complete manual test walkthrough in `docs/e2e-test-script.md`:
 - Verify more hand-holding in agent responses
 
 **Test Case 3: HR Admin Dashboard**
-- Login as `hr@company.com`
+- Login as `patilha2005@gmail.com`
 - Verify both test sessions appear in dashboard
 - Verify metrics are correct
 - Verify "View" opens session detail with correct checklist
