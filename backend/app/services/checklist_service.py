@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
@@ -6,22 +7,31 @@ from app.schemas.persona import DeveloperPersona
 from app.models.checklist_item import ChecklistItem
 from app.models.checklist_template import ChecklistTemplate
 
+logger = logging.getLogger(__name__)
+
 class ChecklistService:
+    """
+    Manages the lifecycle of the onboarding checklist, including generation, 
+    retrieval, and status updates of checklist items.
+    """
     def __init__(self, db: Session):
+        """
+        Initializes the service with a database session.
+        """
         self.db = db
 
     async def generate_checklist_for_persona(
         self, session_id: str, persona: DeveloperPersona
     ) -> List[ChecklistItem]:
         """
-        Algorithm:
-        1. Load ALL items from checklist_template table
-        2. Filter: keep item if persona.role in item.applicable_roles OR "all" in item.applicable_roles
-        3. Filter: keep item if persona.experience_level in item.applicable_levels OR "all" in item.applicable_levels
-        4. Filter: keep item if any tech in persona.tech_stack is in item.applicable_stacks OR "all" in item.applicable_stacks
-        5. Sort by item.sort_order
-        6. Create ChecklistItem rows in DB for this session_id
-        7. Return list of created ChecklistItem objects
+        Generates a tailored onboarding checklist based on the user's persona.
+
+        Args:
+            session_id (str): The ID of the onboarding session.
+            persona (DeveloperPersona): The detected developer persona (role, level, tech stack).
+
+        Returns:
+            List[ChecklistItem]: The list of newly created checklist items.
         """
         templates = self.db.query(ChecklistTemplate).all()
         
@@ -30,7 +40,7 @@ class ChecklistService:
             role_match = "all" in item.applicable_roles or persona.role in item.applicable_roles
             level_match = "all" in item.applicable_levels or persona.experience_level in item.applicable_levels
             
-            # Using any() to check if there is an intersection between the two lists
+            # Intersection between persona tech stack and template stacks
             stack_match = "all" in item.applicable_stacks or any(tech in item.applicable_stacks for tech in persona.tech_stack)
             
             if role_match and level_match and stack_match:
@@ -62,15 +72,18 @@ class ChecklistService:
         for item in created_items:
             self.db.refresh(item)
             
+        logger.info(f"Generated {len(created_items)} checklist items for session {session_id}")
         return created_items
 
     async def get_checklist(self, session_id: str) -> List[ChecklistItem]:
+        """Returns the complete list of checklist items for a session."""
         return self.db.query(ChecklistItem)\
             .filter(ChecklistItem.session_id == session_id)\
             .order_by(asc(ChecklistItem.sort_order))\
             .all()
 
     async def get_current_item(self, session_id: str) -> Optional[ChecklistItem]:
+        """Returns the first pending or in-progress checklist item based on sort order."""
         return self.db.query(ChecklistItem)\
             .filter(ChecklistItem.session_id == session_id)\
             .filter(ChecklistItem.status.in_(["pending", "in_progress"]))\
@@ -80,23 +93,44 @@ class ChecklistService:
     async def update_item_status(
         self, item_id: str, status: str, notes: Optional[str] = None
     ) -> Optional[ChecklistItem]:
-        # Handle string or int conversion for ID based on the DB schema
-        item = self.db.query(ChecklistItem).filter(ChecklistItem.id == int(item_id)).first()
-        if not item:
+        """
+        Updates the status of a specific checklist item.
+
+        Args:
+            item_id (str): The ID of the item.
+            status (str): New status (e.g. 'completed', 'skipped', 'in_progress').
+            notes (str, optional): Additional context or documentation links.
+
+        Returns:
+            ChecklistItem, optional: The updated item if found.
+        """
+        try:
+            item = self.db.query(ChecklistItem).filter(ChecklistItem.id == int(item_id)).first()
+            if not item:
+                return None
+                
+            item.status = status
+            if notes is not None:
+                item.notes = notes
+                
+            if status == "completed":
+                item.completed_at = datetime.now(timezone.utc)
+                
+            self.db.commit()
+            self.db.refresh(item)
+            logger.info(f"Updated item {item_id} to status: {status}")
+            return item
+        except Exception as e:
+            logger.error(f"Failed to update checklist item {item_id}: {str(e)}")
             return None
-            
-        item.status = status
-        if notes is not None:
-            item.notes = notes
-            
-        if status == "completed":
-            item.completed_at = datetime.now(timezone.utc)
-            
-        self.db.commit()
-        self.db.refresh(item)
-        return item
 
     async def get_progress(self, session_id: str) -> dict:
+        """
+        Calculates the onboarding progress metrics for a session.
+
+        Returns:
+            dict: Summary metrics including total items, completion counts, and percentage.
+        """
         items = await self.get_checklist(session_id)
         total_items = len(items)
         
@@ -116,6 +150,7 @@ class ChecklistService:
         }
 
     async def all_required_complete(self, session_id: str) -> bool:
+        """Checks if all required onboarding items are marked as completed."""
         required_items = self.db.query(ChecklistItem)\
             .filter(ChecklistItem.session_id == session_id)\
             .filter(ChecklistItem.required == True)\

@@ -9,23 +9,48 @@ class ConversationRole(str, Enum):
     SYSTEM = "system"
 
 class ChatMessageRequest(BaseModel):
-    content: str
+    """Schema for an incoming chat message."""
+    message: str
     metadata: Optional[Dict[str, Any]] = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "message": "Hi, I'm Rahul. I'm a senior backend developer working with Python.",
+            }
+        }
+    )
 
 class ChatMessageResponse(BaseModel):
-    id: str
+    """Schema for the assistant's reply."""
+    reply: str
     session_id: str
-    role: ConversationRole
-    content: str
     metadata: Optional[Dict[str, Any]] = None
-    created_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "reply": "Welcome Rahul! I've set up your onboarding checklist based on your profile.",
+                "session_id": "sess_456"
+            }
+        }
+    )
 
 class MessageResponse(BaseModel):
     role: str
     content: str
     created_at: datetime
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "role": "user",
+                "content": "What is the policy for GitHub access?",
+                "created_at": "2024-03-24T12:05:00Z"
+            }
+        }
+    )
 
 class ConversationHistoryResponse(BaseModel):
     session_id: str

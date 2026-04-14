@@ -1,9 +1,16 @@
+import logging
 from typing import List, Dict, Any, Optional
 from app.rag.chroma_client import get_collection
 from app.rag.embeddings import embed_query
 
+logger = logging.getLogger(__name__)
+
 class RAGService:
+    """
+    Handles similarity search and retrieval of documentation chunks from ChromaDB.
+    """
     def __init__(self):
+        """Initializes the service and connects to the ChromaDB collection."""
         self.collection = get_collection()
 
     async def retrieve(
@@ -16,12 +23,17 @@ class RAGService:
         top_k: int = 3
     ) -> List[Dict[str, Any]]:
         """
-        Retrieval strategy:
-        1. Build metadata filter from persona (role, tech_stack)
-        2. If checklist_item has knowledge_base_refs, add source filter
-        3. Run ChromaDB similarity search (top 10 candidates)
-        4. Re-rank with LLM to select top 3
-        5. Return formatted list of document dicts
+        Retrieves relevant documentation chunks using semantic search.
+
+        Args:
+            query (str): The search query (usually a user question or task description).
+            role (str, optional): The user's role to filter by.
+            tech_stack (list, optional): The user's tech stack to filter by.
+            category (str, optional): The document category (e.g., 'security', 'onboarding').
+            top_k (int): Number of documents to return.
+
+        Returns:
+            List[Dict]: A list of retrieved documents with content and similarity scores.
         """
         
         # 1. Build where clause for ChromaDB metadata filter
@@ -78,7 +90,15 @@ class RAGService:
         return documents[:top_k]
 
     def format_for_prompt(self, documents: List[Dict[str, Any]]) -> str:
-        """Format retrieved documents for injection into LLM system prompt."""
+        """
+        Formats retrieved documents into a string for injection into an LLM prompt.
+
+        Args:
+            documents (List[Dict]): The list of document dictionaries from retrieve().
+
+        Returns:
+            str: The formatted context string.
+        """
         if not documents:
             return ""
         

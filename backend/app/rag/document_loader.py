@@ -1,7 +1,10 @@
 import os
 import re
 import yaml
+import logging
 from typing import Any, Tuple, List, Dict
+
+logger = logging.getLogger(__name__)
 
 def parse_markdown_file(filepath: str, relative_path: str) -> Tuple[str, Dict[str, Any]]:
     """
@@ -12,7 +15,7 @@ def parse_markdown_file(filepath: str, relative_path: str) -> Tuple[str, Dict[st
         with open(filepath, "r", encoding="utf-8") as f:
             raw = f.read()
     except Exception as e:
-        print(f"Failed to read file {filepath}: {e}")
+        logger.error(f"Failed to read file {filepath}: {str(e)}")
         return "", {}
 
     # Regex to find YAML front-matter between '---'
@@ -28,7 +31,7 @@ def parse_markdown_file(filepath: str, relative_path: str) -> Tuple[str, Dict[st
             if isinstance(parsed_yaml, dict):
                 metadata = parsed_yaml
         except yaml.YAMLError as e:
-            print(f"Error parsing YAML front-matter in {filepath}: {e}")
+            logger.warning(f"Error parsing YAML front-matter in {filepath}: {str(e)}")
         
         # Remove the front-matter from the content body
         content = raw[match.end():]
@@ -44,7 +47,7 @@ def load_knowledge_base(kb_directory: str) -> List[Dict[str, Any]]:
     """
     documents = []
     if not os.path.exists(kb_directory):
-        print(f"Warning: Knowledge base directory {kb_directory} does not exist.")
+        logger.warning(f"Knowledge base directory {kb_directory} does not exist.")
         return []
 
     for root, _, files in os.walk(kb_directory):

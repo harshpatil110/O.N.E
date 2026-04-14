@@ -17,7 +17,10 @@ RETRY_DELAY_SECONDS = 4
 
 class LLMService:
     def __init__(self):
-        """Initialize the LLM service with Google Gemini API."""
+        """
+        Initializes the LLM service using Google Gemini.
+        Configures the generative model with a default temperature and token limit.
+        """
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             logger.warning("GEMINI_API_KEY not found in environment.")
@@ -34,7 +37,21 @@ class LLMService:
         )
 
     async def _call_with_retry(self, fn, *args, **kwargs):
-        """Execute the function with exponential backoff on rate limits."""
+        """
+        Executes an LLM call with a retry strategy for rate limits (ResourceExhausted).
+        
+        Args:
+            fn: The asynchronous function to execute.
+            *args: Positional arguments for fn.
+            **kwargs: Keyword arguments for fn.
+
+        Returns:
+            Any: The result of the fn call.
+
+        Raises:
+            LLMRateLimitError: If retries are exhausted.
+            LLMError: For any other API failures.
+        """
         for attempt in range(MAX_RETRIES):
             try:
                 return await fn(*args, **kwargs)
@@ -46,7 +63,6 @@ class LLMService:
                     raise LLMRateLimitError("Gemini rate limit exceeded after retries")
             except Exception as e:
                 # Wrap all other exceptions in LLMError
-                # Checking name of exception directly just in case it is google specific but not wrapped
                 if "429" in str(e):
                     if attempt < MAX_RETRIES - 1:
                         await asyncio.sleep(RETRY_DELAY_SECONDS * (attempt + 1))
@@ -55,7 +71,16 @@ class LLMService:
                 raise LLMError(f"LLM API error: {str(e)}")
 
     async def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
-        """Generate text from a prompt, optionally using a system prompt."""
+        """
+        Generates a direct text response for a given prompt.
+
+        Args:
+            prompt (str): The user input or specific instruction.
+            system_prompt (str, optional): Overriding system instructions.
+
+        Returns:
+            str: The generated text content.
+        """
         model = self.model
         if system_prompt:
             model = genai.GenerativeModel(
@@ -66,7 +91,6 @@ class LLMService:
             
         async def _generate():
             resp = await model.generate_content_async(prompt)
-            # handle cases where parts can be blocked
             if not resp.parts:
                 return ""
             return resp.text
@@ -74,7 +98,17 @@ class LLMService:
         return await self._call_with_retry(_generate)
 
     async def generate_with_tools(self, messages: List[Dict[str, Any]], tools: list, system_prompt: str) -> Dict[str, Any]:
-        """Generate a response using tools, returning both text and extracted tool calls."""
+        """
+        Generates a response using defined tools, supporting multi-turn conversation history.
+
+        Args:
+            messages (List[Dict]): Conversation history in {'role': ..., 'content': ...} format.
+            tools (list): List of tool definitions.
+            system_prompt (str): Core behavioral instructions.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing 'text' and a list of 'tool_calls'.
+        """
         model = genai.GenerativeModel(
             model_name=self.model_name,
             generation_config=self.generation_config,
@@ -120,7 +154,19 @@ class LLMService:
         return await self._call_with_retry(_generate)
 
     async def extract_structured(self, prompt: str, output_schema: dict) -> dict:
-        """Prompt to get valid JSON matching a schema."""
+        """
+        Uses constrained generation to extract structured data matching a JSON schema.
+
+        Args:
+            prompt (str): The raw text to process.
+            output_schema (dict): The target JSON schema.
+
+        Returns:
+            dict: The extracted data.
+
+        Raises:
+            LLMParseError: If the output cannot be parsed as valid JSON.
+        """
         instruction = "Respond ONLY with valid JSON exactly matching the following schema:\n"
         instruction += json.dumps(output_schema, indent=2)
         instruction += "\nDo not include code blocks or markdown, just the raw JSON object."
