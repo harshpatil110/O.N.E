@@ -6,8 +6,8 @@ import time
 import re
 from typing import List, Dict, Any, Optional
 
-import google.generativeai as genai
-from google.api_core.exceptions import ResourceExhausted
+from openai import AsyncOpenAI
+import openai
 
 from app.core.exceptions import LLMError, LLMRateLimitError, LLMParseError
 
@@ -19,23 +19,17 @@ RETRY_DELAY_SECONDS = 4
 class LLMService:
     def __init__(self):
         """
-        Initializes the LLM service using Google Gemini.
-        Configures the generative model with a default temperature and token limit.
+        Initializes the LLM service using OpenAI SDK for Nvidia NIM.
         """
-        api_key = os.getenv("GEMINI_API_KEY")
+        api_key = os.getenv("NVIDIA_API_KEY")
         if not api_key:
-            logger.warning("GEMINI_API_KEY not found in environment.")
+            logger.warning("NVIDIA_API_KEY not found in environment.")
             
-        genai.configure(api_key=api_key)
-        self.model_name = "gemini-2.0-flash"
-        self.generation_config = genai.types.GenerationConfig(
-            temperature=0.3,
-            max_output_tokens=2048
+        self.client = AsyncOpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=api_key or "dummy-key"
         )
-        self.model = genai.GenerativeModel(
-            model_name=self.model_name,
-            generation_config=self.generation_config
-        )
+        self.model_name = os.getenv("NVIDIA_MODEL_NAME", "meta/llama3-70b-instruct")
 
     async def _call_with_retry(self, fn, *args, **kwargs):
         """
@@ -45,10 +39,10 @@ class LLMService:
         for attempt in range(MAX_RETRIES):
             try:
                 return await fn(*args, **kwargs)
-            except (ResourceExhausted, Exception) as e:
-                # Check if it's a rate limit error (429 or ResourceExhausted)
+            except Exception as e:
+                # Check if it's a rate limit error
                 error_msg = str(e).lower()
-                is_rate_limit = isinstance(e, ResourceExhausted) or "429" in error_msg or "exhausted" in error_msg
+                is_rate_limit = "429" in error_msg or "rate limit" in error_msg or "exhausted" in error_msg
                 
                 if is_rate_limit:
                     logger.warning(f"Rate limit hit. Attempt {attempt + 1}/{MAX_RETRIES} failed.")
@@ -73,19 +67,19 @@ class LLMService:
         Returns:
             str: The generated text content.
         """
-        model = self.model
-        if system_prompt:
-            model = genai.GenerativeModel(
-                model_name=self.model_name,
-                generation_config=self.generation_config,
-                system_instruction=system_prompt
-            )
-            
         async def _generate():
-            resp = await model.generate_content_async(prompt)
-            if not resp.parts:
-                return ""
-            return resp.text
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": prompt})
+            
+            resp = await self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                temperature=0.3,
+                max_tokens=2048
+            )
+            return resp.choices[0].message.content or ""
             
         return await self._call_with_retry(_generate)
 
@@ -99,47 +93,62 @@ class LLMService:
             system_prompt (str): Core behavioral instructions.
 
         Returns:
-            Dict[str, Any]: A dictionary containing 'text' and a list of 'tool_calls'.
+            Dict[str, Any]: A dictionary containing 'text', 'tool_calls', and 'raw_message'.
         """
-        model = genai.GenerativeModel(
-            model_name=self.model_name,
-            generation_config=self.generation_config,
-            system_instruction=system_prompt,
-            tools=tools
-        )
-        
         async def _generate():
-            # Format messages based on Gemini expectations
             formatted_history = []
+            if system_prompt:
+                formatted_history.append({"role": "system", "content": system_prompt})
+                
             for msg in messages:
                 role = msg.get("role", "user")
-                if role == "assistant":
-                    role = "model"
-                content = msg.get("content", "")
-                
-                # Omit empty content if needed
-                formatted_history.append({"role": role, "parts": [content]})
+                if role == "model":
+                    role = "assistant"
                     
-            resp = await model.generate_content_async(formatted_history)
+                formatted_msg = {"role": role}
+                if msg.get("content"):
+                    formatted_msg["content"] = msg["content"]
+                
+                if role == "tool":
+                    formatted_msg["tool_call_id"] = msg.get("tool_call_id", "unknown")
+                    # Content must be a string containing the result
+                    formatted_msg["content"] = msg.get("content", "{}")
+                    
+                formatted_history.append(formatted_msg)
+                
+            resp = await self.client.chat.completions.create(
+                model=self.model_name,
+                messages=formatted_history,
+                tools=tools,
+                temperature=0.3,
+                max_tokens=2048
+            )
             
             result = {
                 "text": "",
                 "tool_calls": []
             }
             
-            if resp.parts:
-                for part in resp.parts:
-                    if hasattr(part, "text") and part.text:
-                        result["text"] += part.text
+            message = resp.choices[0].message
+            if message.content:
+                result["text"] = message.content
+            
+            # Pass the raw message back so it can be appended to history
+            result["raw_message"] = message.model_dump(exclude_unset=True)
+                
+            if message.tool_calls:
+                for tc in message.tool_calls:
+                    # Map struct arguments to a simple dict
+                    try:
+                        args_dict = json.loads(tc.function.arguments)
+                    except json.JSONDecodeError:
+                        args_dict = {}
                         
-                    if hasattr(part, "function_call") and part.function_call:
-                        # Map struct arguments to a simple dict
-                        args_dict = type(part.function_call.args)(part.function_call.args) if type(part.function_call.args) is dict else dict(part.function_call.args)
-                        
-                        result["tool_calls"].append({
-                            "name": part.function_call.name,
-                            "args": args_dict
-                        })
+                    result["tool_calls"].append({
+                        "id": tc.id,
+                        "name": tc.function.name,
+                        "args": args_dict
+                    })
                         
             return result
             
@@ -168,21 +177,17 @@ class LLMService:
         
         full_prompt = f"{instruction}\n\nInput to process:\n{prompt}"
         
-        # Override to json response mime type
-        model = genai.GenerativeModel(
-            model_name=self.model_name,
-            generation_config=genai.types.GenerationConfig(
-                temperature=0.0,
-                max_output_tokens=2048,
-                response_mime_type="application/json"
-            )
-        )
-        
         async def _generate():
-            resp = await model.generate_content_async(full_prompt)
-            if not resp.parts:
-                 return "{}"
-            return resp.text
+            # Nvidia NIM supports JSON output format if supported by the model
+            # We'll use standard generation with a strong prompt
+            resp = await self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": full_prompt}],
+                temperature=0.0,
+                max_tokens=2048,
+                response_format={"type": "json_object"}
+            )
+            return resp.choices[0].message.content or "{}"
             
         text_resp = await self._call_with_retry(_generate)
         

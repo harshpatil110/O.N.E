@@ -12,8 +12,10 @@ class ConversationLog(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id = Column(UUID(as_uuid=True), ForeignKey("onboarding_sessions.id", ondelete="CASCADE"), nullable=False)
-    role = Column(String(50), nullable=False)  # 'user', 'assistant', 'system'
+    role = Column(String(50), nullable=False)  # 'user', 'assistant', 'system', 'tool'
     content = Column(String, nullable=False)
+    tool_name = Column(String, nullable=True)
+    tool_args = Column(JSONB, nullable=True)
     metadata_ = Column("metadata", JSONB, nullable=True)  # 'metadata_' avoids Python reserved name collision
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
