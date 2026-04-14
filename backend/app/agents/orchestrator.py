@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
 from app.agents.tools import AGENT_TOOLS
+from app.services.hr_notification_service import HRNotificationService
 
 # Mock DB models for conversation and session state (Assume these bind with SQLAlchemy DeclarativeBase)
 class ConversationLog:
@@ -229,7 +230,12 @@ class AgentOrchestrator:
             return await self.checklist_service.get_progress(self.session_id)
             
         elif name == "send_hr_completion_email":
-            return await self._trigger_hr_email(state, args.get("include_pending", False))
+            hr_service = HRNotificationService(self.db)
+            success = await hr_service.send_completion_email(str(self.session_id))
+            if success:
+                return {"status": "success", "message": "HR completion email sent successfully"}
+            else:
+                return {"status": "error", "message": "Failed to send email — please check logs"}
             
         elif name == "escalate_to_human":
             return await self._handle_escalation(args.get("reason", ""))
