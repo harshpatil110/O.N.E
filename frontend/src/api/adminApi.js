@@ -20,3 +20,8 @@ export const resendHrNotification = async (sessionId) => {
   const response = await authAxios.post(`/api/v1/admin/notify-hr/${sessionId}`);
   return response.data;
 };
+
+export const getSessionChatHistory = async (sessionId) => {
+  const response = await authAxios.get(`/api/v1/admin/sessions/${sessionId}/chat-history`);
+  return response.data;
+};

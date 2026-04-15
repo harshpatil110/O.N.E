@@ -281,6 +281,8 @@ class AgentOrchestrator:
     async def _persist_state(self, state: ConversationState, user_message: str, assistant_reply: str, system_prompt: Optional[str] = None):
         """
         Persists conversation history and session state back to PostgreSQL.
+        Also appends user/assistant messages to the session's chat_history JSONB column
+        for the admin audit trail.
         """
         now = datetime.now(timezone.utc)
         
@@ -318,7 +320,23 @@ class AgentOrchestrator:
         if session_record:
             session_record.current_fsm_state = state.current_fsm_state.value
             session_record.persona = state.persona
-            # Updating last_active isn't strictly in the model we saw, but it's good practice 
-            # if we added it in a layer. I'll omit to avoid DB errors unless sure.
+
+            # --- Audit Trail: append to chat_history JSONB ---
+            iso_now = now.isoformat()
+            existing_history = list(session_record.chat_history or [])
+            existing_history.append({
+                "role": "user",
+                "content": user_message,
+                "timestamp": iso_now
+            })
+            existing_history.append({
+                "role": "assistant",
+                "content": assistant_reply,
+                "timestamp": iso_now
+            })
+            session_record.chat_history = existing_history
+            # flag_modified ensures SQLAlchemy detects in-place JSONB mutation
+            from sqlalchemy.orm.attributes import flag_modified
+            flag_modified(session_record, "chat_history")
             
         self.db.commit()

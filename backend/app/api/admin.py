@@ -12,7 +12,11 @@ from app.core.auth_deps import get_hr_admin_user
 from app.models.user import User
 from app.models.onboarding_session import OnboardingSession
 from app.models.checklist_item import ChecklistItem
-from app.schemas.admin import PaginatedSessions, SessionSummary, AdminMetrics
+from app.models.conversation_log import ConversationLog
+from app.schemas.admin import (
+    PaginatedSessions, SessionSummary, AdminMetrics,
+    SessionChatHistory, ChatHistoryMessage
+)
 from app.services.hr_notification_service import HRNotificationService
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_hr_admin_user)])
@@ -141,3 +145,65 @@ async def resend_hr_notification(
         )
         
     return {"success": True}
+
+@router.get("/sessions/{session_id}/chat-history", response_model=SessionChatHistory)
+async def get_session_chat_history(
+    session_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Audit Trail: Returns the full chronological chat history for a specific
+    onboarding session. Reads from the denormalized JSONB column first,
+    falling back to conversation_logs for pre-existing sessions.
+    """
+    # 1. Load session + employee info
+    result = db.query(OnboardingSession, User)\
+        .join(User, OnboardingSession.user_id == User.id)\
+        .filter(OnboardingSession.id == session_id)\
+        .first()
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Session not found"
+        )
+
+    session_record, user_record = result
+
+    # 2. Try the fast path: denormalized JSONB column
+    raw_history = session_record.chat_history or []
+
+    if raw_history:
+        messages = [
+            ChatHistoryMessage(
+                role=msg.get("role", "unknown"),
+                content=msg.get("content", ""),
+                timestamp=msg.get("timestamp")
+            )
+            for msg in raw_history
+        ]
+    else:
+        # 3. Fallback: query conversation_logs table (for sessions created before migration)
+        logs = db.query(ConversationLog)\
+            .filter(ConversationLog.session_id == session_id)\
+            .filter(ConversationLog.role.in_(["user", "assistant"]))\
+            .order_by(ConversationLog.created_at.asc())\
+            .all()
+
+        messages = [
+            ChatHistoryMessage(
+                role=log.role,
+                content=log.content,
+                timestamp=log.created_at.isoformat() if log.created_at else None
+            )
+            for log in logs
+        ]
+
+    return SessionChatHistory(
+        session_id=str(session_record.id),
+        employee_name=user_record.name or "Unknown",
+        employee_email=user_record.email or "",
+        status=session_record.status,
+        messages=messages,
+        total_messages=len(messages)
+    )

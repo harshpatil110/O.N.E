@@ -18,6 +18,7 @@ class OnboardingSession(Base):
     current_checklist_index = Column(Integer, default=0, nullable=False)
     started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     completed_at = Column(DateTime, nullable=True)
+    chat_history = Column(JSONB, default=list, nullable=False, server_default="[]")
     hr_notified = Column(Boolean, default=False, nullable=False)
 
     def __repr__(self):

@@ -3,7 +3,8 @@ import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { getProgress } from '../api/checklist';
 import { getAdminSessions, resendHrNotification } from '../api/adminApi';
 import { ChecklistItem } from '../components/ChecklistItem';
-import { ArrowLeft, Mail, User as UserIcon } from 'lucide-react';
+import { ChatHistoryDrawer } from '../components/ChatHistoryDrawer';
+import { ArrowLeft, Mail, User as UserIcon, MessageSquareText } from 'lucide-react';
 
 export const SessionDetailPage = () => {
   const { sessionId } = useParams();
@@ -15,6 +16,7 @@ export const SessionDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     const fetchSessionData = async () => {
@@ -92,16 +94,27 @@ export const SessionDetailPage = () => {
             <h1 className="text-3xl font-semibold tracking-tight">Session Details</h1>
           </div>
 
-          {isCompleted && (
+          <div className="flex items-center gap-3">
+            {/* View Conversation Log button */}
             <button
-              onClick={handleResend}
-              disabled={resending}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:ring-offset-[#F7F5F0] disabled:opacity-50 transition-all shadow-sm"
+              onClick={() => setDrawerOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-medium border border-[#EAE8E2] hover:bg-slate-50 hover:border-slate-300 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:ring-offset-[#F7F5F0] transition-all shadow-sm"
             >
-              <Mail size={16} />
-              {resending ? 'Sending Email...' : 'Resend HR Email'}
+              <MessageSquareText size={16} />
+              View Conversation Log
             </button>
-          )}
+
+            {isCompleted && (
+              <button
+                onClick={handleResend}
+                disabled={resending}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:ring-offset-[#F7F5F0] disabled:opacity-50 transition-all shadow-sm"
+              >
+                <Mail size={16} />
+                {resending ? 'Sending Email...' : 'Resend HR Email'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Employee Info Card */}
@@ -158,6 +171,14 @@ export const SessionDetailPage = () => {
         </div>
 
       </div>
+
+      {/* Chat History Drawer */}
+      <ChatHistoryDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sessionId={sessionId}
+        employeeName={sessionSummary?.employee_name}
+      />
     </div>
   );
 };

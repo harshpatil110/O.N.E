@@ -35,7 +35,7 @@ class LLMService:
             api_key=api_key or "dummy-key"
         )
         # We explicitly hardcode the model name here but do not use it in the client calls as per instruction.
-        self.model_name = "meta/llama3-70b-instruct"
+        self.model_name = "meta/llama-3.1-70b-instruct"
 
     async def _call_with_retry(self, fn, *args, **kwargs):
         """
@@ -80,7 +80,7 @@ class LLMService:
             messages.append({"role": "user", "content": prompt})
             
             resp = await self.client.chat.completions.create(
-                model="meta/llama3-70b-instruct",
+                model="meta/llama-3.1-70b-instruct",
                 messages=messages,
                 temperature=0.3,
                 max_tokens=2048
@@ -123,7 +123,7 @@ class LLMService:
                 formatted_history.append(formatted_msg)
                 
             resp = await self.client.chat.completions.create(
-                model="meta/llama3-70b-instruct",
+                model="meta/llama-3.1-70b-instruct",
                 messages=formatted_history,
                 tools=tools,
                 temperature=0.3,
@@ -201,7 +201,7 @@ class LLMService:
             # Nvidia NIM supports JSON output format if supported by the model
             # We'll use standard generation with a strong prompt
             resp = await self.client.chat.completions.create(
-                model="meta/llama3-70b-instruct",
+                model="meta/llama-3.1-70b-instruct",
                 messages=[{"role": "user", "content": full_prompt}],
                 temperature=0.0,
                 max_tokens=2048,

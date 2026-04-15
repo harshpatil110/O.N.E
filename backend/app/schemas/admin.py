@@ -70,3 +70,47 @@ class AdminMetrics(BaseModel):
             }
         }
     )
+
+
+class ChatHistoryMessage(BaseModel):
+    """A single message entry in the audit trail."""
+    role: str
+    content: str
+    timestamp: Optional[str] = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "role": "user",
+                "content": "Hi, I'm starting my onboarding.",
+                "timestamp": "2024-03-24T10:05:00+00:00"
+            }
+        }
+    )
+
+
+class SessionChatHistory(BaseModel):
+    """Full audit trail for a specific onboarding session."""
+    session_id: str
+    employee_name: str
+    employee_email: str
+    status: str
+    messages: List[ChatHistoryMessage]
+    total_messages: int
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                "employee_name": "Rahul Sharma",
+                "employee_email": "rahul@test.com",
+                "status": "in_progress",
+                "messages": [
+                    {"role": "user", "content": "Hi!", "timestamp": "2024-03-24T10:05:00+00:00"},
+                    {"role": "assistant", "content": "Welcome!", "timestamp": "2024-03-24T10:05:01+00:00"}
+                ],
+                "total_messages": 2
+            }
+        }
+    )
+
