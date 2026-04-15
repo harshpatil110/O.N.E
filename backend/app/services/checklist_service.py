@@ -160,3 +160,87 @@ class ChecklistService:
             return True
             
         return all(item.status == "completed" for item in required_items)
+
+    async def mark_task_by_name(
+        self, session_id: str, task_name: str, task_category: str = None
+    ) -> Dict[str, Any]:
+        """
+        Fuzzy-match a pending/in-progress checklist item by title or category
+        and mark it as completed. Used by the mark_task_complete LLM tool.
+        
+        Args:
+            session_id: The onboarding session ID.
+            task_name: A fuzzy name/title of the task the user claims to have finished.
+            task_category: Optional category filter.
+            
+        Returns:
+            dict: Result with the matched task info or an error message.
+        """
+        items = await self.get_checklist(session_id)
+        pending_items = [i for i in items if i.status in ("pending", "in_progress")]
+        
+        if not pending_items:
+            return {"status": "error", "message": "No pending tasks to mark as complete."}
+
+        # Try to find the best match by title substring (case-insensitive)
+        search = task_name.lower().strip()
+        matched = None
+        
+        # Pass 1: exact substring match in title
+        for item in pending_items:
+            if search in item.title.lower():
+                matched = item
+                break
+        
+        # Pass 2: match by category if provided and title didn't match
+        if not matched and task_category:
+            cat_search = task_category.lower().strip()
+            for item in pending_items:
+                if cat_search in (item.category or "").lower():
+                    matched = item
+                    break
+
+        # Pass 3: match by item_key
+        if not matched:
+            for item in pending_items:
+                if search in (item.item_key or "").lower():
+                    matched = item
+                    break
+
+        # Pass 4: word-level overlap scoring
+        if not matched:
+            search_words = set(search.split())
+            best_score = 0
+            for item in pending_items:
+                title_words = set(item.title.lower().split())
+                overlap = len(search_words & title_words)
+                if overlap > best_score:
+                    best_score = overlap
+                    matched = item
+        
+        if not matched:
+            # Fall back to the first pending item
+            matched = pending_items[0]
+            logger.warning(f"No fuzzy match for '{task_name}' — falling back to first pending: {matched.title}")
+        
+        # Mark it complete
+        matched.status = "completed"
+        matched.completed_at = datetime.now(timezone.utc)
+        self.db.commit()
+        self.db.refresh(matched)
+        
+        # Compute updated progress
+        all_items = await self.get_checklist(session_id)
+        total = len(all_items)
+        completed = sum(1 for i in all_items if i.status == "completed")
+        percent = round((completed / total * 100), 1) if total > 0 else 0
+        
+        logger.info(f"Marked '{matched.title}' as completed for session {session_id} ({percent}%)")
+        
+        return {
+            "status": "success",
+            "matched_task": matched.title,
+            "task_id": str(matched.id),
+            "progress": f"{completed}/{total} ({percent}%)"
+        }
+

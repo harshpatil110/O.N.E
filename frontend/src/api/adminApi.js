@@ -25,3 +25,11 @@ export const getSessionChatHistory = async (sessionId) => {
   const response = await authAxios.get(`/api/v1/admin/sessions/${sessionId}/chat-history`);
   return response.data;
 };
+
+export const toggleTaskCompletion = async (taskId, isCompleted) => {
+  const response = await authAxios.patch(`/api/v1/admin/tasks/${taskId}/toggle-completion`, {
+    is_completed: isCompleted
+  });
+  return response.data;
+};
+

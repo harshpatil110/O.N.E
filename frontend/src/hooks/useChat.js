@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { sendMessage as apiSendMessage, getChatHistory } from '../api/chat';
 
-export const useChat = (sessionId) => {
+export const useChat = (sessionId, onMessageComplete) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,6 +34,12 @@ export const useChat = (sessionId) => {
         ...prev,
         { role: 'assistant', content: response.reply, tempId: Date.now() + 1 }
       ]);
+
+      // Notify parent that a full message roundtrip completed
+      // This allows ChecklistContext to refresh progress immediately
+      if (onMessageComplete) {
+        onMessageComplete();
+      }
     } catch (error) {
       console.error("Failed to send message", error);
       // Optional: Add a system error message or rollback
@@ -44,7 +50,7 @@ export const useChat = (sessionId) => {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, onMessageComplete]);
 
   const appendInitialMessage = useCallback((text) => {
       setMessages((prev) => {

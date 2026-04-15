@@ -207,3 +207,46 @@ async def get_session_chat_history(
         messages=messages,
         total_messages=len(messages)
     )
+
+
+@router.patch("/tasks/{task_id}/toggle-completion")
+async def toggle_task_completion(
+    task_id: str,
+    payload: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Toggle a checklist item's completion status.
+    Accepts: {"is_completed": true/false}
+    
+    When is_completed=true  -> status='completed', completed_at=now
+    When is_completed=false -> status='pending',   completed_at=null
+    """
+    item = db.query(ChecklistItem).filter(ChecklistItem.id == task_id).first()
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Checklist item not found"
+        )
+
+    is_completed = payload.get("is_completed", False)
+
+    if is_completed:
+        item.status = "completed"
+        item.completed_at = datetime.now(timezone.utc)
+    else:
+        item.status = "pending"
+        item.completed_at = None
+
+    db.commit()
+    db.refresh(item)
+
+    logger.info(f"Admin toggled task {task_id} -> {'completed' if is_completed else 'pending'}")
+
+    return {
+        "id": str(item.id),
+        "title": item.title,
+        "status": item.status,
+        "completed_at": item.completed_at.isoformat() if item.completed_at else None
+    }
+

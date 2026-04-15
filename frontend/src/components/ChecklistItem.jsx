@@ -1,20 +1,20 @@
 import React from 'react';
 import { CheckSquare, Square, PlaySquare, SkipForward } from 'lucide-react';
 
-export const ChecklistItem = ({ item }) => {
-  const { title, status, category, required, completed_at } = item;
+export const ChecklistItem = ({ item, onToggle }) => {
+  const { id, title, status, category, required, completed_at } = item;
 
   const renderIcon = () => {
     switch (status) {
       case 'completed':
-        return <CheckSquare className="w-5 h-5 text-slate-500 flex-shrink-0" />;
+        return <CheckSquare className={`w-5 h-5 flex-shrink-0 ${onToggle ? 'text-slate-800 cursor-pointer hover:scale-110 transition-transform' : 'text-slate-500'}`} />;
       case 'in_progress':
-        return <PlaySquare className="w-5 h-5 text-blue-600 flex-shrink-0" />;
+        return <PlaySquare className={`w-5 h-5 flex-shrink-0 ${onToggle ? 'text-blue-700 cursor-pointer hover:scale-110 transition-transform' : 'text-blue-600'}`} />;
       case 'skipped':
-        return <SkipForward className="w-5 h-5 text-yellow-600 flex-shrink-0" />;
+        return <SkipForward className={`w-5 h-5 flex-shrink-0 ${onToggle ? 'text-yellow-700 cursor-pointer hover:scale-110 transition-transform' : 'text-yellow-600'}`} />;
       case 'pending':
       default:
-        return <Square className="w-5 h-5 text-zinc-300 flex-shrink-0" />;
+        return <Square className={`w-5 h-5 flex-shrink-0 ${onToggle ? 'text-zinc-500 cursor-pointer hover:scale-110 transition-transform' : 'text-zinc-300'}`} />;
     }
   };
 
@@ -24,7 +24,12 @@ export const ChecklistItem = ({ item }) => {
   return (
     <div className={`p-4 border border-zinc-200 bg-white mb-3 flex flex-col gap-2 transition-all duration-300 ${isInProgress ? 'border-l-4 border-l-blue-600 shadow-sm' : ''}`}>
       <div className="flex items-start gap-3">
-        {renderIcon()}
+        <div 
+          onClick={() => onToggle && onToggle(id, status)}
+          className={onToggle ? 'cursor-pointer' : ''}
+        >
+          {renderIcon()}
+        </div>
         <div className="flex-1">
           <div className="flex items-start justify-between gap-2">
              <h4 className={`text-sm tracking-wide leading-snug ${isInProgress ? 'font-bold text-zinc-900' : 'font-medium text-zinc-700'} ${isCompleted ? 'line-through text-zinc-400' : ''}`}>
@@ -48,3 +53,4 @@ export const ChecklistItem = ({ item }) => {
     </div>
   );
 };
+

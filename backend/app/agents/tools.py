@@ -39,6 +39,32 @@ AGENT_TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "mark_task_complete",
+            "description": (
+                "Mark an onboarding task as complete by its title or category. "
+                "Use this when the user says they have finished, completed, or done with a task. "
+                "This finds the best matching pending task and marks it as completed."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_name": {
+                        "type": "string",
+                        "description": "The name or title of the task the user says they completed (e.g. 'security training', 'laptop setup')"
+                    },
+                    "task_category": {
+                        "type": "string",
+                        "description": "Optional: the category of the task (e.g. 'General', 'Access', 'Security', 'Development')"
+                    }
+                },
+                "required": ["task_name"],
+                "additionalProperties": False
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_checklist_status",
             "description": "Get the current checklist with all item statuses and progress percentage.",
             "parameters": {"type": "object", "properties": {}, "additionalProperties": False}

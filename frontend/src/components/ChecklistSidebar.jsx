@@ -6,9 +6,9 @@ import { useChecklist } from '../context/ChecklistContext';
 export const ChecklistSidebar = () => {
   const { progress, loading } = useChecklist();
 
-  if (loading) {
+  if (loading && (!progress || !progress.items || progress.items.length === 0)) {
     return (
-      <div className="w-[30%] flex-shrink-0 flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
+      <div className="w-full h-full flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
         <div className="h-16 px-8 flex items-center border-b border-zinc-200">
           <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Progress Tracker</h3>
         </div>
@@ -21,16 +21,16 @@ export const ChecklistSidebar = () => {
 
   if (!progress || !progress.items || progress.items.length === 0) {
     return (
-      <div className="w-[30%] flex-shrink-0 flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
+      <div className="w-full h-full flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
         <div className="h-16 px-8 flex items-center border-b border-zinc-200 bg-white">
           <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-800">Progress Tracker</h3>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500 text-xs">
           <svg className="w-12 h-12 mb-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 13l4 4L19 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          <p className="text-sm font-semibold text-zinc-600 mb-1">All caught up!</p>
-          <p>No tasks assigned yet.</p>
+          <p className="text-sm font-semibold text-zinc-600 mb-1">Awaiting Checklist</p>
+          <p>Complete your profile so O.N.E. can build your personalized onboarding plan.</p>
         </div>
       </div>
     );
@@ -50,9 +50,14 @@ export const ChecklistSidebar = () => {
   }, {});
 
   return (
-    <div className="w-[30%] flex-shrink-0 flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
+    <div className="w-full h-full flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
       <div className="h-16 px-8 flex items-center border-b border-zinc-200 bg-white">
         <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-800">Progress Tracker</h3>
+        {loading && (
+          <div className="ml-auto">
+            <div className="w-4 h-4 border-2 border-zinc-300 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+        )}
       </div>
       
       <div className="flex-1 overflow-y-auto p-6 md:p-8">

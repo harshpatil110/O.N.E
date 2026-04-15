@@ -8,7 +8,11 @@ export const ChecklistProvider = ({ children, sessionId }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProgress = useCallback(async () => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      // Don't set loading=false here — we're still waiting for the session to be created.
+      // The useEffect will re-trigger once sessionId becomes available.
+      return;
+    }
     try {
       const data = await getProgress(sessionId);
       if (data && data.items) {
@@ -22,11 +26,16 @@ export const ChecklistProvider = ({ children, sessionId }) => {
   }, [sessionId]);
 
   useEffect(() => {
-    fetchProgress();
+    // Reset loading state when sessionId changes
+    if (sessionId) {
+      setLoading(true);
+      fetchProgress();
+    }
+
     // Poll every 10 seconds for background updates
     const interval = setInterval(fetchProgress, 10000);
     return () => clearInterval(interval);
-  }, [fetchProgress]);
+  }, [fetchProgress, sessionId]);
 
   const markCurrentTaskDone = async () => {
     // Find the first task that is pending or in_progress
@@ -46,15 +55,11 @@ export const ChecklistProvider = ({ children, sessionId }) => {
       percent_complete: Math.round(((prev.completed_count + 1) / prev.total_items) * 100)
     }));
 
-    setLoading(true);
     try {
       await updateChecklistItem(currentTask.id, 'completed');
       await fetchProgress(); // Refresh stats from server
     } catch (err) {
       console.error("Failed to mark task as done", err);
-      // Optional: rollback on error, but for the demo we can leave it
-    } finally {
-      setLoading(false);
     }
   };
 

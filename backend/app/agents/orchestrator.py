@@ -276,6 +276,16 @@ class AgentOrchestrator:
             else:
                 return {"status": "error", "message": "Failed to dispatch email — check server SMTP logs"}
         
+        elif name == "mark_task_complete":
+            task_name = args.get("task_name", "")
+            task_category = args.get("task_category")
+            logger.info(f"LLM triggered mark_task_complete: '{task_name}' (category: {task_category})")
+            return await self.checklist_service.mark_task_by_name(
+                session_id=str(self.session_id),
+                task_name=task_name,
+                task_category=task_category
+            )
+        
         return {"error": f"Unknown tool: {name}"}
 
     async def _persist_state(self, state: ConversationState, user_message: str, assistant_reply: str, system_prompt: Optional[str] = None):

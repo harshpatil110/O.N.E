@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { getProgress } from '../api/checklist';
-import { getAdminSessions, resendHrNotification } from '../api/adminApi';
+import { getAdminSessions, resendHrNotification, toggleTaskCompletion } from '../api/adminApi';
 import { ChecklistItem } from '../components/ChecklistItem';
 import { ChatHistoryDrawer } from '../components/ChatHistoryDrawer';
 import { ArrowLeft, Mail, User as UserIcon, MessageSquareText } from 'lucide-react';
@@ -55,6 +55,46 @@ export const SessionDetailPage = () => {
       alert('Failed to resend HR email.');
     } finally {
       setResending(false);
+    }
+  };
+
+  const handleToggleTask = async (taskId, currentStatus) => {
+    if (!checklistData) return;
+
+    const isCurrentlyCompleted = currentStatus === 'completed';
+    const newStatus = isCurrentlyCompleted ? 'pending' : 'completed';
+    
+    // OPTIMISTIC UPDATE
+    const updatedItems = checklistData.items.map(item => {
+      if (item.id === taskId) {
+        return { 
+          ...item, 
+          status: newStatus,
+          completed_at: newStatus === 'completed' ? new Date().toISOString() : null 
+        };
+      }
+      return item;
+    });
+
+    const completedCount = updatedItems.filter(i => i.status === 'completed').length;
+    const totalItems = updatedItems.length;
+    const percentComplete = Math.round((completedCount / totalItems) * 100);
+
+    const oldData = { ...checklistData };
+    setChecklistData({
+      ...checklistData,
+      items: updatedItems,
+      completed_count: completedCount,
+      percent_complete: percentComplete
+    });
+
+    try {
+      await toggleTaskCompletion(taskId, !isCurrentlyCompleted);
+    } catch (err) {
+      console.error("Failed to toggle task", err);
+      // Rollback on error
+      setChecklistData(oldData);
+      alert("Failed to update task status. Rolling back.");
     }
   };
 
@@ -146,6 +186,7 @@ export const SessionDetailPage = () => {
         {/* Checklist Section */}
         <div className="space-y-4">
            <h2 className="text-xl font-medium tracking-tight">Onboarding Checklist</h2>
+           <p className="text-xs text-slate-500 italic mt-1">Admin Note: Click task icons to manually override completion status.</p>
            <div className="bg-[#EAE8E2] h-1.5 overflow-hidden w-full">
                <div 
                   className="bg-slate-800 h-1.5 transition-all duration-500" 
@@ -160,7 +201,11 @@ export const SessionDetailPage = () => {
 
            <div className="mt-6 space-y-3">
               {checklistData?.items?.map(item => (
-                <ChecklistItem key={item.id} item={item} />
+                <ChecklistItem 
+                  key={item.id} 
+                  item={item} 
+                  onToggle={handleToggleTask} 
+                />
               ))}
               {(!checklistData?.items || checklistData.items.length === 0) && (
                  <div className="bg-white border border-[#EAE8E2] p-8 text-center text-slate-500">
@@ -182,3 +227,4 @@ export const SessionDetailPage = () => {
     </div>
   );
 };
+
