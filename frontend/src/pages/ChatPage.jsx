@@ -3,25 +3,17 @@ import { useChat } from '../hooks/useChat';
 import { startSession } from '../api/chat';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatInput } from '../components/ChatInput';
-import { ChecklistSidebar } from '../components/ChecklistSidebar';
+import { ContextualSidebar } from '../components/ContextualSidebar';
 import { ChecklistProvider, useChecklist } from '../context/ChecklistContext';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 
-/**
- * Inner component that lives inside ChecklistProvider so it
- * can access the fetchProgress function from context.
- */
 const ChatPageInner = ({ sessionId, setSessionId }) => {
   const [initError, setInitError] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const endOfMessagesRef = useRef(null);
-
-  // Access the checklist context's refresh function
   const { fetchProgress } = useChecklist();
 
-  // Wrap fetchProgress in a stable callback for useChat
   const handleMessageComplete = useCallback(() => {
-    // Small delay to let the backend commit the DB changes
     setTimeout(() => {
       fetchProgress();
     }, 300);
@@ -35,11 +27,7 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
         const data = await startSession();
         const sid = data.session_id;
         setSessionId(sid);
-        
-        // Try loading previous history
         const history = await loadHistory(sid);
-        
-        // Only append the initial greeting if there was no history loaded
         if (data.message && (!history || history.length === 0)) {
             appendInitialMessage(data.message);
         }
@@ -56,24 +44,44 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex h-screen bg-[#F7F5F0] overflow-hidden font-sans">
+    <div className="flex h-screen bg-[#0a0a0c] text-slate-300 overflow-hidden font-sans selection:bg-[#4c6ef5]/30">
       
+      {/* Background Pattern */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)',
+          backgroundSize: '24px 24px'
+        }}
+      />
+
       {/* LEFT PANEL: Chat Interface */}
-      <div className={`flex flex-col border-r border-zinc-200 bg-white shadow-xl z-10 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[70%]' : 'w-full'}`}>
+      <div className={`relative flex flex-col z-10 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[70%]' : 'w-full'}`}>
         
         {/* Header */}
-        <div className="h-16 px-8 flex items-center border-b border-zinc-200">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-zinc-800">O.N.E. Identity Agent</h2>
-          <div className="ml-auto flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-green-600"></span>
-              <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">Active</span>
+        <div className="h-16 px-6 lg:px-12 flex items-center border-b border-[#1f1f23] bg-transparent backdrop-blur-md">
+          <div className="flex items-center gap-2.5">
+            <div className="size-7 bg-[#4c6ef5] rounded flex items-center justify-center text-white shadow-lg shadow-[#4c6ef5]/20">
+              <span className="font-bold font-mono text-sm tracking-tighter">O.</span>
+            </div>
+            <h2 className="text-white text-lg font-extrabold tracking-tight">O.N.E</h2>
+          </div>
+
+          <div className="ml-auto flex items-center space-x-6">
+            <div className="hidden md:flex items-center gap-8 mr-4">
+              <a className="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">Documentation</a>
+              <a className="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">System Status</a>
+            </div>
+
+            <div className="flex items-center space-x-2 bg-white/5 py-1.5 px-3 rounded-full border border-white/5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+              <span className="text-[10px] text-slate-300 font-bold tracking-wider uppercase">Active</span>
             </div>
 
             {/* Sidebar Toggle Button */}
             <button
               onClick={() => setIsSidebarOpen(prev => !prev)}
-              className="p-2 text-zinc-400 hover:text-zinc-800 hover:bg-zinc-100 transition-all duration-200 border border-transparent hover:border-zinc-200"
+              className="p-2 text-slate-400 hover:text-white transition-colors flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg border border-white/5"
               title={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
             >
               {isSidebarOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
@@ -82,11 +90,11 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
         </div>
 
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 scroll-smooth">
           {initError ? (
-             <div className="text-center text-red-600 text-sm mt-10">{initError}</div>
+             <div className="text-center text-red-400 bg-red-400/10 border border-red-400/20 p-4 rounded-xl text-sm max-w-lg mx-auto mt-10">{initError}</div>
           ) : messages.length === 0 && !isLoading ? (
-             <div className="text-center text-zinc-400 text-sm mt-10 tracking-wide">Initializing secure connection...</div>
+             <div className="text-center text-slate-500 text-xs font-bold uppercase tracking-widest mt-20">Initializing secure connection...</div>
           ) : (
             messages.map((msg, idx) => (
               <MessageBubble 
@@ -103,26 +111,21 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
         </div>
 
         {/* Input Area */}
-        <div className="px-8 pb-8 pt-4 bg-white">
+        <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-t from-[#0a0a0c] via-[#0a0a0c] to-transparent">
           <ChatInput onSendMessage={sendMessage} disabled={isLoading || !sessionId} />
         </div>
 
       </div>
 
-      {/* RIGHT PANEL: Checklist Sidebar */}
-      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-[30%] opacity-100' : 'w-0 opacity-0'}`}>
-        {isSidebarOpen && <ChecklistSidebar />}
+      {/* RIGHT PANEL: Contextual Sidebar */}
+      <div className={`relative z-10 transition-all duration-300 ease-in-out border-l border-[#1f1f23] bg-[#111114] ${isSidebarOpen ? 'w-[30%] opacity-100 translate-x-0' : 'w-0 opacity-0 translate-x-12'}`}>
+        {isSidebarOpen && <ContextualSidebar />}
       </div>
 
     </div>
   );
 };
 
-
-/**
- * ChatPage wraps the inner component in the ChecklistProvider.
- * The sessionId state is lifted here so the provider can receive it.
- */
 export const ChatPage = () => {
   const [sessionId, setSessionId] = useState(null);
 

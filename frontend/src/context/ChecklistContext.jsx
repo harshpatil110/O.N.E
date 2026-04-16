@@ -32,9 +32,10 @@ export const ChecklistProvider = ({ children, sessionId }) => {
       fetchProgress();
     }
 
-    // Poll every 10 seconds for background updates
-    const interval = setInterval(fetchProgress, 10000);
+    // Poll every 3 seconds for background updates (demo responsiveness)
+    const interval = setInterval(fetchProgress, 3000);
     return () => clearInterval(interval);
+
   }, [fetchProgress, sessionId]);
 
   const markCurrentTaskDone = async () => {
