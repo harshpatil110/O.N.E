@@ -5,6 +5,20 @@ import { ChatPage } from './pages/ChatPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { SessionDetailPage } from './pages/SessionDetailPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
+import { useAuth } from './hooks/useAuth';
+
+// Role-based dashboard router
+const DashboardRouter = () => {
+  const { role } = useAuth();
+  
+  if (role === 'hr_admin' || role === 'superadmin') {
+    return <AdminDashboardPage />;
+  }
+  
+  // Default for devs/engineers
+  return <DeveloperDashboardPage />;
+};
 
 const App = () => {
   return (
@@ -24,8 +38,8 @@ const App = () => {
       <Route 
         path="/dashboard" 
         element={
-          <ProtectedRoute requiredRole="hr_admin">
-            <AdminDashboardPage />
+          <ProtectedRoute>
+            <DashboardRouter />
           </ProtectedRoute>
         } 
       />

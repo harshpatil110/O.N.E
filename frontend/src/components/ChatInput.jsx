@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useChecklist } from '../context/ChecklistContext';
+import { Send, CheckCircle2, HelpCircle, SkipForward } from 'lucide-react';
 
 export const ChatInput = ({ onSendMessage, disabled }) => {
   const [text, setText] = useState('');
@@ -9,8 +10,7 @@ export const ChatInput = ({ onSendMessage, disabled }) => {
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      // Restrict max-height approximation for ~4 lines (approx 96px depending on line-height)
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
     }
   };
 
@@ -22,7 +22,6 @@ export const ChatInput = ({ onSendMessage, disabled }) => {
     if (text.trim() && !disabled) {
       onSendMessage(text.trim());
       setText('');
-      // Reset height
       if (textareaRef.current) textareaRef.current.style.height = 'auto';
     }
   };
@@ -35,25 +34,20 @@ export const ChatInput = ({ onSendMessage, disabled }) => {
   };
 
   const quickActions = [
-    { label: 'Mark as done', action: markCurrentTaskDone },
-    { label: 'Ask for help', fill: 'Can you explain this in more detail?' },
-    { label: 'Skip this', fill: 'Can I skip this task?' }
+    { label: 'Mark as done', action: markCurrentTaskDone, icon: CheckCircle2 },
+    { label: 'Ask for help', fill: 'Can you explain this in more detail?', icon: HelpCircle },
+    { label: 'Skip this', fill: 'Can I skip this task?', icon: SkipForward }
   ];
 
   const handleQuickAction = (actionLabel, action, fillContent) => {
     if (disabled || isActionLoading) return;
     
     if (actionLabel === 'Ask for help' || actionLabel === 'Skip this') {
-      console.log(`Action triggered: ${actionLabel}`);
-      // Send the message immediately for better demo experience
-      if (fillContent) {
-        onSendMessage(fillContent);
-      }
+      if (fillContent) onSendMessage(fillContent);
       return;
     }
 
     if (action) {
-      console.log(`Action triggered: ${actionLabel}`);
       action();
     } else if (fillContent) {
       setText(fillContent);
@@ -62,39 +56,52 @@ export const ChatInput = ({ onSendMessage, disabled }) => {
   };
 
   return (
-    <div className="w-full flex flex-col space-y-3 pt-4 border-t border-zinc-200">
-      <div className="flex gap-2 text-xs">
-        {quickActions.map((action, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleQuickAction(action.label, action.action, action.fill)}
-            className="px-3 py-1.5 border border-zinc-300 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors uppercase tracking-wider text-[10px] font-medium"
-            disabled={disabled || isActionLoading}
-          >
-            {action.label}
-          </button>
-        ))}
+    <div className="w-full flex flex-col space-y-3 pb-2 max-w-4xl mx-auto">
+      
+      {/* Quick Actions (Stitch Style Pills) */}
+      <div className="flex flex-wrap gap-2">
+        {quickActions.map((action, idx) => {
+          const Icon = action.icon;
+          return (
+            <button
+              key={idx}
+              onClick={() => handleQuickAction(action.label, action.action, action.fill)}
+              className="flex-none flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 text-slate-400 hover:text-white border border-white/10 hover:border-[#4c6ef5]/30 hover:bg-white/10 text-[11px] font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={disabled || isActionLoading}
+            >
+              <Icon size={12} className={action.label === 'Mark as done' ? 'text-emerald-400' : ''} />
+              {action.label}
+            </button>
+          )
+        })}
       </div>
       
-      <div className="flex items-end space-x-3">
+      {/* Main Input Area */}
+      <div className="relative group flex items-end">
         <textarea
           ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
+          placeholder="Ask O.N.E. for help with code, architecture, or deployments..."
           disabled={disabled}
-          className="flex-1 resize-none overflow-y-auto px-4 py-3 border border-zinc-300 bg-white text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-zinc-800 transition-colors shadow-sm"
+          className="block w-full pl-5 pr-14 py-4 bg-white/5 border border-white/10 rounded-2xl focus:ring-1 focus:ring-[#4c6ef5]/30 focus:border-[#4c6ef5]/50 transition-all text-sm font-medium text-white resize-none shadow-xl shadow-black/10 placeholder:text-slate-500"
           rows={1}
         />
-        <button
-          onClick={handleSubmit}
-          disabled={disabled || !text.trim()}
-          className="h-[46px] px-8 bg-zinc-900 text-white font-medium hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors tracking-wide uppercase text-xs"
-        >
-          Send
-        </button>
+        <div className="absolute right-2 bottom-2 flex items-center gap-2">
+          <button
+            onClick={handleSubmit}
+            disabled={disabled || !text.trim()}
+            className="h-9 w-9 bg-[#4c6ef5] hover:bg-[#4c6ef5]/90 text-white rounded-xl flex items-center justify-center shadow-lg shadow-[#4c6ef5]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95"
+          >
+            <Send size={16} className="ml-1" />
+          </button>
+        </div>
       </div>
+      
+      <p className="text-center text-[10px] text-slate-500 font-semibold tracking-wide uppercase pt-2">
+         Data generated by AI may be inaccurate. Verification recommended.
+      </p>
     </div>
   );
 };

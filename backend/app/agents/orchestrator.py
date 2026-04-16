@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from app.agents.tools import AGENT_TOOLS
 from app.agents.fsm_controller import FSMController
+from app.agents.persona_agent import PersonaAgent
 from app.services.hr_notification_service import HRNotificationService
 from app.services.llm_service import LLMService
 from app.services.checklist_service import ChecklistService
@@ -36,10 +37,12 @@ class AgentOrchestrator:
         self.session_id = session_id
         self.db = db
         self.llm = LLMService()
+        self.persona_agent = PersonaAgent(self.llm)
         self.rag = RAGService()
         self.checklist_service = ChecklistService(db)
         self.email_service = EmailService()
         self.fsm: Optional[FSMController] = None
+
 
     async def load_or_create_state(self) -> ConversationState:
         """
@@ -195,17 +198,56 @@ class AgentOrchestrator:
 
         assistant_reply = response.get("text", "")
 
-        # 8. Check fsm.should_transition() and apply it if valid
+        # 8. EXTRACT PERSONA: Try to update persona from history if in profiling states
+        if state.current_fsm_state in [FSMState.WELCOME, FSMState.PROFILING]:
+            extracted_persona = await self.persona_agent.extract_persona(state.conversation_history)
+            if extracted_persona:
+                # Update existing persona with newly extracted truths (if not null)
+                for k, v in extracted_persona.items():
+                    if v is not None:
+                        # Unified naming: scheme uses 'experience_level', state uses 'level'
+                        if k == "experience_level":
+                            state.persona["level"] = v
+                        state.persona[k] = v
+                logger.debug(f"Updated persona: {state.persona}")
+
+        # 9. Check fsm.should_transition() and apply it if valid
         next_state = self.fsm.should_transition(assistant_reply, {"persona": state.persona})
         if next_state:
+            # TRIGGER SIDE EFFECT: Generate checklist if transitioning to PLAN_GENERATION
+            if next_state == FSMState.PLAN_GENERATION:
+                from app.schemas.persona import DeveloperPersona
+                
+                # Coerce data matching schema
+                persona_dict = {
+                    "role": state.persona.get("role", "backend"),
+                    "experience_level": state.persona.get("level") or state.persona.get("experience_level") or "junior",
+                    "tech_stack": state.persona.get("tech_stack", []),
+                    "team": state.persona.get("team", "engineering"),
+                    "name": state.persona.get("name") or state.persona.get("developer_name") or "New Hire",
+                    "email": state.persona.get("email") or "hire@nexustech.ai"
+                }
+                
+                if isinstance(persona_dict["tech_stack"], str):
+                    persona_dict["tech_stack"] = [s.strip() for s in persona_dict["tech_stack"].split(',')]
+
+                try:
+                    p_obj = DeveloperPersona(**persona_dict)
+                    await self.checklist_service.generate_checklist_for_persona(self.session_id, p_obj)
+                    logger.info(f"Side-effect: Generated checklist for {self.session_id}")
+                except Exception as e:
+                    logger.error(f"Failed to auto-generate checklist: {str(e)}")
+            
             self.fsm.transition(next_state)
 
-        # 9. Append the final assistant text to history
+
+        # 10. Append the final assistant text to history
         state.conversation_history.append({"role": "assistant", "content": assistant_reply})
         state.conversation_history = state.conversation_history[-20:]
 
-        # 10. Persist state to DB
+        # 11. Persist state to DB
         await self._persist_state(state, user_message, assistant_reply, system_prompt)
+
 
         return assistant_reply
 
