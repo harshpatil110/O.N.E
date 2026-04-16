@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
 import { ChatPage } from './pages/ChatPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { AdminDevelopersPage } from './pages/AdminDevelopersPage';
 import { SessionDetailPage } from './pages/SessionDetailPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
@@ -50,6 +51,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <KnowledgeBasePage />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/admin/developers" 
+        element={
+          <ProtectedRoute requiredRole="hr_admin">
+            <AdminDevelopersPage />
           </ProtectedRoute>
         } 
       />

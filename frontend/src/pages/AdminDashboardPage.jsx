@@ -82,14 +82,14 @@ export const AdminDashboardPage = () => {
         </div>
         
         <nav className="flex-1 px-4 space-y-2 mt-6 text-sm font-medium">
-          <div className="px-3 py-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 flex items-center gap-3 cursor-pointer">
+          <Link to="/dashboard" className="px-3 py-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 flex items-center gap-3">
             <LayoutDashboard size={18} />
             Dashboard
-          </div>
-          <div className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3 cursor-pointer">
+          </Link>
+          <Link to="/admin/developers" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
             <Users size={18} />
             Developers
-          </div>
+          </Link>
           <div className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3 cursor-pointer">
             <BarChart2 size={18} />
             Analytics
