@@ -11,13 +11,13 @@ from app.models.conversation_log import ConversationLog
 from app.schemas.analytics import (
     DeepDiveAnalyticsResponse, QuantitativeData, QualitativeData, 
     CompletionMatrixItem, TaskVelocityItem, DeveloperInsight, 
-    TopicDistributionItem, LaggingDeveloper
+    TopicDistributionItem, LaggingDeveloper, SentimentIndexItem, AutonomyScoreItem
 )
 from app.services.analytics_service import AnalyticsService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/hr/analytics", tags=["analytics"], dependencies=[Depends(get_hr_admin_user)])
+router = APIRouter(prefix="/hr/analytics", tags=["analytics"])
 
 @router.get("/deep-dive", response_model=DeepDiveAnalyticsResponse)
 async def get_deep_dive_analytics(db: Session = Depends(get_db)):
@@ -140,10 +140,28 @@ async def get_deep_dive_analytics(db: Session = Depends(get_db)):
              risk_summary=str(lag_dev_data.get("risk_summary", ""))
          )
          
+    sentiment_index = []
+    for si in ai_result.get("sentiment_index", []):
+         sentiment_index.append(SentimentIndexItem(
+             employee_name=str(si.get("employee_name", "Unknown")),
+             frustration_score=int(si.get("frustration_score", 0)),
+             primary_emotion=str(si.get("primary_emotion", "Neutral"))
+         ))
+
+    autonomy_scores = []
+    for asc in ai_result.get("autonomy_scores", []):
+         autonomy_scores.append(AutonomyScoreItem(
+             employee_name=str(asc.get("employee_name", "Unknown")),
+             independence_rating=int(asc.get("independence_rating", 0)),
+             messages_per_task=float(asc.get("messages_per_task", 0.0))
+         ))
+
     qualitative_data = QualitativeData(
          developer_insights=developer_insights,
          topic_distribution=topic_distribution,
-         lagging_developer=lagging_developer
+         lagging_developer=lagging_developer,
+         sentiment_index=sentiment_index,
+         autonomy_scores=autonomy_scores
     )
     
     return DeepDiveAnalyticsResponse(

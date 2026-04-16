@@ -28,7 +28,21 @@ class AnalyticsService:
             "lagging_developer": {
                 "developer_id": "string",
                 "risk_summary": "string"
-            }
+            },
+            "sentiment_index": [
+                {
+                    "employee_name": "string",
+                    "frustration_score": 0,
+                    "primary_emotion": "string"
+                }
+            ],
+            "autonomy_scores": [
+                {
+                    "employee_name": "string",
+                    "independence_rating": 0,
+                    "messages_per_task": 0.0
+                }
+            ]
         }
         
         prompt = (
@@ -37,7 +51,9 @@ class AnalyticsService:
             "For 'question_complexity_score', use an integer 1-10 assessing technical depth.\n"
             "For 'question_severity', use 'Low', 'Medium', or 'High' (e.g. asking about simple login is Low, asking about infrastructure blockers is High).\n"
             "For 'topic_distribution', break down the topics discussed into percentages. Their sum must evaluate to 100.\n"
-            "For 'lagging_developer', identify the single developer struggling most based on tone, delays vs progress. Provide exactly one sentence for risk_summary.\n\n"
+            "For 'lagging_developer', identify the single developer struggling most based on tone, delays vs progress. Provide exactly one sentence for risk_summary.\n"
+            "For 'sentiment_index', evaluate the emotional tone, assigning 'frustration_score' (0-100) where 100 is highly frustrated, and deriving a string 'primary_emotion' (e.g., 'Confident', 'Confused', 'Stressed').\n"
+            "For 'autonomy_scores', evaluate independence. Assign an 'independence_rating' (1-10) and calculate 'messages_per_task' assuming basic progression ratio metrics.\n\n"
             "Data to analyze:\n"
         )
         
@@ -62,6 +78,10 @@ class AnalyticsService:
                 result["developer_insights"] = []
             if "topic_distribution" not in result:
                 result["topic_distribution"] = []
+            if "sentiment_index" not in result:
+                result["sentiment_index"] = []
+            if "autonomy_scores" not in result:
+                result["autonomy_scores"] = []
                 
             return result
         except Exception as e:

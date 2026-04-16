@@ -30,10 +30,22 @@ class LaggingDeveloper(BaseModel):
     developer_id: str
     risk_summary: str
 
+class SentimentIndexItem(BaseModel):
+    employee_name: str
+    frustration_score: int
+    primary_emotion: str
+
+class AutonomyScoreItem(BaseModel):
+    employee_name: str
+    independence_rating: int
+    messages_per_task: float
+
 class QualitativeData(BaseModel):
     developer_insights: List[DeveloperInsight]
     topic_distribution: List[TopicDistributionItem]
     lagging_developer: Optional[LaggingDeveloper] = None
+    sentiment_index: List[SentimentIndexItem]
+    autonomy_scores: List[AutonomyScoreItem]
 
 class DeepDiveAnalyticsResponse(BaseModel):
     quantitative: QuantitativeData
