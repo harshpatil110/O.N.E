@@ -1,12 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { X, MessageSquare, Bot, User, Loader2, AlertCircle } from 'lucide-react';
+import { X, MessageSquare, Bot, User, Loader2, AlertCircle, MessageSquareText } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { getSessionChatHistory } from '../api/adminApi';
 
 /**
- * ChatHistoryDrawer — A slide-over drawer that displays the full audit trail
- * of the conversation between an employee and the O.N.E. chatbot.
- * Matches the "Warm Editorial Minimalism" design system used across the admin UI.
+ * ChatHistoryDrawer — Modified to utilize "Dark Enterprise" design system bindings
  */
 export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) => {
   const [messages, setMessages] = useState([]);
@@ -36,10 +34,10 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
     fetchHistory();
   }, [isOpen, sessionId]);
 
-  // Scroll to top when messages load
+  // Scroll to bottom when messages load to see most recent
   useEffect(() => {
     if (scrollRef.current && messages.length > 0) {
-      scrollRef.current.scrollTop = 0;
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -61,7 +59,9 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
   const formatTimestamp = (ts) => {
     if (!ts) return '';
     try {
-      const date = new Date(ts);
+      // Append 'Z' to treat as UTC if the string doesn't specify timezone, then convert to local
+      const dateString = ts.endsWith('Z') ? ts : ts + 'Z';
+      const date = new Date(dateString);
       return date.toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -78,130 +78,140 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
 
   return (
     <>
-      {/* Backdrop overlay */}
+      {/* Dark Enterprise Backdrop overlay */}
       <div
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity duration-300"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Drawer panel */}
       <div
-        className="fixed top-0 right-0 h-full w-full sm:w-[520px] bg-[#F7F5F0] shadow-2xl z-50 flex flex-col
-                   transform transition-transform duration-300 ease-out"
+        className="fixed top-0 right-0 h-full w-full sm:w-[560px] bg-[#0B0B0E] shadow-2xl shadow-black/50 z-50 flex flex-col transform transition-transform duration-300 ease-out border-l border-white/5"
         role="dialog"
         aria-modal="true"
         aria-label="Conversation History"
       >
         {/* ─── Header ─── */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#EAE8E2] bg-white">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-slate-800 text-white flex items-center justify-center flex-shrink-0">
-              <MessageSquare size={18} />
+        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-[#13131A] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-emerald-400" />
+            <div className="flex items-center gap-4 relative z-10">
+                <div className="size-10 bg-indigo-500/10 text-indigo-400 flex items-center justify-center rounded-xl border border-indigo-500/20">
+                    <MessageSquareText size={20} />
+                </div>
+                <div>
+                <h2 className="text-lg font-bold text-white tracking-tight leading-tight">
+                    Conversation Log
+                </h2>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mt-1">
+                    {employeeName ? `User: ${employeeName}` : 'Session View'} <span className="text-slate-600 mx-1">•</span> {totalMessages} messages
+                </p>
+                </div>
             </div>
-            <div>
-              <h2 className="text-base font-semibold text-slate-900 tracking-tight leading-tight">
-                Conversation Log
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {employeeName ? `${employeeName}` : 'Session'} · {totalMessages} messages
-              </p>
-            </div>
-          </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-            aria-label="Close drawer"
-          >
-            <X size={20} />
-          </button>
+            <button
+                onClick={onClose}
+                className="p-2 text-slate-500 hover:text-white bg-[#0B0B0E] rounded-lg border border-white/5 hover:border-slate-700 transition-all z-10"
+                aria-label="Close drawer"
+            >
+                <X size={18} />
+            </button>
         </div>
 
         {/* ─── Body ─── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-1">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 py-8 space-y-6 custom-scrollbar bg-[#0B0B0E]">
           {/* Loading state */}
           {loading && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400">
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-indigo-400">
               <Loader2 className="w-8 h-8 animate-spin" />
-              <span className="text-sm font-medium uppercase tracking-widest">Loading history…</span>
+              <span className="text-xs font-bold uppercase tracking-widest animate-pulse">Decrypting Event Stream...</span>
             </div>
           )}
 
           {/* Error state */}
           {!loading && error && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-red-500">
-              <AlertCircle className="w-8 h-8" />
-              <span className="text-sm text-center">{error}</span>
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-rose-400">
+              <AlertCircle className="w-10 h-10 text-rose-500" />
+              <span className="text-sm font-medium text-center">{error}</span>
               <button
                 onClick={() => {
                   setError('');
                   setLoading(true);
                   getSessionChatHistory(sessionId)
                     .then(data => { setMessages(data.messages || []); setTotalMessages(data.total_messages || 0); })
-                    .catch(() => setError('Still unable to load. Please try again later.'))
+                    .catch(() => setError('Database sync threshold failed. Please refresh the diagnostic pane.'))
                     .finally(() => setLoading(false));
                 }}
-                className="text-xs font-semibold uppercase tracking-wider text-slate-700 underline hover:text-slate-900"
+                className="px-4 py-2 mt-2 bg-rose-500/10 border border-rose-500/20 rounded-lg text-xs font-bold uppercase tracking-wider text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition-all"
               >
-                Retry
+                Attempt Re-Sync
               </button>
             </div>
           )}
 
           {/* Empty state */}
           {!loading && !error && messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-400">
-              <MessageSquare className="w-10 h-10" />
-              <span className="text-sm font-medium uppercase tracking-widest">No messages yet</span>
-              <span className="text-xs text-slate-400">The conversation history will appear here once the employee starts chatting.</span>
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-slate-500">
+              <div className="size-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10 mb-2">
+                 <MessageSquare className="w-8 h-8 text-slate-600" />
+              </div>
+              <span className="text-sm font-bold uppercase tracking-widest text-slate-400">No conversation history yet</span>
+              <span className="text-xs text-slate-600 font-medium">The neural interface is standing by for initialization.</span>
             </div>
           )}
 
           {/* Messages */}
           {!loading && !error && messages.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-6 pb-4">
               {messages.map((msg, idx) => {
                 const isUser = msg.role === 'user';
                 return (
                   <div
                     key={idx}
-                    className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'} animate-fade-in`}
+                    className={`flex gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'} animate-fade-in`}
                     style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
                   >
                     {/* Avatar */}
                     <div
-                      className={`w-8 h-8 flex-shrink-0 flex items-center justify-center mt-1
+                      className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center mt-1 border shadow-sm
                         ${isUser
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-slate-800 text-white'
+                          ? 'bg-slate-800 text-slate-300 border-white/10'
+                          : 'bg-indigo-500 text-white border-indigo-400 shadow-indigo-500/20'
                         }`}
                     >
-                      {isUser ? <User size={14} /> : <Bot size={14} />}
+                      {isUser ? <User size={18} /> : 
+                       <div className="font-black text-[10px] tracking-tighter flex items-center">
+                            O.N.E.
+                       </div>
+                      }
                     </div>
 
                     {/* Bubble */}
                     <div className={`flex flex-col max-w-[80%] ${isUser ? 'items-end' : 'items-start'}`}>
                       {/* Role label */}
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1 px-1">
-                        {isUser ? 'Employee' : 'O.N.E.'}
+                      <span className="text-[10px] font-bold uppercase tracking-widest mb-1.5 px-1 shadow-sm">
+                        {isUser ? (
+                             <span className="text-slate-500">Subject Log</span>
+                        ) : (
+                             <span className="text-indigo-400">System Broadcast</span>
+                        )}
                       </span>
 
                       <div
-                        className={`px-4 py-3 border text-sm leading-relaxed
+                        className={`px-5 py-4 rounded-2xl text-sm leading-relaxed border
                           ${isUser
-                            ? 'bg-blue-500 text-white border-blue-500'
-                            : 'bg-white text-slate-800 border-[#EAE8E2]'
+                            ? 'bg-slate-800 text-slate-200 border-slate-700 rounded-tr-sm'
+                            : 'bg-indigo-500/10 text-indigo-100 border-indigo-500/20 rounded-tl-sm'
                           }`}
                       >
-                        <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : ''}`}>
+                        <div className="prose prose-sm prose-invert max-w-none text-opacity-90">
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       </div>
 
                       {/* Timestamp */}
                       {msg.timestamp && (
-                        <span className="text-[10px] text-slate-400 mt-1 px-1 font-medium">
+                        <span className="text-[10px] text-slate-500 mt-2 px-1 font-bold tracking-wider uppercase">
                           {formatTimestamp(msg.timestamp)}
                         </span>
                       )}
@@ -214,21 +224,39 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
         </div>
 
         {/* ─── Footer ─── */}
-        <div className="px-6 py-3 border-t border-[#EAE8E2] bg-white">
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest text-center font-medium">
-            Read-only audit trail · {totalMessages} total messages
+        <div className="px-8 py-4 border-t border-white/5 bg-[#13131A] flex justify-between items-center">
+          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+            Read-only deployment stream
+          </p>
+          <p className="text-[10px] text-indigo-400 uppercase tracking-widest font-bold bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
+            {totalMessages} Total Packets
           </p>
         </div>
       </div>
 
-      {/* Fade-in animation keyframe (injected once) */}
+      {/* Utilities */}
       <style>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(8px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in {
-          animation: fade-in 0.3s ease-out both;
+          animation: fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        
+        /* Modal dark-themed custom scrollbars override */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #0B0B0E; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #1e293b; 
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #334155; 
         }
       `}</style>
     </>

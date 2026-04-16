@@ -4,6 +4,7 @@ import { LoginPage } from './pages/LoginPage';
 import { ChatPage } from './pages/ChatPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminDevelopersPage } from './pages/AdminDevelopersPage';
+import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 import { SessionDetailPage } from './pages/SessionDetailPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
@@ -60,6 +61,15 @@ const App = () => {
         element={
           <ProtectedRoute requiredRole="hr_admin">
             <AdminDevelopersPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/admin/analytics" 
+        element={
+          <ProtectedRoute requiredRole="hr_admin">
+            <AdminAnalyticsPage />
           </ProtectedRoute>
         } 
       />
