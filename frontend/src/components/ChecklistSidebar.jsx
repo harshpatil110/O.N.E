@@ -2,18 +2,22 @@ import React from 'react';
 import { ProgressBar } from './ProgressBar';
 import { ChecklistItem } from './ChecklistItem';
 import { useChecklist } from '../context/ChecklistContext';
+import { LayoutList, RefreshCw } from 'lucide-react';
 
 export const ChecklistSidebar = () => {
-  const { progress, loading } = useChecklist();
+  const { progress, loading, fetchProgress } = useChecklist();
 
   if (loading && (!progress || !progress.items || progress.items.length === 0)) {
     return (
-      <div className="w-full h-full flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
-        <div className="h-16 px-8 flex items-center border-b border-zinc-200">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Progress Tracker</h3>
+      <div className="w-full h-full flex flex-col p-6 lg:p-8">
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="text-white text-sm font-bold flex items-center gap-2">
+            <LayoutList size={18} className="text-[#4c6ef5]" />
+            Onboarding Plan
+          </h3>
         </div>
-        <div className="flex-1 flex items-center justify-center p-8 animate-pulse text-center text-zinc-400 text-xs">
-           Initializing checklist...
+        <div className="flex-1 flex items-center justify-center animate-pulse text-center text-slate-500 text-xs font-bold uppercase tracking-widest">
+           Initializing variables...
         </div>
       </div>
     );
@@ -21,16 +25,21 @@ export const ChecklistSidebar = () => {
 
   if (!progress || !progress.items || progress.items.length === 0) {
     return (
-      <div className="w-full h-full flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
-        <div className="h-16 px-8 flex items-center border-b border-zinc-200 bg-white">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-800">Progress Tracker</h3>
+      <div className="w-full h-full flex flex-col p-6 lg:p-8">
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="text-white text-sm font-bold flex items-center gap-2">
+            <LayoutList size={18} className="text-[#4c6ef5]" />
+            Onboarding Plan
+          </h3>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-zinc-500 text-xs">
-          <svg className="w-12 h-12 mb-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          <p className="text-sm font-semibold text-zinc-600 mb-1">Awaiting Checklist</p>
-          <p>Complete your profile so O.N.E. can build your personalized onboarding plan.</p>
+        <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-400">
+          <div className="size-12 bg-white/5 border border-white/10 flex items-center justify-center rounded-xl mb-4 text-[#4c6ef5]">
+             <LayoutList size={20} />
+          </div>
+          <p className="text-sm font-bold text-white mb-2">Awaiting Variables</p>
+          <p className="text-xs text-slate-500 max-w-[200px] leading-relaxed">
+            Please complete the initial profiling with O.N.E. to map your tailored onboarding sequence.
+          </p>
         </div>
       </div>
     );
@@ -39,7 +48,6 @@ export const ChecklistSidebar = () => {
   const { percent_complete, completed_count, items } = progress;
   const total_count = items.length;
 
-  // Group items by category
   const groups = items.reduce((acc, item) => {
     const cat = item.category || 'general';
     if (!acc[cat]) {
@@ -50,40 +58,45 @@ export const ChecklistSidebar = () => {
   }, {});
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#F7F5F0] border-l border-zinc-300">
-      <div className="h-16 px-8 flex items-center border-b border-zinc-200 bg-white">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-800">Progress Tracker</h3>
-        {loading && (
-          <div className="ml-auto">
-            <div className="w-4 h-4 border-2 border-zinc-300 border-t-blue-600 rounded-full animate-spin"></div>
-          </div>
-        )}
+    <div className="w-full h-full flex flex-col p-6 lg:p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="text-white text-sm font-bold flex items-center gap-2">
+          <LayoutList size={18} className="text-[#4c6ef5]" />
+          Onboarding Plan
+        </h3>
+        <button 
+          className={`p-1.5 text-slate-500 hover:text-white transition-colors rounded-lg hover:bg-white/5 ${loading ? 'animate-spin text-[#4c6ef5]' : ''}`}
+          onClick={() => fetchProgress()}
+          title="Sync Progress"
+        >
+          <RefreshCw size={14} />
+        </button>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-6 md:p-8">
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
         <ProgressBar 
           percentComplete={percent_complete || 0} 
           completedCount={completed_count || 0} 
           totalCount={total_count} 
         />
         
-        <div className="space-y-8 mt-8">
+        <div className="space-y-8 mt-10">
           {Object.entries(groups).map(([category, catItems]) => {
             const catCompleted = catItems.filter(i => i.status === 'completed' || i.status === 'skipped').length;
             const catTotal = catItems.length;
             
             return (
               <div key={category}>
-                <div className="flex items-center justify-between mb-4 border-b border-zinc-200 pb-2">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-900">
+                <div className="flex items-center justify-between mb-4 border-b border-[#1f1f23] pb-2">
+                  <h4 className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">
                     {category}
                   </h4>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500">
-                    ({catCompleted}/{catTotal})
+                  <span className="text-[10px] font-bold text-slate-500 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                    {catCompleted}/{catTotal}
                   </span>
                 </div>
                 
-                <div>
+                <div className="space-y-3">
                   {catItems.map((item, idx) => (
                     <ChecklistItem key={item.id || idx} item={item} />
                   ))}
@@ -93,6 +106,12 @@ export const ChecklistSidebar = () => {
           })}
         </div>
       </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f1f23; border-radius: 4px; }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #333; }
+      `}} />
     </div>
   );
 };
