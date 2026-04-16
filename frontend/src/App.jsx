@@ -6,6 +6,7 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { SessionDetailPage } from './pages/SessionDetailPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
+import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { useAuth } from './hooks/useAuth';
 
 // Role-based dashboard router
@@ -40,6 +41,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <DashboardRouter />
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/docs" 
+        element={
+          <ProtectedRoute>
+            <KnowledgeBasePage />
           </ProtectedRoute>
         } 
       />

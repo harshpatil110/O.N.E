@@ -86,7 +86,7 @@ const DashboardContent = ({ sessionId }) => {
               Checklist
             </Link>
              
-              <Link to="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">
+              <Link to="/docs" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">
               <BookOpen size={18} />
               Docs
             </Link>
