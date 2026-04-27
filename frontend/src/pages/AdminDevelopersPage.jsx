@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getAdminSessions } from '../api/adminApi';
+import axios from 'axios';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Search, Bell, Plus, AlertTriangle, ArrowRight,
@@ -11,6 +12,23 @@ export const AdminDevelopersPage = () => {
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [error, setError] = useState(null);
   const location = useLocation();
+  const [adminProfile, setAdminProfile] = useState(null);
+
+  useEffect(() => {
+      const fetchAdminProfile = async () => {
+          try {
+              const token = localStorage.getItem('token');
+              const res = await axios.get('http://localhost:8000/api/v1/admin/profile', {
+                  headers: { Authorization: `Bearer ${token}` },
+                  withCredentials: true,
+              });
+              setAdminProfile(res.data);
+          } catch (err) {
+              console.error('Failed to load admin profile', err);
+          }
+      };
+      fetchAdminProfile();
+  }, []);
 
   useEffect(() => {
     let intervalId;
@@ -79,23 +97,19 @@ export const AdminDevelopersPage = () => {
             <BarChart2 size={18} />
             Analytics
           </Link>
-          <div className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3 cursor-pointer">
-            <MessageSquare size={18} />
-            AI Insights
-          </div>
         </nav>
 
         <div className="p-4 border-t border-white/5">
-           <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#13131A] cursor-pointer transition-colors">
-              <div className="w-8 h-8 rounded-full bg-slate-800 flex flex-shrink-0 items-center justify-center text-slate-300">
-                <UserIcon size={16} />
+           <Link to="/admin/settings" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#13131A] cursor-pointer transition-colors">
+              <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex flex-shrink-0 items-center justify-center text-indigo-400 text-xs font-bold">
+                {adminProfile?.name ? adminProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : <UserIcon size={16} />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">Alex Chen</p>
-                <p className="text-xs text-slate-500 truncate">Manager Mode</p>
+                <p className="text-sm font-medium text-white truncate">{adminProfile?.name || 'Loading...'}</p>
+                <p className="text-xs text-slate-500 truncate capitalize">{adminProfile?.role?.replace('_', ' ') || '...'}</p>
               </div>
               <Settings size={16} className="text-slate-500" />
-           </div>
+           </Link>
         </div>
       </aside>
 

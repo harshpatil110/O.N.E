@@ -5,6 +5,7 @@ import { ChatPage } from './pages/ChatPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminDevelopersPage } from './pages/AdminDevelopersPage';
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
+import { AdminSettingsPage } from './pages/AdminSettingsPage';
 import { SessionDetailPage } from './pages/SessionDetailPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
@@ -70,6 +71,15 @@ const App = () => {
         element={
           <ProtectedRoute requiredRole="hr_admin">
             <AdminAnalyticsPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/admin/settings" 
+        element={
+          <ProtectedRoute requiredRole="hr_admin">
+            <AdminSettingsPage />
           </ProtectedRoute>
         } 
       />
