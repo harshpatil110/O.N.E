@@ -15,7 +15,8 @@ from app.models.checklist_item import ChecklistItem
 from app.models.conversation_log import ConversationLog
 from app.schemas.admin import (
     PaginatedSessions, SessionSummary, AdminMetrics,
-    SessionChatHistory, ChatHistoryMessage
+    SessionChatHistory, ChatHistoryMessage,
+    AdminProfileResponse, AdminProfileUpdate
 )
 from app.services.hr_notification_service import HRNotificationService
 
@@ -250,3 +251,53 @@ async def toggle_task_completion(
         "completed_at": item.completed_at.isoformat() if item.completed_at else None
     }
 
+
+@router.get("/profile", response_model=AdminProfileResponse)
+async def get_admin_profile(
+    current_user: User = Depends(get_hr_admin_user)
+):
+    """
+    Return the currently logged-in admin's profile.
+    """
+    return AdminProfileResponse(
+        id=str(current_user.id),
+        name=current_user.name or "",
+        email=current_user.email or "",
+        role=current_user.role or "hr_admin"
+    )
+
+
+@router.put("/profile", response_model=AdminProfileResponse)
+async def update_admin_profile(
+    payload: AdminProfileUpdate,
+    current_user: User = Depends(get_hr_admin_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update the currently logged-in admin's name and/or email.
+    """
+    if payload.email and payload.email != current_user.email:
+        existing = db.query(User).filter(
+            User.email == payload.email,
+            User.id != current_user.id
+        ).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already in use by another account."
+            )
+        current_user.email = payload.email
+
+    if payload.name is not None:
+        current_user.name = payload.name
+
+    db.commit()
+    db.refresh(current_user)
+    logger.info(f"Admin profile updated for user {current_user.id}")
+
+    return AdminProfileResponse(
+        id=str(current_user.id),
+        name=current_user.name or "",
+        email=current_user.email or "",
+        role=current_user.role or "hr_admin"
+    )

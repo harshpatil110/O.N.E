@@ -114,3 +114,39 @@ class SessionChatHistory(BaseModel):
         }
     )
 
+
+class AdminProfileResponse(BaseModel):
+    """Response schema for admin profile data."""
+    id: str
+    name: str
+    email: str
+    role: str
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "name": "Alex Chen",
+                "email": "alex@one-corp.com",
+                "role": "hr_admin"
+            }
+        }
+    )
+
+
+class AdminProfileUpdate(BaseModel):
+    """Request schema for updating admin profile."""
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "name": "Alex Chen",
+                "email": "alex@one-corp.com"
+            }
+        }
+    )
+
+
