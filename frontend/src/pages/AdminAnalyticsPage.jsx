@@ -6,10 +6,11 @@ import {
   PieChart, Pie, Cell, ScatterChart, Scatter, ZAxis,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { 
-  Search, Bell, Plus, LayoutDashboard, Users, BarChart2, MessageSquare, Settings, User as UserIcon, AlertTriangle
+  Search, Bell, Plus, LayoutDashboard, Users, BarChart2, MessageSquare, Settings, User as UserIcon, AlertTriangle,
+  Download, Loader2
 } from 'lucide-react';
 
 export const AdminAnalyticsPage = () => {
@@ -23,45 +24,78 @@ export const AdminAnalyticsPage = () => {
         if (!dashboardRef.current || isExporting) return;
         setIsExporting(true);
         try {
-            const canvas = await html2canvas(dashboardRef.current, {
+            // Small delay to let React finish any pending renders
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const node = dashboardRef.current;
+
+            // html-to-image handles SVGs natively via foreignObject serialization
+            const dataUrl = await toPng(node, {
                 backgroundColor: '#0B0B0E',
-                scale: 2,
-                useCORS: true,
-                logging: false,
+                pixelRatio: 2,
+                cacheBust: true,
+                filter: (domNode) => {
+                    // Filter out any problematic invisible elements
+                    if (domNode.tagName === 'IFRAME') return false;
+                    return true;
+                },
             });
-            const imgData = canvas.toDataURL('image/png');
+
+            // Create a temporary image to get natural dimensions
+            const img = new Image();
+            img.src = dataUrl;
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+
+            // Landscape A4 PDF
             const pdf = new jsPDF('l', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const canvasRatio = canvas.height / canvas.width;
-            const imgWidth = pdfWidth - 20;
-            const imgHeight = imgWidth * canvasRatio;
+            const margin = 10;
+            const usableWidth = pdfWidth - margin * 2;
+            const usableHeight = pdfHeight - margin * 2;
 
-            if (imgHeight <= pdfHeight - 20) {
-                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+            const imgRatio = img.naturalHeight / img.naturalWidth;
+            const imgWidth = usableWidth;
+            const imgHeight = imgWidth * imgRatio;
+
+            if (imgHeight <= usableHeight) {
+                // Fits on one page
+                pdf.addImage(dataUrl, 'PNG', margin, margin, imgWidth, imgHeight);
             } else {
+                // Multi-page: slice the source image into page-sized chunks
+                const scaleFactor = img.naturalWidth / imgWidth;
+                const sourcePageHeight = usableHeight * scaleFactor;
                 let yOffset = 0;
-                let pageIndex = 0;
-                const pageImgHeight = pdfHeight - 20;
-                const sourceSliceHeight = pageImgHeight / imgWidth * canvas.width;
+                let pageNum = 0;
 
-                while (yOffset < canvas.height) {
-                    if (pageIndex > 0) pdf.addPage();
-                    const sliceCanvas = document.createElement('canvas');
-                    sliceCanvas.width = canvas.width;
-                    sliceCanvas.height = Math.min(sourceSliceHeight, canvas.height - yOffset);
-                    const ctx = sliceCanvas.getContext('2d');
-                    ctx.drawImage(canvas, 0, yOffset, canvas.width, sliceCanvas.height, 0, 0, sliceCanvas.width, sliceCanvas.height);
-                    const sliceImg = sliceCanvas.toDataURL('image/png');
-                    const sliceDisplayHeight = sliceCanvas.height / canvas.width * imgWidth;
-                    pdf.addImage(sliceImg, 'PNG', 10, 10, imgWidth, sliceDisplayHeight);
-                    yOffset += sourceSliceHeight;
-                    pageIndex++;
+                const offscreenCanvas = document.createElement('canvas');
+                const ctx = offscreenCanvas.getContext('2d');
+
+                while (yOffset < img.naturalHeight) {
+                    if (pageNum > 0) pdf.addPage();
+
+                    const sliceHeight = Math.min(sourcePageHeight, img.naturalHeight - yOffset);
+                    offscreenCanvas.width = img.naturalWidth;
+                    offscreenCanvas.height = sliceHeight;
+                    ctx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+                    ctx.drawImage(img, 0, yOffset, img.naturalWidth, sliceHeight, 0, 0, img.naturalWidth, sliceHeight);
+
+                    const sliceDataUrl = offscreenCanvas.toDataURL('image/png');
+                    const displayHeight = sliceHeight / scaleFactor;
+                    pdf.addImage(sliceDataUrl, 'PNG', margin, margin, imgWidth, displayHeight);
+
+                    yOffset += sourcePageHeight;
+                    pageNum++;
                 }
             }
+
             pdf.save('ONE_Analytics_Report.pdf');
         } catch (err) {
             console.error('PDF export failed:', err);
+            alert('PDF export failed. Please try again.');
         } finally {
             setIsExporting(false);
         }
@@ -179,12 +213,12 @@ export const AdminAnalyticsPage = () => {
                         >
                             {isExporting ? (
                                 <>
-                                    <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                                    <Loader2 size={16} className="animate-spin" />
                                     Generating PDF...
                                 </>
                             ) : (
                                 <>
-                                    <Plus size={16} strokeWidth={3} />
+                                    <Download size={16} strokeWidth={2.5} />
                                     Export Data
                                 </>
                             )}
