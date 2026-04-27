@@ -415,8 +415,9 @@ export const AdminAnalyticsPage = () => {
                                                 <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} tickLine={false} axisLine={false} domain={[0, 100]} />
                                                 <Tooltip 
                                                     cursor={{fill: '#ffffff05'}}
-                                                    contentStyle={{backgroundColor: '#0B0B0E', borderColor: '#ffffff10', borderRadius: '8px', color: '#fff'}}
+                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
                                                     itemStyle={{color: '#6366f1'}}
+                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
                                                 />
                                                 <Bar dataKey="percent_complete" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={40} />
                                             </BarChart>
@@ -440,8 +441,9 @@ export const AdminAnalyticsPage = () => {
                                                 <XAxis dataKey="title" stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 10}} tickLine={false} axisLine={false} tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val} />
                                                 <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} tickLine={false} axisLine={false} />
                                                 <Tooltip 
-                                                    contentStyle={{backgroundColor: '#0B0B0E', borderColor: '#ffffff10', borderRadius: '8px', color: '#fff'}}
+                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
                                                     itemStyle={{color: '#22d3ee'}}
+                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
                                                 />
                                                 <Area type="monotone" dataKey="avg_duration_hours" stroke="#22d3ee" strokeWidth={3} fillOpacity={1} fill="url(#colorVelocity)" />
                                             </AreaChart>
@@ -471,8 +473,9 @@ export const AdminAnalyticsPage = () => {
                                                     ))}
                                                 </Pie>
                                                 <Tooltip 
-                                                    contentStyle={{backgroundColor: '#0B0B0E', borderColor: '#ffffff10', borderRadius: '8px', color: '#fff'}}
-                                                    itemStyle={{color: '#fff'}}
+                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
+                                                    itemStyle={{color: '#CBD5E1'}}
+                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
                                                     formatter={(value) => `${value}%`}
                                                 />
                                             </PieChart>
@@ -497,7 +500,9 @@ export const AdminAnalyticsPage = () => {
                                                 <ZAxis type="category" dataKey="name" name="Developer" />
                                                 <Tooltip 
                                                     cursor={{strokeDasharray: '3 3', stroke: '#ffffff30'}}
-                                                    contentStyle={{backgroundColor: '#0B0B0E', borderColor: '#ffffff10', borderRadius: '8px', color: '#fff'}}
+                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
+                                                    itemStyle={{color: '#CBD5E1'}}
+                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
                                                     formatter={(value, name) => {
                                                         if (name === "Developer") return [value, name];
                                                         if (name === "Complexity Score") return [value, name];
@@ -532,8 +537,9 @@ export const AdminAnalyticsPage = () => {
                                                 <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} tickLine={false} axisLine={false} domain={[0, 100]} />
                                                 <Tooltip 
                                                     cursor={{fill: '#ffffff05'}}
-                                                    contentStyle={{backgroundColor: '#0B0B0E', borderColor: '#ffffff10', borderRadius: '8px', color: '#fff'}}
-                                                    itemStyle={{color: '#fff'}}
+                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
+                                                    itemStyle={{color: '#CBD5E1'}}
+                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
                                                     formatter={(value, name, props) => {
                                                         const emotion = props.payload.primary_emotion || 'Unknown';
                                                         return [`${value} (${emotion})`, 'Frustration Level'];
@@ -562,8 +568,9 @@ export const AdminAnalyticsPage = () => {
                                                 <PolarAngleAxis dataKey="employee_name" tick={{ fill: '#94a3b8', fontSize: 12 }} />
                                                 <PolarRadiusAxis angle={30} domain={[0, 10]} tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
                                                 <Tooltip 
-                                                    contentStyle={{backgroundColor: '#0B0B0E', borderColor: '#ffffff10', borderRadius: '8px', color: '#fff'}}
+                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
                                                     itemStyle={{color: '#22d3ee'}}
+                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
                                                 />
                                                 <Radar name="Independence Rating" dataKey="independence_rating" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.2} strokeWidth={2} />
                                             </RadarChart>
