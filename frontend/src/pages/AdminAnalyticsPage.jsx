@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { 
@@ -6,6 +6,8 @@ import {
   PieChart, Pie, Cell, ScatterChart, Scatter, ZAxis,
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { 
   Search, Bell, Plus, LayoutDashboard, Users, BarChart2, MessageSquare, Settings, User as UserIcon, AlertTriangle
 } from 'lucide-react';
@@ -14,6 +16,56 @@ export const AdminAnalyticsPage = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isExporting, setIsExporting] = useState(false);
+    const dashboardRef = useRef(null);
+
+    const handleExportPDF = async () => {
+        if (!dashboardRef.current || isExporting) return;
+        setIsExporting(true);
+        try {
+            const canvas = await html2canvas(dashboardRef.current, {
+                backgroundColor: '#0B0B0E',
+                scale: 2,
+                useCORS: true,
+                logging: false,
+            });
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const canvasRatio = canvas.height / canvas.width;
+            const imgWidth = pdfWidth - 20;
+            const imgHeight = imgWidth * canvasRatio;
+
+            if (imgHeight <= pdfHeight - 20) {
+                pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+            } else {
+                let yOffset = 0;
+                let pageIndex = 0;
+                const pageImgHeight = pdfHeight - 20;
+                const sourceSliceHeight = pageImgHeight / imgWidth * canvas.width;
+
+                while (yOffset < canvas.height) {
+                    if (pageIndex > 0) pdf.addPage();
+                    const sliceCanvas = document.createElement('canvas');
+                    sliceCanvas.width = canvas.width;
+                    sliceCanvas.height = Math.min(sourceSliceHeight, canvas.height - yOffset);
+                    const ctx = sliceCanvas.getContext('2d');
+                    ctx.drawImage(canvas, 0, yOffset, canvas.width, sliceCanvas.height, 0, 0, sliceCanvas.width, sliceCanvas.height);
+                    const sliceImg = sliceCanvas.toDataURL('image/png');
+                    const sliceDisplayHeight = sliceCanvas.height / canvas.width * imgWidth;
+                    pdf.addImage(sliceImg, 'PNG', 10, 10, imgWidth, sliceDisplayHeight);
+                    yOffset += sourceSliceHeight;
+                    pageIndex++;
+                }
+            }
+            pdf.save('ONE_Analytics_Report.pdf');
+        } catch (err) {
+            console.error('PDF export failed:', err);
+        } finally {
+            setIsExporting(false);
+        }
+    };
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -118,14 +170,29 @@ export const AdminAnalyticsPage = () => {
                         <button className="relative text-slate-400 hover:text-white transition-colors">
                             <Bell size={20} />
                         </button>
-                        <button className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-5 py-2.5 rounded-full flex items-center gap-2 transition-colors shadow-lg shadow-indigo-600/20">
-                            <Plus size={16} strokeWidth={3} />
-                            Export Data
+                        <button
+                            onClick={handleExportPDF}
+                            disabled={isExporting || loading}
+                            className={`text-white text-sm font-medium px-5 py-2.5 rounded-full flex items-center gap-2 transition-colors shadow-lg shadow-indigo-600/20 ${
+                                isExporting ? 'bg-indigo-800 cursor-wait opacity-70' : 'bg-indigo-600 hover:bg-indigo-500'
+                            }`}
+                        >
+                            {isExporting ? (
+                                <>
+                                    <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                                    Generating PDF...
+                                </>
+                            ) : (
+                                <>
+                                    <Plus size={16} strokeWidth={3} />
+                                    Export Data
+                                </>
+                            )}
                         </button>
                     </div>
                 </header>
 
-                <div className="px-8 pb-12 w-full max-w-7xl mx-auto space-y-8">
+                <div ref={dashboardRef} className="px-8 pb-12 w-full max-w-7xl mx-auto space-y-8">
                     {/* Header Title */}
                     <div>
                         <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Analytics & AI Insights</h1>
