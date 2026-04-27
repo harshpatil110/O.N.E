@@ -305,10 +305,6 @@ export const AdminAnalyticsPage = () => {
                     <BarChart2 size={18} />
                     Analytics
                 </Link>
-                <div className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3 cursor-pointer">
-                    <MessageSquare size={18} />
-                    AI Insights
-                </div>
                 </nav>
 
                 <div className="p-4 border-t border-white/5">
