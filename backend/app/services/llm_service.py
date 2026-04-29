@@ -19,21 +19,27 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES = 3
 RETRY_DELAY_SECONDS = 4
 
+_shared_client = None
+
+def get_shared_client():
+    global _shared_client
+    if _shared_client is None:
+        api_key = os.getenv("NVIDIA_API_KEY") 
+        if not api_key:
+            print("🚨 URGENT: NVIDIA_API_KEY is missing or empty!")
+            logger.warning("NVIDIA_API_KEY not found in environment.")
+        _shared_client = AsyncOpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=api_key or "dummy-key"
+        )
+    return _shared_client
+
 class LLMService:
     def __init__(self):
         """
         Initializes the LLM service using OpenAI SDK for Nvidia NIM.
         """
-        # 2. Grab the key and explicitly check if it exists
-        api_key = os.getenv("NVIDIA_API_KEY") 
-        if not api_key:
-            print("🚨 URGENT: NVIDIA_API_KEY is missing or empty!")
-            logger.warning("NVIDIA_API_KEY not found in environment.")
-            
-        self.client = AsyncOpenAI(
-            base_url="https://integrate.api.nvidia.com/v1",
-            api_key=api_key or "dummy-key"
-        )
+        self.client = get_shared_client()
         # We explicitly hardcode the model name here but do not use it in the client calls as per instruction.
         self.model_name = "meta/llama-3.1-70b-instruct"
 
@@ -49,12 +55,13 @@ class LLMService:
                 # Check if it's a rate limit error
                 error_msg = str(e).lower()
                 is_rate_limit = "429" in error_msg or "rate limit" in error_msg or "exhausted" in error_msg
+                is_transient = is_rate_limit or "connection error" in error_msg or "timeout" in error_msg or "50" in error_msg
                 
-                if is_rate_limit:
-                    logger.warning(f"Rate limit hit. Attempt {attempt + 1}/{MAX_RETRIES} failed.")
+                if is_transient:
+                    logger.warning(f"Transient error hit ({error_msg}). Attempt {attempt + 1}/{MAX_RETRIES} failed.")
                     if attempt < MAX_RETRIES - 1:
-                        # Short blocking delay as requested
-                        time.sleep(2)
+                        # Non-blocking delay
+                        await asyncio.sleep(RETRY_DELAY_SECONDS)
                         continue
                     return "I'm receiving too many messages right now. Please wait a moment and try again!"
                 

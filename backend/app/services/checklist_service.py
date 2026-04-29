@@ -105,7 +105,9 @@ class ChecklistService:
             ChecklistItem, optional: The updated item if found.
         """
         try:
-            item = self.db.query(ChecklistItem).filter(ChecklistItem.id == int(item_id)).first()
+            import uuid
+            valid_uuid = uuid.UUID(item_id)
+            item = self.db.query(ChecklistItem).filter(ChecklistItem.id == valid_uuid).first()
             if not item:
                 return None
                 
