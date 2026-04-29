@@ -25,13 +25,12 @@ def ingest_directory():
         logger.error("Error: Could not find the knowledge_base directory. Please check the path.")
         return
 
-    # Initialize Chroma client
-    client = chromadb.PersistentClient(path=persist_dir)
-    sentence_transformer_ef = embedding_functions.DefaultEmbeddingFunction()
-    collection = client.get_or_create_collection(
-        name=collection_name,
-        embedding_function=sentence_transformer_ef
-    )
+    # Initialize Chroma collection
+    from app.rag.embeddings import NvidiaEmbeddingFunction
+    from app.rag.chroma_client import get_collection
+    
+    collection = get_collection()
+    nvidia_ef = NvidiaEmbeddingFunction()
 
     documents = []
     metadatas = []
@@ -66,11 +65,15 @@ def ingest_directory():
 
     logger.info(f"Found {len(documents)} files. Embedding and inserting into ChromaDB...")
     
+    # Compute embeddings
+    embeddings = nvidia_ef(documents)
+
     # Upsert into database
     collection.upsert(
         documents=documents,
         metadatas=metadatas,
-        ids=ids
+        ids=ids,
+        embeddings=embeddings
     )
     
     logger.info(f"Successfully ingested {len(documents)} real documents into '{collection_name}'!")
