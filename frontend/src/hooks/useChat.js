@@ -29,10 +29,22 @@ export const useChat = (sessionId, onMessageComplete) => {
 
     try {
       const response = await apiSendMessage(sessionId, text);
+      console.log("🔥 RAW API RESPONSE DATA:", response);
+      console.log("🔥 RESPONSE KEYS:", Object.keys(response || {}));
+      console.log("🔥 response.reply =", response?.reply, "| type:", typeof response?.reply);
+      console.log("🔥 response.response =", response?.response, "| type:", typeof response?.response);
+      console.log("🔥 response.text =", response?.text, "| type:", typeof response?.text);
+      console.log("🔥 response.content =", response?.content, "| type:", typeof response?.content);
+      console.log("🔥 response.message =", response?.message, "| type:", typeof response?.message);
+      
+      // Robustly extract the text, handling possible structural variations
+      const extractedText = response.reply || response.response || response.text || response.content || response.message || "FALLBACK_ERROR: No text key found in response";
+      console.log("🔥 EXTRACTED TEXT =", `[${extractedText}]`, "| length:", extractedText.length);
+
       // Append the agent's reply
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: response.reply, tempId: Date.now() + 1 }
+        { role: 'assistant', content: extractedText, tempId: Date.now() + 1 }
       ]);
 
       // Notify parent that a full message roundtrip completed
