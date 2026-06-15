@@ -12,18 +12,6 @@ import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { useAuth } from './hooks/useAuth';
 
-// Role-based dashboard router
-const DashboardRouter = () => {
-  const { role } = useAuth();
-  
-  if (role === 'hr_admin' || role === 'superadmin') {
-    return <AdminDashboardPage />;
-  }
-  
-  // Default for devs/engineers
-  return <DeveloperDashboardPage />;
-};
-
 const App = () => {
   return (
     <Routes>
@@ -43,11 +31,20 @@ const App = () => {
         path="/dashboard" 
         element={
           <ProtectedRoute>
-            <DashboardRouter />
+            <DeveloperDashboardPage />
           </ProtectedRoute>
         } 
       />
       
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        } 
+      />
+
       <Route 
         path="/docs" 
         element={
@@ -60,7 +57,7 @@ const App = () => {
       <Route 
         path="/admin/developers" 
         element={
-          <ProtectedRoute requiredRole="hr_admin">
+          <ProtectedRoute requiredRole="admin">
             <AdminDevelopersPage />
           </ProtectedRoute>
         } 
@@ -69,7 +66,7 @@ const App = () => {
       <Route 
         path="/admin/analytics" 
         element={
-          <ProtectedRoute requiredRole="hr_admin">
+          <ProtectedRoute requiredRole="admin">
             <AdminAnalyticsPage />
           </ProtectedRoute>
         } 
@@ -78,16 +75,16 @@ const App = () => {
       <Route 
         path="/admin/settings" 
         element={
-          <ProtectedRoute requiredRole="hr_admin">
+          <ProtectedRoute requiredRole="admin">
             <AdminSettingsPage />
           </ProtectedRoute>
         } 
       />
 
       <Route 
-        path="/dashboard/sessions/:sessionId" 
+        path="/admin/sessions/:sessionId" 
         element={
-          <ProtectedRoute requiredRole="hr_admin">
+          <ProtectedRoute requiredRole="admin">
             <SessionDetailPage />
           </ProtectedRoute>
         } 

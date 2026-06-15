@@ -11,7 +11,7 @@ export const ProtectedRoute = ({ children, requiredRole = null }) => {
 
   // Allow superadmin to bypass role checks, or explicitly check for requiredRole
   if (requiredRole && role !== requiredRole && role !== 'superadmin') {
-    return <Navigate to="/chat" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;
