@@ -44,7 +44,7 @@ async def send_message(
     try:
         orchestrator = AgentOrchestrator(session_id=session_id, db=db)
         reply = await orchestrator.handle_message(request.message)
-        return ChatMessageResponse(reply=reply, session_id=session_id)
+        return ChatMessageResponse(content=reply, session_id=session_id)
     except Exception as e:
         logger.error(f"Error in chat logic: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
