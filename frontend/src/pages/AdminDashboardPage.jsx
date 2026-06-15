@@ -12,6 +12,7 @@ export const AdminDashboardPage = () => {
   const [metrics, setMetrics] = useState(null);
   const [sessionsData, setSessionsData] = useState({ items: [], total: 0 });
   const [analyticsData, setAnalyticsData] = useState([]);
+  const [commonQuestions, setCommonQuestions] = useState([]);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [error, setError] = useState(null);
@@ -54,6 +55,7 @@ export const AdminDashboardPage = () => {
         // It returns {"volume_data": [{"day": "Mon", "volume": 0}, ...]}
         // We'll map it to an array of objects to maintain the order returned.
         setAnalyticsData(data.volume_data || []);
+        setCommonQuestions(data.common_questions || []);
       } catch (err) {
         console.error('Failed to load analytics', err);
       }
@@ -378,38 +380,30 @@ export const AdminDashboardPage = () => {
                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Common Questions Asked</p>
                     
                     <div className="space-y-5">
-                      {/* Insight Q1 */}
-                      <div className="group">
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="text-slate-300 group-hover:text-white transition-colors">How to config VPN?</span>
-                          <span className="text-slate-400 font-medium tabular-nums">42</span>
-                        </div>
-                        <div className="h-1.5 bg-[#0B0B0E] border border-white/5 rounded-full overflow-hidden">
-                           <div className="h-full bg-indigo-500 w-[85%] rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]"></div>
-                        </div>
-                      </div>
-
-                      {/* Insight Q2 */}
-                      <div className="group">
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="text-slate-300 group-hover:text-white transition-colors">Where are the AWS keys?</span>
-                          <span className="text-slate-400 font-medium tabular-nums">28</span>
-                        </div>
-                        <div className="h-1.5 bg-[#0B0B0E] border border-white/5 rounded-full overflow-hidden">
-                           <div className="h-full bg-indigo-400 w-[60%] rounded-full shadow-[0_0_8px_rgba(129,140,248,0.8)]"></div>
-                        </div>
-                      </div>
-
-                      {/* Insight Q3 */}
-                      <div className="group">
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="text-slate-300 group-hover:text-white transition-colors">Who to contact for Github access?</span>
-                          <span className="text-slate-400 font-medium tabular-nums">15</span>
-                        </div>
-                        <div className="h-1.5 bg-[#0B0B0E] border border-white/5 rounded-full overflow-hidden">
-                           <div className="h-full bg-indigo-300/80 w-[35%] rounded-full shadow-[0_0_8px_rgba(165,180,252,0.6)]"></div>
-                        </div>
-                      </div>
+                      {commonQuestions.length > 0 ? commonQuestions.map((q, idx) => {
+                        const maxCount = Math.max(...commonQuestions.map(cq => cq.count), 1);
+                        const widthPct = Math.round((q.count / maxCount) * 100);
+                        const colors = [
+                          'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]',
+                          'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]',
+                          'bg-indigo-300/80 shadow-[0_0_8px_rgba(165,180,252,0.6)]',
+                          'bg-indigo-200/60 shadow-[0_0_8px_rgba(199,210,254,0.4)]',
+                          'bg-indigo-200/40 shadow-[0_0_8px_rgba(199,210,254,0.3)]',
+                        ];
+                        return (
+                          <div key={idx} className="group">
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="text-slate-300 group-hover:text-white transition-colors truncate mr-4">{q.question}</span>
+                              <span className="text-slate-400 font-medium tabular-nums flex-shrink-0">{q.count}</span>
+                            </div>
+                            <div className="h-1.5 bg-[#0B0B0E] border border-white/5 rounded-full overflow-hidden">
+                               <div className={`h-full rounded-full ${colors[idx] || colors[colors.length - 1]}`} style={{ width: `${widthPct}%` }}></div>
+                            </div>
+                          </div>
+                        );
+                      }) : (
+                        <p className="text-slate-500 text-sm">No questions data available yet.</p>
+                      )}
                     </div>
                  </div>
 

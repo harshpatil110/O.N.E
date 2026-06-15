@@ -24,7 +24,7 @@ export const AdminSettingsPage = () => {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const token = localStorage.getItem('token');
+                const token = sessionStorage.getItem('token');
                 const res = await axios.get('http://localhost:8000/api/v1/admin/profile', {
                     headers: { Authorization: `Bearer ${token}` },
                     withCredentials: true,
@@ -54,7 +54,7 @@ export const AdminSettingsPage = () => {
         setSaveError('');
 
         try {
-            const token = localStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
             const res = await axios.put(
                 'http://localhost:8000/api/v1/admin/profile',
                 { name: formName, email: formEmail },
