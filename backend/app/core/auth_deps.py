@@ -54,12 +54,13 @@ async def get_hr_admin_user(
     current_user: User = Depends(get_current_user)
 ) -> User:
     """
-    Dependency that ensures the current user has HR Admin or Superadmin privileges.
+    Dependency that ensures the current user has Admin, HR Admin or Superadmin privileges.
     Raises 403 Forbidden otherwise.
     """
-    if current_user.role not in ["hr_admin", "superadmin"]:
+    allowed_roles = {"admin", "hr_admin", "superadmin"}
+    if current_user.role.lower() not in allowed_roles:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
-            detail="HR admin access required"
+            detail="Admin access required"
         )
     return current_user

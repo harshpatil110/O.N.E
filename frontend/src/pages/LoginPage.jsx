@@ -26,6 +26,7 @@ export const LoginPage = () => {
       } else {
           navigate('/dashboard');
       }
+    } catch (err) {
       setError(err.response?.data?.detail || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
