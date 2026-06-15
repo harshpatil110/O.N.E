@@ -123,6 +123,7 @@ async def get_metrics(db: Session = Depends(get_db)):
 async def get_analytics_volume(db: Session = Depends(get_db)):
     """
     Aggregate chat logs by day of the week to feed the Onboarding Volume bar chart.
+    Also returns the top common questions asked by developers.
     """
     seven_days_ago = datetime.utcnow() - timedelta(days=7)
     
@@ -141,7 +142,19 @@ async def get_analytics_volume(db: Session = Depends(get_db)):
             
     # Format for Recharts
     chart_data = [{"day": k, "volume": v} for k, v in volume.items()]
-    return {"volume_data": chart_data}
+    
+    # Common questions: count frequency of user messages
+    user_logs = db.query(ConversationLog.content, func.count(ConversationLog.id).label("count")).filter(
+        ConversationLog.created_at >= seven_days_ago,
+        ConversationLog.role == "user"
+    ).group_by(ConversationLog.content).order_by(func.count(ConversationLog.id).desc()).limit(5).all()
+    
+    common_questions = [
+        {"question": row.content, "count": row.count}
+        for row in user_logs
+    ]
+    
+    return {"volume_data": chart_data, "common_questions": common_questions}
 
 @router.post("/notify-hr/{session_id}")
 async def resend_hr_notification(
