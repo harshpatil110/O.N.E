@@ -23,7 +23,7 @@ class ChatMessageRequest(BaseModel):
 
 class ChatMessageResponse(BaseModel):
     """Schema for the assistant's reply."""
-    reply: str
+    content: str
     session_id: str
     metadata: Optional[Dict[str, Any]] = None
 
@@ -31,7 +31,7 @@ class ChatMessageResponse(BaseModel):
         from_attributes=True,
         json_schema_extra={
             "example": {
-                "reply": "Welcome Rahul! I've set up your onboarding checklist based on your profile.",
+                "content": "Welcome Rahul! I've set up your onboarding checklist based on your profile.",
                 "session_id": "sess_456"
             }
         }

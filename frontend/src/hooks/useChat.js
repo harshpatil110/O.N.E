@@ -37,8 +37,8 @@ export const useChat = (sessionId, onMessageComplete) => {
       console.log("🔥 response.content =", response?.content, "| type:", typeof response?.content);
       console.log("🔥 response.message =", response?.message, "| type:", typeof response?.message);
       
-      // Robustly extract the text, handling possible structural variations
-      const extractedText = response.reply || response.response || response.text || response.content || response.message || "FALLBACK_ERROR: No text key found in response";
+      // Robustly extract the text, handling possible structural variations and allowing empty strings
+      const extractedText = response.content ?? response.reply ?? response.response ?? response.text ?? response.message ?? "FALLBACK_ERROR: No text key found in response";
       console.log("🔥 EXTRACTED TEXT =", `[${extractedText}]`, "| length:", extractedText.length);
 
       // Append the agent's reply
