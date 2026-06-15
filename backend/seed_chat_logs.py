@@ -1,11 +1,25 @@
 import sys
 import os
-from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+
+# 1. CRITICAL FIX: Load the .env file FIRST before importing any database modules
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
+# Verify which URL is being loaded (this should print your Supabase URL now)
+db_url = os.getenv("DATABASE_URL")
+if db_url:
+    # Safely print the URL without exposing the password
+    safe_url = db_url.split("@")[-1] if "@" in db_url else "No @ found in URL"
+    print(f"Loaded DATABASE_URL pointing to: {safe_url}")
+else:
+    print("WARNING: DATABASE_URL is completely empty. Check your .env file.")
 
 # Add the root directory to sys.path so 'app' is importable
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+# 2. Now it is safe to import your database and models
+from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.models.user import User
 from app.models.onboarding_session import OnboardingSession
