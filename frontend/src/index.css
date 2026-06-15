@@ -14,3 +14,27 @@
     @apply font-heading tracking-tight;
   }
 }
+
+/* Custom Dark Mode Scrollbars */
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: #333333 transparent; /* thumb color | track color */
+}
+
+::-webkit-scrollbar {
+  width: 8px; /* Slimmer, more modern width */
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333333; /* Subtle dark gray */
+  border-radius: 10px; /* Rounded pill shape */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555555; /* Slightly lighter on hover for UX feedback */
+}
