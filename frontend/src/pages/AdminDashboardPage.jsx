@@ -100,7 +100,7 @@ export const AdminDashboardPage = () => {
         </div>
         
         <nav className="flex-1 px-4 space-y-2 mt-6 text-sm font-medium">
-          <Link to="/dashboard" className="px-3 py-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 flex items-center gap-3">
+          <Link to="/admin" className="px-3 py-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 flex items-center gap-3">
             <LayoutDashboard size={18} />
             Dashboard
           </Link>
@@ -280,7 +280,7 @@ export const AdminDashboardPage = () => {
                                      </div>
                                      <div>
                                         <div className="text-white font-medium group-hover:text-indigo-400 transition-colors">
-                                          <Link to={`/dashboard/sessions/${session.session_id}`}>
+                                          <Link to={`/admin/sessions/${session.session_id}`}>
                                             {session.employee_name}
                                           </Link>
                                         </div>

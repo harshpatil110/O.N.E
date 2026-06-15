@@ -20,10 +20,12 @@ export const LoginPage = () => {
       const data = await apiLogin(email, password);
       // login auth context
       login(data.access_token, data.role);
-      
-      // Always route to dashboard on successful login
-      navigate('/dashboard');
-    } catch (err) {
+      const userRole = (data.role || '').toLowerCase();
+      if (userRole === 'admin' || userRole === 'superadmin') {
+          navigate('/admin');
+      } else {
+          navigate('/dashboard');
+      }
       setError(err.response?.data?.detail || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);

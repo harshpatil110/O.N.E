@@ -85,7 +85,7 @@ export const AdminDevelopersPage = () => {
         </div>
         
         <nav className="flex-1 px-4 space-y-2 mt-6 text-sm font-medium">
-          <Link to="/dashboard" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
+          <Link to="/admin" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
             <LayoutDashboard size={18} />
             Dashboard
           </Link>
