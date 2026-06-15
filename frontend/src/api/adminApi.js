@@ -21,6 +21,11 @@ export const getAdminAnalytics = async () => {
   return response.data;
 };
 
+export const getDeveloperChats = async (userId) => {
+  const response = await authAxios.get(`/api/v1/admin/developers/${userId}/chats`);
+  return response.data;
+};
+
 export const resendHrNotification = async (sessionId) => {
   const response = await authAxios.post(`/api/v1/admin/notify-hr/${sessionId}`);
   return response.data;

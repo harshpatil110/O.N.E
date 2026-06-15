@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { getAdminSessions } from '../api/adminApi';
+import { getAdminSessions, getDeveloperChats } from '../api/adminApi';
 import axios from 'axios';
 import { Link, useLocation } from 'react-router-dom';
 import { 
-  Search, Bell, Plus, AlertTriangle, ArrowRight,
+  Search, Bell, Plus, AlertTriangle, ArrowRight, X,
   LayoutDashboard, Users, BarChart2, MessageSquare, Settings, User as UserIcon
 } from 'lucide-react';
 
@@ -13,6 +13,27 @@ export const AdminDevelopersPage = () => {
   const [error, setError] = useState(null);
   const location = useLocation();
   const [adminProfile, setAdminProfile] = useState(null);
+
+  const [selectedUserForChat, setSelectedUserForChat] = useState(null);
+  const [chatTranscript, setChatTranscript] = useState([]);
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
+
+  const handleViewChats = async (user_id, name) => {
+    setSelectedUserForChat(name);
+    setIsChatModalOpen(true);
+    setLoadingChats(true);
+    setChatTranscript([]);
+    try {
+      const data = await getDeveloperChats(user_id);
+      setChatTranscript(data.chats || []);
+    } catch (err) {
+      console.error('Failed to load chats', err);
+      // Let it be empty so the empty state handles it
+    } finally {
+      setLoadingChats(false);
+    }
+  };
 
   useEffect(() => {
       const fetchAdminProfile = async () => {
@@ -241,13 +262,22 @@ export const AdminDevelopersPage = () => {
                               </span>
                            </td>
                            <td className="px-6 py-5 text-right">
-                              <Link 
-                                to={`/dashboard/sessions/${session.session_id}`} 
-                                className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 flex items-center justify-end gap-1.5 transition-colors group-hover:translate-x-0.5"
-                              >
-                                View Details
-                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </Link>
+                              <div className="flex items-center justify-end gap-4">
+                                <button
+                                  onClick={() => handleViewChats(session.user_id, name)}
+                                  className="text-sm font-semibold text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
+                                >
+                                  <MessageSquare size={14} />
+                                  View Chats
+                                </button>
+                                <Link 
+                                  to={`/dashboard/sessions/${session.session_id}`} 
+                                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 transition-colors group-hover:translate-x-0.5"
+                                >
+                                  View Details
+                                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </Link>
+                              </div>
                            </td>
                          </tr>
                        )
@@ -260,6 +290,67 @@ export const AdminDevelopersPage = () => {
         </div>
 
       </main>
+
+      {/* Chat Transcript Modal */}
+      {isChatModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#111114] border border-[#1f1f23] rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+              <div>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <MessageSquare size={18} className="text-indigo-400" />
+                  Chat Transcript
+                </h2>
+                <p className="text-sm text-slate-500">History with {selectedUserForChat}</p>
+              </div>
+              <button 
+                onClick={() => setIsChatModalOpen(false)}
+                className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {loadingChats ? (
+                <div className="flex justify-center items-center h-40">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                </div>
+              ) : chatTranscript.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-40 text-slate-500 space-y-3">
+                  <MessageSquare size={32} className="opacity-20" />
+                  <p>No chat history found for this developer.</p>
+                </div>
+              ) : (
+                chatTranscript.map((chat) => {
+                  const isAssistant = chat.role === 'assistant';
+                  return (
+                    <div key={chat.id} className={`flex w-full ${isAssistant ? 'justify-start' : 'justify-end'}`}>
+                      <div className={`max-w-[80%] rounded-2xl px-5 py-3.5 ${
+                        isAssistant 
+                          ? 'bg-[#1a1a24] text-slate-300 border border-white/5 rounded-tl-sm' 
+                          : 'bg-indigo-600 text-white rounded-tr-sm shadow-lg shadow-indigo-500/20'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-1 opacity-70 text-[11px] font-medium uppercase tracking-wider">
+                          {isAssistant ? 'O.N.E. Assistant' : selectedUserForChat}
+                          <span className="opacity-50">•</span>
+                          <span>{formatDate(chat.created_at)}</span>
+                        </div>
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {chat.content}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

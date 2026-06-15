@@ -52,6 +52,7 @@ async def list_sessions(
         
         items.append(SessionSummary(
             session_id=str(session_record.id),
+            user_id=str(user_record.id),
             employee_name=user_record.name or "Unknown",
             employee_email=user_record.email or "",
             role=user_record.role or "employee",
@@ -236,6 +237,32 @@ async def get_session_chat_history(
         messages=messages,
         total_messages=len(messages)
     )
+
+@router.get("/developers/{user_id}/chats")
+async def get_developer_chats(
+    user_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve chronological chat history for a specific developer (by user_id).
+    """
+    session = db.query(OnboardingSession).filter(OnboardingSession.user_id == user_id).first()
+    if not session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Onboarding session not found for this user.")
+        
+    logs = db.query(ConversationLog).filter(ConversationLog.session_id == session.id).order_by(ConversationLog.created_at.asc()).all()
+    
+    chat_history = [
+        {
+            "id": str(log.id),
+            "role": log.role,
+            "content": log.content,
+            "created_at": log.created_at.isoformat() if log.created_at else None
+        }
+        for log in logs
+    ]
+    
+    return {"chats": chat_history}
 
 
 @router.patch("/tasks/{task_id}/toggle-completion")

@@ -5,6 +5,7 @@ from uuid import UUID
 
 class SessionSummary(BaseModel):
     session_id: Any  # Accept UUID objects from SQLAlchemy
+    user_id: Any
     employee_name: str
     employee_email: str
     role: str
@@ -13,8 +14,8 @@ class SessionSummary(BaseModel):
     completed_at: Optional[datetime] = None
     percent_complete: int
 
-    @field_serializer('session_id')
-    def serialize_session_id(self, v):
+    @field_serializer('session_id', 'user_id')
+    def serialize_uuids(self, v):
         return str(v)
 
     model_config = ConfigDict(
