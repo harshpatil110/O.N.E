@@ -20,6 +20,7 @@ class OnboardingSession(Base):
     completed_at = Column(DateTime, nullable=True)
     chat_history = Column(JSONB, default=list, nullable=False, server_default="[]")
     hr_notified = Column(Boolean, default=False, nullable=False)
+    progress_percentage = Column(Integer, default=0, nullable=False)
 
     def __repr__(self):
         return f"<OnboardingSession {self.id} status={self.status}>"

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAdminMetrics, getAdminSessions } from '../api/adminApi';
+import { getAdminMetrics, getAdminSessions, getAdminAnalytics } from '../api/adminApi';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { 
@@ -11,6 +11,7 @@ import {
 export const AdminDashboardPage = () => {
   const [metrics, setMetrics] = useState(null);
   const [sessionsData, setSessionsData] = useState({ items: [], total: 0 });
+  const [analyticsData, setAnalyticsData] = useState([]);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [error, setError] = useState(null);
@@ -19,7 +20,7 @@ export const AdminDashboardPage = () => {
   useEffect(() => {
       const fetchAdminProfile = async () => {
           try {
-              const token = localStorage.getItem('token');
+              const token = sessionStorage.getItem('token');
               const res = await axios.get('http://localhost:8000/api/v1/admin/profile', {
                   headers: { Authorization: `Bearer ${token}` },
                   withCredentials: true,
@@ -45,6 +46,19 @@ export const AdminDashboardPage = () => {
       }
     };
     fetchMetrics();
+    
+    const fetchAnalytics = async () => {
+      try {
+        const data = await getAdminAnalytics();
+        // The API returns days starting from Monday maybe, let's just use what it returns.
+        // It returns {"volume_data": [{"day": "Mon", "volume": 0}, ...]}
+        // We'll map it to an array of objects to maintain the order returned.
+        setAnalyticsData(data.volume_data || []);
+      } catch (err) {
+        console.error('Failed to load analytics', err);
+      }
+    };
+    fetchAnalytics();
   }, []);
 
   useEffect(() => {
@@ -324,26 +338,32 @@ export const AdminDashboardPage = () => {
                    <h3 className="text-white font-medium tracking-wide">Onboarding Volume</h3>
                    <MoreHorizontal size={18} className="text-slate-500 cursor-pointer hover:text-white transition-colors" />
                  </div>
-                 {/* Mock Bar Chart */}
+                 {/* Dynamic Bar Chart */}
                  <div className="h-44 flex items-end justify-between gap-3 px-2">
-                    {[4, 6, 9, 14, 11, 5, 3].map((val, idx) => (
+                    {analyticsData.length > 0 ? analyticsData.map((item, idx) => {
+                      const maxVolume = Math.max(...analyticsData.map(d => d.volume), 1);
+                      return (
                       <div key={idx} className="flex flex-col items-center gap-3 flex-1 group">
                          <div className="w-full bg-[#0B0B0E] border border-white/5 hover:border-white/10 transition-colors rounded-t-md flex items-end justify-center relative overflow-hidden h-full">
                             {/* The Bar */}
                             <div 
                               className="w-full bg-gradient-to-t from-indigo-900 to-indigo-500 rounded-t-sm transition-all duration-300 group-hover:to-indigo-400 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
-                              style={{ height: `${(val / 14) * 100}%` }}
+                              style={{ height: `${(item.volume / maxVolume) * 100}%` }}
                             />
                             {/* Tooltip */}
                             <div className="absolute -top-2 bg-[#13131A] border border-white/10 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 transform -translate-y-full">
-                              {val}
+                              {item.volume}
                             </div>
                          </div>
                          <span className="text-[10px] text-slate-500 font-bold mt-1 tracking-widest">
-                           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][idx]}
+                           {item.day}
                          </span>
                       </div>
-                    ))}
+                    )}) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
+                        Loading volume data...
+                      </div>
+                    )}
                  </div>
               </div>
 

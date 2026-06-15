@@ -23,7 +23,7 @@ export const AdminAnalyticsPage = () => {
     useEffect(() => {
         const fetchAdminProfile = async () => {
             try {
-                const token = localStorage.getItem('token');
+                const token = sessionStorage.getItem('token');
                 const res = await axios.get('http://localhost:8000/api/v1/admin/profile', {
                     headers: { Authorization: `Bearer ${token}` },
                     withCredentials: true,
@@ -258,7 +258,7 @@ export const AdminAnalyticsPage = () => {
     useEffect(() => {
         const fetchAnalytics = async () => {
              try {
-                 const token = localStorage.getItem('token');
+                 const token = sessionStorage.getItem('token');
                  const res = await axios.get('http://localhost:8000/api/v1/hr/analytics/deep-dive', {
                      headers: { Authorization: `Bearer ${token}` },
                      withCredentials: true

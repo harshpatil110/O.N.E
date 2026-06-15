@@ -22,7 +22,7 @@ from app.services.hr_notification_service import HRNotificationService
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_hr_admin_user)])
 
-@router.get("/sessions", response_model=PaginatedSessions)
+@router.get("/developers", response_model=PaginatedSessions)
 async def list_sessions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -48,16 +48,7 @@ async def list_sessions(
     
     items = []
     for session_record, user_record in results:
-        # Calculate completion percentage
-        # We query for this session's checklist items
-        checklist_stats = db.query(
-            func.count(ChecklistItem.id).label("total"),
-            func.count(ChecklistItem.id).filter(ChecklistItem.status == "completed").label("completed")
-        ).filter(ChecklistItem.session_id == session_record.id).first()
-        
-        total_items = checklist_stats.total if checklist_stats else 0
-        completed_items = checklist_stats.completed if checklist_stats else 0
-        percent_complete = round((completed_items / total_items) * 100) if total_items > 0 else 0
+        percent_complete = session_record.progress_percentage
         
         items.append(SessionSummary(
             session_id=str(session_record.id),
@@ -127,6 +118,30 @@ async def get_metrics(db: Session = Depends(get_db)):
         avg_duration_hours=avg_duration_hours,
         completions_this_week=completions_this_week
     )
+
+@router.get("/analytics")
+async def get_analytics_volume(db: Session = Depends(get_db)):
+    """
+    Aggregate chat logs by day of the week to feed the Onboarding Volume bar chart.
+    """
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    
+    logs = db.query(ConversationLog.created_at).filter(
+        ConversationLog.created_at >= seven_days_ago
+    ).all()
+    
+    # Group by day of week
+    volume = {"Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0}
+    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    
+    for log in logs:
+        if log.created_at:
+            day_str = days[log.created_at.weekday()]
+            volume[day_str] += 1
+            
+    # Format for Recharts
+    chart_data = [{"day": k, "volume": v} for k, v in volume.items()]
+    return {"volume_data": chart_data}
 
 @router.post("/notify-hr/{session_id}")
 async def resend_hr_notification(

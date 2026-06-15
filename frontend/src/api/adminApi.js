@@ -12,7 +12,12 @@ export const getAdminSessions = async (page = 1, pageSize = 20, role = '', statu
   if (role) params.append('role', role);
   if (status) params.append('status', status);
 
-  const response = await authAxios.get(`/api/v1/admin/sessions?${params.toString()}`);
+  const response = await authAxios.get(`/api/v1/admin/developers?${params.toString()}`);
+  return response.data;
+};
+
+export const getAdminAnalytics = async () => {
+  const response = await authAxios.get('/api/v1/admin/analytics');
   return response.data;
 };
 
