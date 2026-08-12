@@ -58,6 +58,9 @@ async def send_message(
             for log in history_logs
         ]
         
+        # End the current transaction so connection can be recycled if needed
+        db.commit()
+        
         # 2. Invoke Hermes agent
         reply = await run_hermes_agent(request.message, history)
         
@@ -78,9 +81,11 @@ async def send_message(
             created_at=now
         )
         
-        db.add(user_log)
-        db.add(ai_log)
-        db.commit()
+        from app.core.database import SessionLocal
+        with SessionLocal() as fresh_db:
+            fresh_db.add(user_log)
+            fresh_db.add(ai_log)
+            fresh_db.commit()
         
         return ChatMessageResponse(content=reply, session_id=session_id)
         
