@@ -42,9 +42,48 @@ async def send_message(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     try:
-        orchestrator = AgentOrchestrator(session_id=session_id, db=db)
-        reply = await orchestrator.handle_message(request.message)
+        from app.core.agent import run_hermes_agent
+        from datetime import datetime, timezone
+        
+        # 1. Fetch conversation history (last 20 messages)
+        history_logs = db.query(ConversationLog)\
+            .filter_by(session_id=session_id)\
+            .filter(ConversationLog.role != "system")\
+            .order_by(ConversationLog.created_at.asc())\
+            .limit(20)\
+            .all()
+            
+        history = [
+            {"role": log.role, "content": log.content}
+            for log in history_logs
+        ]
+        
+        # 2. Invoke Hermes agent
+        reply = await run_hermes_agent(request.message, history)
+        
+        # 3. Persist new messages to database
+        now = datetime.now(timezone.utc)
+        
+        user_log = ConversationLog(
+            session_id=session_id,
+            role="user",
+            content=request.message,
+            created_at=now
+        )
+        
+        ai_log = ConversationLog(
+            session_id=session_id,
+            role="assistant",
+            content=reply,
+            created_at=now
+        )
+        
+        db.add(user_log)
+        db.add(ai_log)
+        db.commit()
+        
         return ChatMessageResponse(content=reply, session_id=session_id)
+        
     except Exception as e:
         logger.error(f"Error in chat logic: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
