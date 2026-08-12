@@ -7,6 +7,7 @@ import { Search, Terminal, FileCode2, ShieldAlert, Cpu, ArrowRight, X, LayoutDas
 import { useAuth } from '../hooks/useAuth';
 
 export const KnowledgeBasePage = () => {
+    // eslint-disable-next-line no-unused-vars
     const { user } = useAuth();
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);

@@ -263,7 +263,7 @@ const DeveloperOnboardingHub = () => {
                         </h3>
                         <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
                             <div className="relative before:absolute before:inset-0 before:ml-[5px] before:-translate-x-px before:h-full before:w-[1px] before:bg-white/5">
-                                {log.map((entry, idx) => (
+                                {log.map((entry) => (
                                     <div key={entry.id} className="relative flex items-start gap-4 mb-6 last:mb-0">
                                         <div className={`absolute left-0 mt-1.5 size-2.5 rounded-full ${entry.type === 'human' ? 'bg-indigo-500 ring-4 ring-indigo-500/10' : 'bg-slate-700'}`} />
                                         <div className="pl-6 block">

@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Bot } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 
 export const MessageBubble = ({ role, content, isLoadingIndicator = false }) => {
   const isUser = role === 'user';
@@ -14,7 +16,12 @@ export const MessageBubble = ({ role, content, isLoadingIndicator = false }) => 
 
   if (isLoadingIndicator) {
     return (
-      <div className={`flex w-full justify-start items-end space-x-3`}>
+      <motion.div 
+        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+        className={`flex w-full justify-start items-end space-x-3`}
+      >
         <div className="w-8 h-8 flex-shrink-0 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-[#4c6ef5]">
           <Bot size={16} />
         </div>
@@ -23,12 +30,17 @@ export const MessageBubble = ({ role, content, isLoadingIndicator = false }) => 
           <div className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-pulse flex-shrink-0" style={{ animationDelay: '150ms' }} />
           <div className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-pulse flex-shrink-0" style={{ animationDelay: '300ms' }} />
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} items-end space-x-3 group`}>
+    <motion.div 
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+      className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} items-end space-x-3 group`}
+    >
       {!isUser && (
         <div className="w-8 h-8 flex-shrink-0 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-[#4c6ef5] shadow-sm">
           <Bot size={16} />
@@ -39,6 +51,6 @@ export const MessageBubble = ({ role, content, isLoadingIndicator = false }) => 
           <ReactMarkdown>{typeof content === 'string' && content.length > 0 ? content : '*⚠️ EMPTY — No content string received*'}</ReactMarkdown>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

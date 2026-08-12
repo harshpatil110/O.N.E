@@ -71,4 +71,5 @@ export const ChecklistProvider = ({ children, sessionId }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useChecklist = () => useContext(ChecklistContext);

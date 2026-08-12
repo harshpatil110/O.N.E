@@ -1,4 +1,6 @@
 import React from 'react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 
 export const ProgressBar = ({ percentComplete, completedCount, totalCount }) => {
   const safePercent = Math.min(100, Math.max(0, percentComplete || 0));
@@ -12,9 +14,11 @@ export const ProgressBar = ({ percentComplete, completedCount, totalCount }) => 
         <span className="text-sm font-bold text-white">{Math.round(safePercent)}%</span>
       </div>
       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden relative border border-white/5 shadow-inner">
-        <div 
-          className="absolute top-0 left-0 h-full bg-[#4c6ef5] transition-all duration-700 ease-out shadow-[0_0_10px_rgba(76,110,245,0.5)]"
-          style={{ width: `${safePercent}%` }}
+        <motion.div 
+          className="absolute top-0 left-0 h-full bg-[#4c6ef5] shadow-[0_0_10px_rgba(76,110,245,0.5)]"
+          initial={{ width: 0 }}
+          animate={{ width: `${safePercent}%` }}
+          transition={{ type: 'spring', bounce: 0, duration: 0.6 }}
         />
       </div>
     </div>

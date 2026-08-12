@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getAdminSessions, getDeveloperChats } from '../api/adminApi';
 import axios from 'axios';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   Search, Bell, Plus, AlertTriangle, ArrowRight, X,
   LayoutDashboard, Users, BarChart2, MessageSquare, Settings, User as UserIcon
@@ -11,7 +11,6 @@ export const AdminDevelopersPage = () => {
   const [sessionsData, setSessionsData] = useState({ items: [], total: 0 });
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [error, setError] = useState(null);
-  const location = useLocation();
   const [adminProfile, setAdminProfile] = useState(null);
 
   const [selectedUserForChat, setSelectedUserForChat] = useState(null);

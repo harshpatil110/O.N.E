@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { X, MessageSquare, Bot, User, Loader2, AlertCircle, MessageSquareText } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { getSessionChatHistory } from '../api/adminApi';
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * ChatHistoryDrawer — Modified to utilize "Dark Enterprise" design system bindings
@@ -74,24 +76,33 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      {/* Dark Enterprise Backdrop overlay */}
-      <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity duration-300"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Dark Enterprise Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
+              onClick={onClose}
+              aria-hidden="true"
+            />
 
-      {/* Drawer panel */}
-      <div
-        className="fixed top-0 right-0 h-full w-full sm:w-[560px] bg-[#0B0B0E] shadow-2xl shadow-black/50 z-50 flex flex-col transform transition-transform duration-300 ease-out border-l border-white/5"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Conversation History"
-      >
+            {/* Drawer panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+              className="fixed top-0 right-0 h-full w-full sm:w-[560px] bg-[#0B0B0E] shadow-2xl shadow-black/50 z-50 flex flex-col border-l border-white/5"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Conversation History"
+            >
         {/* ─── Header ─── */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-[#13131A] relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-emerald-400" />
@@ -232,7 +243,10 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
             {totalMessages} Total Packets
           </p>
         </div>
-      </div>
+      </motion.div>
+      </>
+      )}
+      </AnimatePresence>
 
       {/* Utilities */}
       <style>{`

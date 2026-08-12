@@ -10,11 +10,13 @@ import { SessionDetailPage } from './pages/SessionDetailPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
-import { useAuth } from './hooks/useAuth';
+import { ThemeToggle } from './components/ThemeToggle';
 
 const App = () => {
   return (
-    <Routes>
+    <>
+      <ThemeToggle />
+      <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       
@@ -90,6 +92,7 @@ const App = () => {
         } 
       />
     </Routes>
+    </>
   );
 };
 
