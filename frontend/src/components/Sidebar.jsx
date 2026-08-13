@@ -78,7 +78,7 @@ export const Sidebar = () => {
       {/* Bottom Section: External Links */}
       <div className="p-4 border-t border-stone-800">
         <a
-          href="https://github.com"
+          href="https://github.com/harshpatil110/O.N.E"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-stone-400 hover:text-white hover:bg-stone-800/50 transition-colors"
