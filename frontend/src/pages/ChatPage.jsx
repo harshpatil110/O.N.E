@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useChat } from '../hooks/useChat';
 import { startSession } from '../api/chat';
 import { MessageBubble } from '../components/MessageBubble';
@@ -63,6 +64,11 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
             </div>
             <h2 className="text-stone-900 text-lg font-serif font-bold tracking-tight">O.N.E.</h2>
             <span className="text-[10px] font-mono uppercase tracking-widest text-stone-400 border-l border-stone-200 pl-3">Onboarding System</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link to="/checklist" className="text-xs font-mono uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors">
+              My Checklist
+            </Link>
           </div>
         </div>
 

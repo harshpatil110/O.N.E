@@ -10,6 +10,7 @@ import { SessionDetailPage } from './pages/SessionDetailPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
+import { ChecklistPage } from './pages/ChecklistPage';
 import { ThemeToggle } from './components/ThemeToggle';
 
 const App = () => {
@@ -25,6 +26,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <ChatPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/checklist" 
+        element={
+          <ProtectedRoute>
+            <ChecklistPage />
           </ProtectedRoute>
         } 
       />

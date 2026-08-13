@@ -8,6 +8,7 @@ from app.api.chat import router as chat_router
 from app.api.admin import router as admin_router
 from app.api.docs import router as docs_router
 from app.api.analytics import router as analytics_router
+from app.api.tasks import router as tasks_router
 
 app = FastAPI(title="O.N.E API", version="1.0.0")
 
@@ -40,3 +41,4 @@ app.include_router(chat_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(docs_router, prefix="/api/v1")
 app.include_router(analytics_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api/v1")
