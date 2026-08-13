@@ -13,6 +13,7 @@ from langgraph.graph import StateGraph, END
 from app.core.graph_state import AgentState
 from app.core.rag_tool import search_corporate_knowledge
 from app.core.task_tools import get_current_task, mark_task_complete
+from app.core.github_tools import get_open_pull_requests, get_recent_commits, get_repository_issues
 
 logger = logging.getLogger(__name__)
 
@@ -44,12 +45,13 @@ def supervisor_node(state: AgentState) -> Dict[str, Any]:
     latest_msg = messages[-1].content if hasattr(messages[-1], "content") else str(messages[-1])
 
     classification_prompt = SystemMessage(content="""You are an intent classification router for an enterprise onboarding AI mentor.
-Classify the user's message into EXACTLY ONE of the following 3 labels:
+Classify the user's message into EXACTLY ONE of the following 4 labels:
+- 'github': The user is asking about the GitHub repository, PRs, pull requests, commits, branches, codebase, or issues.
 - 'task': The user is asking about their current task, next steps, checklist item, progress, or stating they completed a task.
 - 'rag': The user is asking about company policies, HR, technical documentation, coding standards, architecture, terminal commands, or documentation.
 - 'general': General greeting, casual conversation, or basic chat.
 
-Respond with ONLY ONE word: 'task', 'rag', or 'general'.""")
+Respond with ONLY ONE word: 'github', 'task', 'rag', or 'general'.""")
 
     try:
         response = llm.invoke([classification_prompt, HumanMessage(content=latest_msg)])
@@ -57,14 +59,18 @@ Respond with ONLY ONE word: 'task', 'rag', or 'general'.""")
     except Exception as e:
         logger.warning(f"[SUPERVISOR ROUTER] Ollama endpoint unreachable ({e}). Using keyword fallback classification...")
         msg_lower = latest_msg.lower()
-        if any(w in msg_lower for w in ["task", "next", "checklist", "todo", "done", "step"]):
+        if any(w in msg_lower for w in ["github", "pr", "pull request", "commit", "branch", "codebase", "issue"]):
+            raw_intent = "github"
+        elif any(w in msg_lower for w in ["task", "next", "checklist", "todo", "done", "step"]):
             raw_intent = "task"
         elif any(w in msg_lower for w in ["policy", "pto", "leave", "vpn", "code", "architecture", "doc", "docker", "setup", "standard"]):
             raw_intent = "rag"
         else:
             raw_intent = "general"
 
-    if "task" in raw_intent:
+    if "github" in raw_intent:
+        route = "github"
+    elif "task" in raw_intent:
         route = "task"
     elif "rag" in raw_intent:
         route = "rag"
@@ -222,13 +228,58 @@ Answer using the knowledge base context below. Be extremely concise.
     }
 
 
+def github_node(state: AgentState) -> Dict[str, Any]:
+    """
+    GitHub Node: Fetches data from GitHub API.
+    """
+    messages = state.get("messages", [])
+    prompt = SystemMessage(content="You are O.N.E., a Senior Staff Engineer. The user is asking about the GitHub repository. Use the provided tools to fetch real-time data and summarize it clearly in Markdown. If the tools return no data, inform the user.")
+    
+    input_messages = [prompt] + messages
+    llm_with_github_tools = llm.bind_tools([get_open_pull_requests, get_recent_commits, get_repository_issues])
+    
+    try:
+        response = llm_with_github_tools.invoke(input_messages)
+        
+        if hasattr(response, "tool_calls") and response.tool_calls:
+            from langchain_core.messages import ToolMessage
+            tool_messages = []
+            for tc in response.tool_calls:
+                tool_name = tc["name"]
+                
+                if tool_name == "get_open_pull_requests":
+                    output = get_open_pull_requests.invoke({})
+                elif tool_name == "get_recent_commits":
+                    output = get_recent_commits.invoke({})
+                elif tool_name == "get_repository_issues":
+                    output = get_repository_issues.invoke({})
+                else:
+                    output = "Unknown tool."
+                    
+                tool_messages.append(ToolMessage(content=str(output), tool_call_id=tc["id"]))
+                
+            final_messages = input_messages + [response] + tool_messages
+            final_response = llm_with_github_tools.invoke(final_messages)
+            content = str(final_response.content)
+        else:
+            content = str(response.content)
+    except Exception as e:
+        logger.warning(f"[GITHUB NODE] Execution error ({e}). Generating fallback response...")
+        content = "I encountered a slight system error while checking GitHub. Could you rephrase your request?"
+
+    return {
+        "messages": messages + [AIMessage(content=content)],
+        "next_route": "end",
+    }
+
+
 # ─── LangGraph State Machine Assembly ──────────────────────────────────────────
 def route_next(state: AgentState) -> str:
     """
     Conditional routing function reading supervisor's next_route decision.
     """
     route = state.get("next_route", "general")
-    if route not in ["onboarding", "task", "rag"]:
+    if route not in ["onboarding", "task", "rag", "github"]:
         return END
     return route
 
@@ -240,6 +291,7 @@ workflow.add_node("supervisor", supervisor_node)
 workflow.add_node("onboarding", onboarding_node)
 workflow.add_node("task", task_node)
 workflow.add_node("rag", rag_node)
+workflow.add_node("github", github_node)
 
 # Set Entry Point
 workflow.set_entry_point("supervisor")
@@ -252,6 +304,7 @@ workflow.add_conditional_edges(
         "onboarding": "onboarding",
         "task": "task",
         "rag": "rag",
+        "github": "github",
         END: END,
     },
 )
@@ -260,6 +313,7 @@ workflow.add_conditional_edges(
 workflow.add_edge("onboarding", END)
 workflow.add_edge("task", END)
 workflow.add_edge("rag", END)
+workflow.add_edge("github", END)
 
 # Compile Graph
 app_graph = workflow.compile()
