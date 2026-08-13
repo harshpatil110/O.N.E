@@ -61,7 +61,7 @@ async def send_message(
             .filter_by(session_id=session_id)\
             .filter(ConversationLog.role != "system")\
             .order_by(ConversationLog.created_at.asc())\
-            .limit(10)\
+            .limit(5)\
             .all()
             
         # Action 5.2: Format Messages to LangChain classes

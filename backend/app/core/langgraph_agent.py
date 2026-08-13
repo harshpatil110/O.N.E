@@ -130,13 +130,12 @@ def task_node(state: AgentState) -> Dict[str, Any]:
     progress = state.get("progress", 0)
     user_id = state.get("user_id", "")
 
-    # Action 5.3: Dynamic Prompt Injection based on current state variables
-    prompt = SystemMessage(content=f"""You are the O.N.E. Task Manager Mentor.
-User Role: {user_role}
-Current Onboarding Progress: {progress}%
-Assigned Current Task: "{current_task}"
+    # Action 5.3 & 10.3: Concise System Prompt Injection
+    prompt = SystemMessage(content=f"""Role: {user_role}
+Progress: {progress}%
+Task: "{current_task}"
 
-Provide clear, helpful instructions to help the user complete their assigned task. If they indicate they have finished it, congratulate them and encourage them to move forward. You have tools available to check tasks and mark them complete.""")
+Help user complete their task. If finished, congratulate. Use tools if needed.""")
 
     input_messages = [prompt] + messages
     llm_with_tools = llm.bind_tools([get_current_task, mark_task_complete])
@@ -170,7 +169,7 @@ Provide clear, helpful instructions to help the user complete their assigned tas
             
     except Exception as e:
         logger.warning(f"[TASK NODE] Execution error ({e}). Generating fallback response...")
-        content = f"Here is guidance for your current task: '{current_task}'. Follow the instructions in your role checklist to proceed."
+        content = "I encountered a slight system error while looking that up. Could you rephrase your request?"
 
     return {
         "messages": messages + [AIMessage(content=content)],
@@ -196,21 +195,18 @@ def rag_node(state: AgentState) -> Dict[str, Any]:
     progress = state.get("progress", 0)
     current_task = state.get("current_task", "No current task assigned.")
 
-    prompt = SystemMessage(content=f"""You are Hermes, the AI Corporate Knowledge Assistant for Nexus AI Innovations.
-The current user is a {user_role} with {progress}% progress. Their current assigned task is: '{current_task}'.
-Use the following retrieved context from the company knowledge base to answer the user's question accurately.
-Do not guess or hallucinate. Keep your answer professional, clear, and concise.
+    prompt = SystemMessage(content=f"""Role: {user_role} | Task: {current_task}
+Answer using the knowledge base context below. Be extremely concise.
 
---- RETRIEVED KNOWLEDGE BASE CONTEXT ---
-{rag_context}
-""")
+--- CONTEXT ---
+{rag_context}""")
 
     try:
         response = llm.invoke([prompt, HumanMessage(content=latest_msg)])
         content = str(response.content)
     except Exception as e:
-        logger.warning(f"[RAG NODE] Ollama offline ({e}). Returning retrieved RAG context directly...")
-        content = f"Retrieved Knowledge Base Information:\n\n{rag_context}"
+        logger.warning(f"[RAG NODE] Ollama offline or execution error ({e}). Returning fallback...")
+        content = "I encountered a slight system error while looking that up. Could you rephrase your request?"
 
     return {
         "messages": messages + [AIMessage(content=content)],

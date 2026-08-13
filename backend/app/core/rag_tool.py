@@ -99,11 +99,11 @@ def _init_hybrid_retriever():
             persist_directory=CHROMA_DIR,
         )
 
-    vector_retriever = chroma_vectorstore.as_retriever(search_kwargs={"k": 3})
+    vector_retriever = chroma_vectorstore.as_retriever(search_kwargs={"k": 2})
 
     # 3. Sparse Retriever (BM25)
     bm25_retriever = BM25Retriever.from_documents(chunks)
-    bm25_retriever.k = 3
+    bm25_retriever.k = 2
 
     # 4. Ensemble Retriever (50/50 Dense & Sparse)
     _hybrid_retriever = EnsembleRetriever(
@@ -126,9 +126,11 @@ def search_corporate_knowledge(query: str) -> str:
     docs = retriever.invoke(query)
     if not docs:
         return "No relevant corporate documentation found."
-    return "\n\n---\n\n".join(
+    
+    full_str = "\n\n---\n\n".join(
         [f"Source: {d.metadata.get('source', 'KB')}\nContent: {d.page_content}" for d in docs]
     )
+    return full_str[:1500]
 
 
 # Also expose alias search_company_knowledge_base for backward compatibility
