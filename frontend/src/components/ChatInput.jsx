@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useChecklist } from '../context/ChecklistContext';
-import { Send, CheckCircle2, HelpCircle, SkipForward } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 export const ChatInput = ({ onSendMessage, disabled }) => {
   const [text, setText] = useState('');
   const textareaRef = useRef(null);
-  const { markCurrentTaskDone, loading: isActionLoading } = useChecklist();
 
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
@@ -33,48 +31,8 @@ export const ChatInput = ({ onSendMessage, disabled }) => {
     }
   };
 
-  const quickActions = [
-    { label: 'Mark as done', action: markCurrentTaskDone, icon: CheckCircle2 },
-    { label: 'Ask for help', fill: 'Can you explain this in more detail?', icon: HelpCircle },
-    { label: 'Skip this', fill: 'Can I skip this task?', icon: SkipForward }
-  ];
-
-  const handleQuickAction = (actionLabel, action, fillContent) => {
-    if (disabled || isActionLoading) return;
-    
-    if (actionLabel === 'Ask for help' || actionLabel === 'Skip this') {
-      if (fillContent) onSendMessage(fillContent);
-      return;
-    }
-
-    if (action) {
-      action();
-    } else if (fillContent) {
-      setText(fillContent);
-      if (textareaRef.current) textareaRef.current.focus();
-    }
-  };
-
   return (
-    <div className="w-full flex flex-col space-y-3 pb-2 max-w-4xl mx-auto">
-      
-      {/* Quick Actions (Stitch Style Pills) */}
-      <div className="flex flex-wrap gap-2">
-        {quickActions.map((action, idx) => {
-          const Icon = action.icon;
-          return (
-            <button
-              key={idx}
-              onClick={() => handleQuickAction(action.label, action.action, action.fill)}
-              className="flex-none flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 text-slate-400 hover:text-white border border-white/10 hover:border-[#4c6ef5]/30 hover:bg-white/10 text-[11px] font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={disabled || isActionLoading}
-            >
-              <Icon size={12} className={action.label === 'Mark as done' ? 'text-emerald-400' : ''} />
-              {action.label}
-            </button>
-          )
-        })}
-      </div>
+    <div className="w-full flex flex-col space-y-2 pb-2 max-w-4xl mx-auto">
       
       {/* Main Input Area */}
       <div className="relative group flex items-end">
