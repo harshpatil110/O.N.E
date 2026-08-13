@@ -19,7 +19,7 @@ def reset_harsh():
             user.department_role = None
             db.commit()
 
-def login(email: str, password: str = "defaultpassword123") -> str:
+def login(email: str, password: str = "123456") -> str:
     with httpx.Client() as client:
         res = client.post(f"{API_URL}/auth/login", json={"email": email, "password": password})
         if res.status_code != 200:
