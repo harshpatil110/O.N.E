@@ -341,39 +341,8 @@ export const AdminAnalyticsPage = () => {
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto overflow-x-hidden">
                 {/* Header */}
-                <header className="px-8 py-6 flex flex-col md:flex-row md:justify-between items-center gap-4">
-                    <div className="relative w-full md:w-96">
-                        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                        <input 
-                            type="text" 
-                            placeholder="Search dashboards or metrics..." 
-                            className="w-full bg-[#13131A] text-sm text-white placeholder-slate-500 rounded-full pl-10 pr-4 py-2.5 outline-none border border-white/5 focus:border-indigo-500/50 transition-colors shadow-sm"
-                        />
-                    </div>
-                    <div className="flex items-center gap-5">
-                        <button className="relative text-slate-400 hover:text-white transition-colors">
-                            <Bell size={20} />
-                        </button>
-                        <button
-                            onClick={handleExportPDF}
-                            disabled={isExporting || loading}
-                            className={`text-white text-sm font-medium px-5 py-2.5 rounded-full flex items-center gap-2 transition-colors shadow-lg shadow-indigo-600/20 ${
-                                isExporting ? 'bg-indigo-800 cursor-wait opacity-70' : 'bg-indigo-600 hover:bg-indigo-500'
-                            }`}
-                        >
-                            {isExporting ? (
-                                <>
-                                    <Loader2 size={16} className="animate-spin" />
-                                    Generating PDF...
-                                </>
-                            ) : (
-                                <>
-                                    <Download size={16} strokeWidth={2.5} />
-                                    Export Data
-                                </>
-                            )}
-                        </button>
-                    </div>
+                <header className="px-8 py-6 flex flex-col md:flex-row md:justify-start items-center gap-4">
+                    {/* Clean header, preserving space for future controls */}
                 </header>
 
                 <div className="px-8 pb-12 w-full max-w-7xl mx-auto space-y-8">

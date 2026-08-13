@@ -147,27 +147,8 @@ export const AdminDashboardPage = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto overflow-x-hidden">
         {/* Header */}
-        <header className="px-8 py-6 flex flex-col md:flex-row md:justify-between items-center gap-4">
-           {/* Global Search */}
-           <div className="relative w-full md:w-96">
-             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-             <input 
-               type="text" 
-               placeholder="Search developers, phases, or logs..." 
-               className="w-full bg-[#13131A] text-sm text-white placeholder-slate-500 rounded-full pl-10 pr-4 py-2.5 outline-none border border-white/5 focus:border-indigo-500/50 transition-colors shadow-sm"
-             />
-           </div>
-           {/* Header Actions */}
-           <div className="flex items-center gap-5">
-              <button className="relative text-slate-400 hover:text-white transition-colors">
-                <Bell size={20} />
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-[#0B0B0E]"></span>
-              </button>
-              <button className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-5 py-2.5 rounded-full flex items-center gap-2 transition-colors shadow-lg shadow-indigo-600/20">
-                <Plus size={16} strokeWidth={3} />
-                Invite Developer
-              </button>
-           </div>
+        <header className="px-8 py-6 flex flex-col md:flex-row md:justify-start items-center gap-4">
+           {/* Header is clean now, preserving space for future breadcrumbs or titles */}
         </header>
 
         <div className="px-8 pb-12 space-y-8 max-w-7xl">
@@ -258,14 +239,6 @@ export const AdminDashboardPage = () => {
             <div className="lg:col-span-2 bg-[#13131A] border border-white/5 rounded-xl flex flex-col overflow-hidden shadow-xl">
                <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
                  <h2 className="text-white font-medium tracking-wide">Onboarding Progress</h2>
-                 <div className="flex items-center gap-1 bg-[#0B0B0E] p-1 rounded-lg border border-white/5">
-                    <button className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#13131A] text-white shadow-sm border border-white/5">
-                      All Phases
-                    </button>
-                    <button className="text-xs font-medium px-3 py-1.5 rounded-md text-slate-400 hover:text-white transition-colors">
-                      Recent Only
-                    </button>
-                 </div>
                </div>
                
                <div className="overflow-x-auto flex-1">
@@ -338,7 +311,6 @@ export const AdminDashboardPage = () => {
               <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 shadow-xl">
                  <div className="flex items-center justify-between mb-8">
                    <h3 className="text-white font-medium tracking-wide">Onboarding Volume</h3>
-                   <MoreHorizontal size={18} className="text-slate-500 cursor-pointer hover:text-white transition-colors" />
                  </div>
                  {/* Dynamic Bar Chart */}
                  <div className="h-44 flex items-end justify-between gap-3 px-2">
