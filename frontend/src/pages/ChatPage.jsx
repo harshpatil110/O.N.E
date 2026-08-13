@@ -56,24 +56,12 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
       <div className="relative flex flex-col z-10 transition-all duration-300 ease-in-out w-full">
         
         {/* Header */}
-        <div className="h-16 px-6 lg:px-12 flex items-center border-b border-[#1f1f23] bg-transparent backdrop-blur-md">
+        <div className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#1f1f23] bg-transparent backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             <div className="size-7 bg-[#4c6ef5] rounded flex items-center justify-center text-white shadow-lg shadow-[#4c6ef5]/20">
               <span className="font-bold font-mono text-sm tracking-tighter">O.</span>
             </div>
             <h2 className="text-white text-lg font-extrabold tracking-tight">O.N.E</h2>
-          </div>
-
-          <div className="ml-auto flex items-center space-x-6">
-            <div className="hidden md:flex items-center gap-8 mr-4">
-              <a className="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">Documentation</a>
-              <a className="text-sm font-medium text-slate-400 hover:text-white transition-colors" href="#">System Status</a>
-            </div>
-
-            <div className="flex items-center space-x-2 bg-white/5 py-1.5 px-3 rounded-full border border-white/5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-              <span className="text-[10px] text-slate-300 font-bold tracking-wider uppercase">Active</span>
-            </div>
           </div>
         </div>
 
