@@ -10,7 +10,7 @@ from app.core.config import settings
 
 # Import Base and ALL models so autogenerate can detect them
 from app.core.database import Base
-from app.models import User, OnboardingSession, ChecklistItem, ConversationLog, ChecklistTemplate  # noqa: F401
+from app.models import User, OnboardingSession, ChecklistItem, ConversationLog, ChecklistTemplate, RoleTask  # noqa: F401
 
 import os 
 from dotenv import load_dotenv

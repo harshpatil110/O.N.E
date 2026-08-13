@@ -6,6 +6,7 @@ from app.models.onboarding_session import OnboardingSession
 from app.models.checklist_item import ChecklistItem
 from app.models.conversation_log import ConversationLog
 from app.models.checklist_template import ChecklistTemplate
+from app.models.tasks import RoleTask
 
 __all__ = [
     "User",
@@ -13,4 +14,5 @@ __all__ = [
     "ChecklistItem",
     "ConversationLog",
     "ChecklistTemplate",
+    "RoleTask",
 ]
