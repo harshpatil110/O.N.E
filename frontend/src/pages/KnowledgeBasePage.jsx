@@ -73,53 +73,10 @@ export const KnowledgeBasePage = () => {
         }
     };
 
-    // Keep Sidebar identical to Developer Dashboard to fulfill identical layout flow
-    const Sidebar = () => (
-        <aside className="w-64 bg-[#F2F0EA] border-r border-stone-200 flex flex-col z-10 hidden md:flex h-full flex-shrink-0">
-          <div className="h-16 px-6 flex items-center border-b border-stone-200 bg-transparent">
-            <div className="flex items-center gap-2.5">
-              <div className="size-7 bg-stone-900 rounded-sm flex items-center justify-center text-stone-100 shadow-sm">
-                <span className="font-bold font-mono text-xs tracking-tighter">O.</span>
-              </div>
-              <h2 className="text-stone-900 text-lg font-serif font-bold tracking-tight">O.N.E.</h2>
-            </div>
-          </div>
 
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
-            <div className="space-y-1">
-              <h3 className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest pl-2 mb-2">Navigation</h3>
-              
-              <Link to="/dashboard" className="flex items-center gap-3 px-3 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-sm transition-colors font-medium text-xs">
-                <LayoutDashboard size={16} />
-                Dashboard
-              </Link>
-              
-              <Link to="/chat" className="flex items-center gap-3 px-3 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-sm transition-colors font-medium text-xs">
-                <MessageSquare size={16} />
-                Chat Assistant
-              </Link>
-               
-               <Link to="/docs" className="flex items-center gap-3 px-3 py-2 bg-stone-900 text-stone-100 rounded-sm font-medium text-xs shadow-sm">
-                <BookOpen size={16} />
-                Docs
-              </Link>
-            </div>
-
-            <div className="mt-auto space-y-2 pb-2">
-              <h3 className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest pl-2 mb-2">Integrations</h3>
-               <button className="flex items-center gap-3 px-3 py-2 w-full text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-sm transition-colors font-medium text-xs">
-                <Code size={14} /> GitHub
-              </button>
-               <button className="flex items-center gap-3 px-3 py-2 w-full text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-sm transition-colors font-medium text-xs">
-                <MessageSquare size={14} /> Slack
-              </button>
-            </div>
-          </div>
-        </aside>
-    );
 
     return (
-        <div className="flex h-screen bg-[#F7F5F0] text-stone-900 overflow-hidden font-sans selection:bg-blue-100 relative">
+        <div className="flex h-full bg-[#F7F5F0] text-stone-900 overflow-hidden font-sans selection:bg-blue-100 relative">
             <div 
                 className="absolute inset-0 z-0 pointer-events-none opacity-40"
                 style={{
@@ -128,7 +85,7 @@ export const KnowledgeBasePage = () => {
                 }}
             />
             
-            <Sidebar />
+
 
             <main className="flex-1 overflow-y-auto z-10 relative">
                 {selectedDoc ? (

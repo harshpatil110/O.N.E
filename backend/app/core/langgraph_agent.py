@@ -82,16 +82,16 @@ def onboarding_node(state: AgentState) -> Dict[str, Any]:
     messages = state.get("messages", [])
     
     # Count how many messages have been sent by the human in this session so far
+    # Note: The welcome AI message is already persisted by the session start endpoint,
+    # so human_count=1 means the user has responded with their name.
     human_count = sum(1 for m in messages if isinstance(m, HumanMessage))
 
     if human_count == 1:
-        content = "Hi! I'm O.N.E — your Onboarding Navigation Environment. I'm here to guide you through your first days at the company. Let's start with the basics — what's your full name?"
-    elif human_count == 2:
         content = "What is your email id?"
-    elif human_count == 3:
+    elif human_count == 2:
         content = "What is your position? (Choose from: frontend dev, backend dev, AI dev, cloud, IT, database dev)"
     else:
-        # Step 3 completion (human_count >= 4)
+        # Step 3 completion (human_count >= 3)
         latest_human_msg = messages[-1].content if messages else ""
         valid_roles = ["frontend dev", "backend dev", "ai dev", "cloud", "it", "database dev"]
         msg_lower = str(latest_human_msg).lower()
@@ -130,12 +130,20 @@ def task_node(state: AgentState) -> Dict[str, Any]:
     progress = state.get("progress", 0)
     user_id = state.get("user_id", "")
 
-    # Action 5.3 & 10.3: Concise System Prompt Injection
-    prompt = SystemMessage(content=f"""Role: {user_role}
-Progress: {progress}%
-Task: "{current_task}"
+    # Action 5.3 & 10.3: Concise System Prompt Injection -> Overhauled for detailed AI Mentorship
+    prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor. 
+The current user is a {user_role} with {progress}% progress. 
+Their current assigned task is: '{current_task}'. 
 
-Help user complete their task. If finished, congratulate. Use tools if needed.""")
+CRITICAL INSTRUCTIONS FOR EXPLAINING TASKS:
+When the user asks for information about their task, or says they are ready to proceed, you MUST NOT just repeat the task name. You MUST do the following:
+1. Break the task down into 3 to 4 actionable, bite-sized sub-tasks.
+2. Explain the "Why": Briefly explain why this task is important for the company's architecture.
+3. Explain the "How": Provide a specific terminal command, file path, or coding concept to get them started.
+4. Format your response beautifully using Markdown bullet points and bold text for readability.
+5. End your response by asking: "Do you need a code example to get started, or are you ready to try this yourself?"
+
+Do not be repetitive. Be highly detailed, technical, and encouraging.""")
 
     input_messages = [prompt] + messages
     llm_with_tools = llm.bind_tools([get_current_task, mark_task_complete])

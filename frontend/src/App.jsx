@@ -11,6 +11,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { ChecklistPage } from './pages/ChecklistPage';
+import { DashboardLayout } from './layouts/DashboardLayout';
 import { ThemeToggle } from './components/ThemeToggle';
 
 const App = () => {
@@ -21,23 +22,32 @@ const App = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       
-      <Route 
-        path="/chat" 
-        element={
-          <ProtectedRoute>
-            <ChatPage />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/checklist" 
-        element={
-          <ProtectedRoute>
-            <ChecklistPage />
-          </ProtectedRoute>
-        } 
-      />
+      <Route element={<DashboardLayout />}>
+        <Route 
+          path="/chat" 
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/checklist" 
+          element={
+            <ProtectedRoute>
+              <ChecklistPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/docs" 
+          element={
+            <ProtectedRoute>
+              <KnowledgeBasePage />
+            </ProtectedRoute>
+          } 
+        />
+      </Route>
       
       <Route 
         path="/dashboard" 
@@ -53,15 +63,6 @@ const App = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminDashboardPage />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/docs" 
-        element={
-          <ProtectedRoute>
-            <KnowledgeBasePage />
           </ProtectedRoute>
         } 
       />

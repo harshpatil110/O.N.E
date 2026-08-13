@@ -42,15 +42,15 @@ export const ChecklistPage = () => {
   };
 
   if (loading) {
-    return <div className="p-12 text-stone-900 font-sans min-h-screen bg-[#F7F5F0]">Loading checklist...</div>;
+    return <div className="p-12 text-stone-900 font-sans h-full bg-[#F7F5F0]">Loading checklist...</div>;
   }
 
   if (!data) {
-    return <div className="p-12 text-stone-900 font-sans min-h-screen bg-[#F7F5F0]">No tasks found.</div>;
+    return <div className="p-12 text-stone-900 font-sans h-full bg-[#F7F5F0]">No tasks found.</div>;
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F5F0] text-stone-900 font-sans selection:bg-blue-100 relative">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#F7F5F0] text-stone-900 font-sans selection:bg-blue-100 relative">
       {/* Editorial Grid Pattern */}
       <div 
         className="absolute inset-0 z-0 pointer-events-none opacity-40"

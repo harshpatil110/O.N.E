@@ -10,6 +10,7 @@ from app.core.auth_deps import get_current_user
 from app.services.checklist_service import ChecklistService
 
 from app.models.onboarding_session import OnboardingSession
+from app.models.conversation_log import ConversationLog
 from app.schemas.auth import UserResponse
 from app.schemas.onboarding import SessionStartResponse, SessionDetailResponse, SessionProgressResponse
 
@@ -24,6 +25,10 @@ async def start_session(
     Starts a new onboarding session for the current user.
     If an active session already exists, returns the existing one.
     """
+    welcome_msg = ("Hi! I'm O.N.E — your Onboarding Navigation Environment. "
+                   "I'm here to guide you through your first days at the company. "
+                   "Let's start with the basics — what's your full name?")
+
     # Check for existing active session
     existing_session = db.query(OnboardingSession).filter(
         OnboardingSession.user_id == str(current_user.id),
@@ -31,11 +36,21 @@ async def start_session(
     ).first()
     
     if existing_session:
+        # Ensure the welcome log exists (idempotent)
+        has_logs = db.query(ConversationLog).filter(
+            ConversationLog.session_id == existing_session.id
+        ).first()
+        if not has_logs:
+            db.add(ConversationLog(
+                session_id=str(existing_session.id),
+                role="assistant",
+                content=welcome_msg,
+                created_at=datetime.now(timezone.utc)
+            ))
+            db.commit()
         return SessionStartResponse(
             session_id=str(existing_session.id),
-            message="Hi! I'm O.N.E — your Onboarding Navigation Environment. "
-                       "I'm here to guide you through your first days at the company. "
-                       "Let's start with the basics — what's your full name and email address?"
+            message=welcome_msg
         )
 
     # Generate a unique ID
@@ -54,11 +69,18 @@ async def start_session(
     db.commit()
     db.refresh(new_session)
     
+    # Persist welcome message as conversation log so the 3-question gate stays in sync
+    db.add(ConversationLog(
+        session_id=new_session_id,
+        role="assistant",
+        content=welcome_msg,
+        created_at=datetime.now(timezone.utc)
+    ))
+    db.commit()
+    
     return SessionStartResponse(
         session_id=str(new_session.id),
-        message="Hi! I'm O.N.E — your Onboarding Navigation Environment. "
-                   "I'm here to guide you through your first days at the company. "
-                   "Let's start with the basics — what's your full name and email address?"
+        message=welcome_msg
     )
 
 @router.get("/onboarding/{session_id}", response_model=SessionDetailResponse)

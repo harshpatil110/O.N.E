@@ -44,7 +44,7 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex h-screen bg-[#F7F5F0] text-stone-900 overflow-hidden font-sans selection:bg-blue-100">
+    <div className="flex h-full w-full bg-[#F7F5F0] text-stone-900 overflow-hidden font-sans selection:bg-blue-100">
       
       {/* Editorial Grid Pattern */}
       <div 
