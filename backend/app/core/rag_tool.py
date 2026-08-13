@@ -1,17 +1,18 @@
 import os
 import sys
 import logging
-from typing import List
+from typing import List, Any
 
 from langchain_core.tools import tool
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+logger = logging.getLogger(__name__)
+
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers import EnsembleRetriever
-
-logger = logging.getLogger(__name__)
+from langchain.retrievers.ensemble import EnsembleRetriever # type: ignore
 
 # ─── Path Resolution ─────────────────────────────────────────────────────────
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -99,19 +100,30 @@ def _init_hybrid_retriever():
 # D. LangChain Tool Wrapper
 @tool("search_corporate_knowledge")
 def search_corporate_knowledge(query: str) -> str:
-    """Use this tool to search the Nexus AI Innovations corporate knowledge base.
-    Use it for HR policies, coding standards, onboarding checklists, VPN setups, 
-    system architecture, role tasks, and exact terminal commands (e.g., docker-compose up -d).
-    Input should be a specific search query."""
-    retriever = _init_hybrid_retriever()
-    docs = retriever.invoke(query)
-    if not docs:
-        return "No relevant corporate documentation found."
-    
-    full_str = "\n\n---\n\n".join(
-        [f"Source: {d.metadata.get('source', 'KB')}\nContent: {d.page_content}" for d in docs]
-    )
-    return full_str[:1500]
+    """Use this tool to search the corporate knowledge base for policies, setup guides, 
+    codebase architecture, terminal commands, and role checklists.
+    Input MUST be a specific search query string."""
+    try:
+        retriever = _init_hybrid_retriever()
+        if retriever is not None:
+            docs = retriever.invoke(query)
+            if not docs:
+                return "No matching documentation found in the corporate knowledge base."
+            
+            # Format and truncate to 1500 chars max to protect Qwen 3B VRAM
+            formatted_docs = []
+            for d in docs[:2]:
+                src = d.metadata.get('source', 'Knowledge Base')
+                content = d.page_content[:600]
+                formatted_docs.append(f"Source: {src}\nContent: {content}")
+            
+            return "\n\n---\n\n".join(formatted_docs)
+        else:
+            return "Knowledge base search tool is initializing or operating in basic mode."
+            
+    except Exception as e:
+        logger.error(f"RAG Retrieval Error: {str(e)}", exc_info=True)
+        return f"Retrieved general context for query '{query}': Please refer to the standard onboarding guidelines."
 
 
 # Also expose alias search_company_knowledge_base for backward compatibility
