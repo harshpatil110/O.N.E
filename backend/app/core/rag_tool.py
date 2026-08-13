@@ -6,29 +6,10 @@ from typing import List
 from langchain_core.tools import tool
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-try:
-    from langchain_huggingface import HuggingFaceEmbeddings
-except ImportError:
-    from langchain_community.embeddings import HuggingFaceEmbeddings
-
-try:
-    from langchain_chroma import Chroma
-except ImportError:
-    from langchain_community.vectorstores import Chroma
-
-try:
-    from langchain_community.retrievers import BM25Retriever
-except ImportError:
-    from langchain.retrievers import BM25Retriever
-
-try:
-    from langchain.retrievers import EnsembleRetriever
-except ImportError:
-    try:
-        from langchain_classic.retrievers import EnsembleRetriever
-    except ImportError:
-        from langchain_community.retrievers import EnsembleRetriever
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from langchain_community.retrievers import BM25Retriever
+from langchain.retrievers import EnsembleRetriever
 
 logger = logging.getLogger(__name__)
 

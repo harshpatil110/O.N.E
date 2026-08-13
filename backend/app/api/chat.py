@@ -124,8 +124,9 @@ async def send_message(
         return ChatMessageResponse(content=reply, session_id=session_id)
         
     except Exception as e:
-        logger.error(f"Error in chat logic: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        logger.error(f"Error in chat endpoint: {str(e)}\n{traceback.format_exc()}", exc_info=True)
+        return {"content": f"I encountered an internal error processing your request: {str(e)}", "session_id": session_id}
 
 @router.get("/chat/{session_id}/history", response_model=ConversationHistoryResponse)
 async def get_chat_history(
