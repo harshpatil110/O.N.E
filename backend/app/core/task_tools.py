@@ -8,7 +8,8 @@ from app.models.tasks import RoleTask
 def get_current_task(user_id: str) -> str:
     """Use this tool when a user asks what their next task is, what they need to work on, 
     or what their current onboarding step is.
-    Input MUST be the user's UUID string."""
+    Input MUST be the user's UUID string.
+    CRITICAL: You MUST NOT just repeat the output of this tool to the user. You MUST elaborate, explain the "Why" and "How", and break it down into 3-4 subtasks as per your system prompt instructions."""
     try:
         with SessionLocal() as db:
             task_str = get_next_task(db, user_id)
@@ -22,7 +23,8 @@ def get_current_task(user_id: str) -> str:
 def mark_task_complete(user_id: str) -> str:
     """Use this tool when a user explicitly states they finished, completed, or did their 
     current task (e.g., 'I completed task 1', 'Mark as done', 'Finished it').
-    Input MUST be the user's UUID string."""
+    Input MUST be the user's UUID string.
+    CRITICAL: After calling this tool, you MUST enthusiastically congratulate the user, then immediately break down their NEXT task using the exact same detailed rules (Why, How, Subtasks) in your system prompt."""
     try:
         with SessionLocal() as db:
             user = db.query(User).filter(User.id == user_id).first()
