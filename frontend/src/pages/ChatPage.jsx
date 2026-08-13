@@ -3,13 +3,10 @@ import { useChat } from '../hooks/useChat';
 import { startSession } from '../api/chat';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatInput } from '../components/ChatInput';
-import { ContextualSidebar } from '../components/ContextualSidebar';
 import { ChecklistProvider, useChecklist } from '../context/ChecklistContext';
-import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 
 const ChatPageInner = ({ sessionId, setSessionId }) => {
   const [initError, setInitError] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const endOfMessagesRef = useRef(null);
   const { fetchProgress } = useChecklist();
 
@@ -56,7 +53,7 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
       />
 
       {/* LEFT PANEL: Chat Interface */}
-      <div className={`relative flex flex-col z-10 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-[70%]' : 'w-full'}`}>
+      <div className="relative flex flex-col z-10 transition-all duration-300 ease-in-out w-full">
         
         {/* Header */}
         <div className="h-16 px-6 lg:px-12 flex items-center border-b border-[#1f1f23] bg-transparent backdrop-blur-md">
@@ -77,15 +74,6 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
               <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
               <span className="text-[10px] text-slate-300 font-bold tracking-wider uppercase">Active</span>
             </div>
-
-            {/* Sidebar Toggle Button */}
-            <button
-              onClick={() => setIsSidebarOpen(prev => !prev)}
-              className="p-2 text-slate-400 hover:text-white transition-colors flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-lg border border-white/5"
-              title={isSidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
-            >
-              {isSidebarOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
-            </button>
           </div>
         </div>
 
@@ -115,11 +103,6 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
           <ChatInput onSendMessage={sendMessage} disabled={isLoading || !sessionId} />
         </div>
 
-      </div>
-
-      {/* RIGHT PANEL: Contextual Sidebar */}
-      <div className={`relative z-10 transition-all duration-300 ease-in-out border-l border-[#1f1f23] bg-[#111114] ${isSidebarOpen ? 'w-[30%] opacity-100 translate-x-0' : 'w-0 opacity-0 translate-x-12'}`}>
-        {isSidebarOpen && <ContextualSidebar />}
       </div>
 
     </div>
