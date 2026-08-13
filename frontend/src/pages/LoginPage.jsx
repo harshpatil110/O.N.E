@@ -24,7 +24,7 @@ export const LoginPage = () => {
       if (userRole === 'admin' || userRole === 'superadmin') {
           navigate('/admin');
       } else {
-          navigate('/dashboard');
+          navigate('/chat');
       }
     } catch (err) {
       setError(err.response?.data?.detail || 'Invalid email or password. Please try again.');

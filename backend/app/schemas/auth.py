@@ -25,6 +25,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     role: str
+    onboarding_progress: int = 0
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -48,6 +49,8 @@ class UserResponse(BaseModel):
     name: str
     email: EmailStr
     role: str
+    department_role: str | None = None
+    onboarding_progress: int = 0
     
     model_config = ConfigDict(
         from_attributes=True,

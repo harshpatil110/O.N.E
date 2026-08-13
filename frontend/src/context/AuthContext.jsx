@@ -4,12 +4,26 @@ import { AuthContext } from './AuthContextObject';
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => sessionStorage.getItem('token'));
   const [role, setRole] = useState(() => sessionStorage.getItem('role'));
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     if (token) {
       sessionStorage.setItem('token', token);
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUser({
+          id: payload.sub,
+          role: payload.role,
+          email: payload.email,
+          departmentRole: payload.department_role,
+          onboardingProgress: payload.onboarding_progress
+        });
+      } catch (e) {
+        console.error("Failed to decode JWT", e);
+      }
     } else {
       sessionStorage.removeItem('token');
+      setUser(null);
     }
   }, [token]);
 
@@ -32,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, role, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ token, role, user, login, logout, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

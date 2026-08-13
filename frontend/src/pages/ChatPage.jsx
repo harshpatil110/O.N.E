@@ -5,11 +5,13 @@ import { startSession } from '../api/chat';
 import { MessageBubble } from '../components/MessageBubble';
 import { ChatInput } from '../components/ChatInput';
 import { ChecklistProvider, useChecklist } from '../context/ChecklistContext';
+import { useAuth } from '../hooks/useAuth';
 
 const ChatPageInner = ({ sessionId, setSessionId }) => {
   const [initError, setInitError] = useState(null);
   const endOfMessagesRef = useRef(null);
   const { fetchProgress } = useChecklist();
+  const { user } = useAuth();
 
   const handleMessageComplete = useCallback(() => {
     setTimeout(() => {
@@ -66,9 +68,18 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
             <span className="text-[10px] font-mono uppercase tracking-widest text-stone-400 border-l border-stone-200 pl-3">Onboarding System</span>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/checklist" className="text-xs font-mono uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors">
-              My Checklist
-            </Link>
+            {user?.onboardingProgress > 0 ? (
+              <Link to="/checklist" className="text-xs font-mono uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors">
+                My Checklist
+              </Link>
+            ) : (
+              <span className="text-[10px] font-mono uppercase tracking-widest text-stone-400 font-semibold bg-[#F7F5F0] px-2.5 py-1.5 rounded-sm border border-stone-200 flex items-center gap-1.5 shadow-sm">
+                <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="square" strokeLinejoin="miter" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V7z" />
+                </svg>
+                Gate Locked
+              </span>
+            )}
           </div>
         </div>
 

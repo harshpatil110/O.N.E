@@ -69,11 +69,18 @@ async def login(
     
     # Create JWT token payload. Custom payload logic goes here
     access_token = create_access_token(
-        data={"sub": str(user.id), "role": user.role}
+        data={
+            "sub": str(user.id), 
+            "role": user.role,
+            "email": user.email,
+            "department_role": user.department_role,
+            "onboarding_progress": user.onboarding_progress or 0
+        }
     )
     
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
-        role=user.role
+        role=user.role,
+        onboarding_progress=user.onboarding_progress or 0
     )
