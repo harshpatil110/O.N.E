@@ -42,29 +42,63 @@ async def send_message(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     try:
-        from app.core.agent import run_hermes_agent
+        from app.core.langgraph_agent import app_graph
+        from app.core.task_manager import get_next_task
+        from app.models.user import User
+        from langchain_core.messages import HumanMessage, AIMessage
         from datetime import datetime, timezone
         
-        # 1. Fetch conversation history (last 20 messages)
+        # Action 5.1: Fetch User Data
+        user_model = db.query(User).filter(User.id == current_user.id).first()
+        if not user_model:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        current_task_obj = get_next_task(db, str(current_user.id))
+        current_task_string = current_task_obj.title if current_task_obj else "No pending tasks."
+        
+        # Action 5.1: Fetch Chat History (last 10 messages)
         history_logs = db.query(ConversationLog)\
             .filter_by(session_id=session_id)\
             .filter(ConversationLog.role != "system")\
             .order_by(ConversationLog.created_at.asc())\
-            .limit(20)\
+            .limit(10)\
             .all()
             
-        history = [
-            {"role": log.role, "content": log.content}
-            for log in history_logs
-        ]
+        # Action 5.2: Format Messages to LangChain classes
+        formatted_messages = []
+        for log in history_logs:
+            if log.role == "user":
+                formatted_messages.append(HumanMessage(content=log.content))
+            elif log.role == "assistant":
+                formatted_messages.append(AIMessage(content=log.content))
+                
+        # Append the new incoming message
+        formatted_messages.append(HumanMessage(content=request.message))
         
         # End the current transaction so connection can be recycled if needed
         db.commit()
         
-        # 2. Invoke Hermes agent
-        reply = await run_hermes_agent(request.message, history)
+        # Action 5.2: State Initialization
+        initial_state = {
+            "messages": formatted_messages,
+            "user_id": str(user_model.id),
+            "user_role": user_model.department_role,
+            "progress": user_model.onboarding_progress,
+            "current_task": current_task_string,
+            "next_route": ""
+        }
         
-        # 3. Persist new messages to database
+        # Invoke the compiled LangGraph workflow
+        response_state = app_graph.invoke(initial_state)
+        
+        # Extract the final AI response
+        final_messages = response_state.get("messages", [])
+        if final_messages and hasattr(final_messages[-1], "content"):
+            reply = str(final_messages[-1].content)
+        else:
+            reply = "I'm sorry, I couldn't process that request."
+        
+        # 4. Database Persistence (Save new human and AI messages)
         now = datetime.now(timezone.utc)
         
         user_log = ConversationLog(

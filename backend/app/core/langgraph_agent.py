@@ -142,7 +142,12 @@ def rag_node(state: AgentState) -> Dict[str, Any]:
         logger.error(f"RAG search error: {e}")
         rag_context = "No relevant corporate documentation found."
 
+    user_role = state.get("user_role", "Developer")
+    progress = state.get("progress", 0)
+    current_task = state.get("current_task", "No current task assigned.")
+
     prompt = SystemMessage(content=f"""You are Hermes, the AI Corporate Knowledge Assistant for Nexus AI Innovations.
+The current user is a {user_role} with {progress}% progress. Their current assigned task is: '{current_task}'.
 Use the following retrieved context from the company knowledge base to answer the user's question accurately.
 Do not guess or hallucinate. Keep your answer professional, clear, and concise.
 
