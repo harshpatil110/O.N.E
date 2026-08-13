@@ -1,56 +1,44 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Bot } from 'lucide-react';
-// eslint-disable-next-line no-unused-vars
-import { motion } from 'framer-motion';
 
 export const MessageBubble = ({ role, content, isLoadingIndicator = false }) => {
   const isUser = role === 'user';
 
-  const baseClasses = 'max-w-[85%] px-5 py-3.5 md:max-w-[75%] leading-relaxed text-[14px]';
+  const baseClasses = 'max-w-[85%] px-5 py-3.5 md:max-w-[75%] leading-relaxed text-[14px] font-sans';
   
-  // Dark UI styling based on Stitch design
+  // Warm Editorial Minimalism bubble styling
   const roleClasses = isUser
-    ? 'ml-auto bg-[#4c6ef5] text-white rounded-2xl rounded-tr-sm shadow-lg shadow-[#4c6ef5]/20'
-    : 'mr-auto bg-[#111114] text-slate-300 rounded-2xl rounded-tl-sm border border-[#1f1f23] shadow-lg shadow-black/20';
+    ? 'ml-auto bg-[#BFDBFE] text-stone-900 border border-blue-300/60 rounded-md rounded-tr-none shadow-sm'
+    : 'mr-auto bg-white text-stone-900 border border-stone-200/80 rounded-md rounded-tl-none shadow-sm';
 
   if (isLoadingIndicator) {
     return (
-      <motion.div 
-        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-        className={`flex w-full justify-start items-end space-x-3`}
-      >
-        <div className="w-8 h-8 flex-shrink-0 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-[#4c6ef5]">
-          <Bot size={16} />
+      <div className={`flex w-full justify-start items-end space-x-3`}>
+        <div className="w-7 h-7 flex-shrink-0 bg-stone-900 text-stone-100 rounded-sm flex items-center justify-center shadow-sm">
+          <Bot size={14} />
         </div>
-        <div className={`${baseClasses} ${roleClasses} flex items-center space-x-1.5 h-[42px] px-5`}>
-          <div className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-pulse flex-shrink-0" style={{ animationDelay: '0ms' }} />
-          <div className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-pulse flex-shrink-0" style={{ animationDelay: '150ms' }} />
-          <div className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-pulse flex-shrink-0" style={{ animationDelay: '300ms' }} />
+        <div className={`${baseClasses} ${roleClasses} flex items-center space-x-1.5 h-[40px] px-4`}>
+          <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-pulse flex-shrink-0" style={{ animationDelay: '0ms' }} />
+          <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-pulse flex-shrink-0" style={{ animationDelay: '150ms' }} />
+          <div className="w-1.5 h-1.5 bg-stone-400 rounded-full animate-pulse flex-shrink-0" style={{ animationDelay: '300ms' }} />
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
-      className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} items-end space-x-3 group`}
-    >
+    <div className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'} items-end space-x-3 group`}>
       {!isUser && (
-        <div className="w-8 h-8 flex-shrink-0 bg-white/5 border border-white/10 rounded-lg flex items-center justify-center text-[#4c6ef5] shadow-sm">
-          <Bot size={16} />
+        <div className="w-7 h-7 flex-shrink-0 bg-stone-900 text-stone-100 rounded-sm flex items-center justify-center shadow-sm">
+          <Bot size={14} />
         </div>
       )}
       <div className={`${baseClasses} ${roleClasses}`}>
-        <div className={`prose prose-sm max-w-none ${isUser ? 'prose-invert text-white' : 'prose-invert text-slate-300 prose-a:text-[#4c6ef5] prose-strong:text-white prose-code:text-emerald-400 prose-code:bg-emerald-400/10 prose-code:px-1 prose-code:rounded'}`}>
+        <div className={`prose prose-sm max-w-none ${isUser ? 'text-stone-900 prose-strong:text-stone-900' : 'text-stone-800 prose-headings:font-serif prose-a:text-blue-700 prose-strong:text-stone-900 prose-code:font-mono prose-code:bg-stone-100 prose-code:text-stone-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-sm'}`}>
           <ReactMarkdown>{typeof content === 'string' && content.length > 0 ? content : '*⚠️ EMPTY — No content string received*'}</ReactMarkdown>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

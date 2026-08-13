@@ -99,23 +99,23 @@ export const SessionDetailPage = () => {
 
   if (loading) {
       return (
-          <div className="min-h-screen bg-[#0B0B0E] flex flex-col items-center justify-center text-slate-400 font-sans">
-              <div className="size-10 flex items-center justify-center animate-spin mb-4">
-                  <div className="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full" />
+          <div className="min-h-screen bg-[#F7F5F0] flex flex-col items-center justify-center text-stone-900 font-sans">
+              <div className="size-8 flex items-center justify-center animate-spin mb-3">
+                  <div className="w-6 h-6 border-2 border-stone-300 border-t-stone-900 rounded-full" />
               </div>
-              <p className="text-sm font-bold tracking-widest uppercase text-indigo-400 animate-pulse">Loading Session Details...</p>
+              <p className="text-xs font-mono uppercase tracking-widest text-stone-500">Loading Session Details...</p>
           </div>
       );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0B0B0E] p-8 flex flex-col items-center justify-center">
-        <div className="bg-rose-500/10 text-rose-400 p-4 rounded-xl border border-rose-500/20 max-w-md text-center">
+      <div className="min-h-screen bg-[#F7F5F0] p-8 flex flex-col items-center justify-center">
+        <div className="bg-rose-50 text-rose-800 p-4 rounded-sm border border-rose-200 max-w-md text-center text-xs font-mono">
           {error}
         </div>
-        <button onClick={() => navigate('/admin/developers')} className="mt-6 text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-widest text-sm font-bold flex items-center gap-2">
-          <ArrowLeft size={16} /> Back to Directory
+        <button onClick={() => navigate('/admin/developers')} className="mt-6 text-stone-900 hover:text-stone-700 transition-colors uppercase tracking-widest text-xs font-mono font-bold flex items-center gap-2">
+          <ArrowLeft size={14} /> Back to Directory
         </button>
       </div>
     );
@@ -124,24 +124,24 @@ export const SessionDetailPage = () => {
   const isCompleted = sessionSummary?.status === 'completed' || checklistData?.percent_complete === 100;
 
   return (
-    <div className="min-h-screen bg-[#0B0B0E] text-slate-300 font-sans p-6 md:p-10 flex justify-center">
+    <div className="min-h-screen bg-[#F7F5F0] text-stone-900 font-sans p-6 md:p-10 flex justify-center">
       <div className="w-full max-w-7xl space-y-8">
         
         {/* Navigation / Header Actions */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/5">
-          <div className="space-y-4">
-            <Link to="/admin/developers" className="inline-flex items-center gap-2 text-slate-500 hover:text-white font-medium text-sm transition-colors uppercase tracking-widest">
-              <ArrowLeft size={16} /> Directory
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-stone-200">
+          <div className="space-y-3">
+            <Link to="/admin/developers" className="inline-flex items-center gap-2 text-stone-500 hover:text-stone-900 font-mono text-xs transition-colors uppercase tracking-widest">
+              <ArrowLeft size={14} /> Directory
             </Link>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">Session Diagnostics</h1>
+            <h1 className="text-3xl font-serif font-bold text-stone-900 tracking-tight">Session Diagnostics</h1>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setDrawerOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#13131A] text-slate-300 text-sm font-bold border border-white/10 hover:bg-[#1a1a24] hover:text-white hover:border-slate-600 transition-all shadow-sm rounded-lg"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-stone-900 text-xs font-medium border border-stone-300 hover:bg-stone-50 transition-colors shadow-sm rounded-sm"
             >
-              <MessageSquareText size={16} className="text-indigo-400" />
+              <MessageSquareText size={14} className="text-stone-700" />
               View Conversation Log
             </button>
 
@@ -149,10 +149,10 @@ export const SessionDetailPage = () => {
               <button
                 onClick={handleResend}
                 disabled={resending}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-lg shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 disabled:opacity-50 transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-xs font-mono font-bold uppercase tracking-wider rounded-sm shadow-sm hover:bg-stone-800 disabled:opacity-50 transition-colors"
               >
-                <Mail size={16} />
-                {resending ? 'Sending Email...' : 'Resend HR Email'}
+                <Mail size={14} />
+                {resending ? 'Sending...' : 'Resend HR Email'}
               </button>
             )}
           </div>
@@ -160,30 +160,29 @@ export const SessionDetailPage = () => {
 
         {/* Employee Info Card */}
         {sessionSummary && (
-          <div className="bg-[#13131A] p-8 rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-indigo-500 to-emerald-400" />
+          <div className="bg-white p-8 rounded-md border border-stone-200 shadow-sm relative overflow-hidden">
             <div className="relative z-10 flex items-center gap-3 mb-6">
-               <UserIcon size={20} className="text-indigo-400" />
-               <h2 className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+               <UserIcon size={18} className="text-stone-700" />
+               <h2 className="text-xs font-mono font-bold text-stone-500 uppercase tracking-widest">
                  Employee Information
                </h2>
-               <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 ml-auto">
+               <span className="px-2.5 py-0.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider bg-blue-100 text-blue-900 border border-blue-200 ml-auto">
                    Active Session
                </span>
             </div>
             
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-8">
                <div>
-                 <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1.5">Name</div>
-                 <div className="font-semibold text-xl text-white">{sessionSummary.employee_name}</div>
+                 <div className="text-[10px] font-mono text-stone-400 uppercase tracking-widest mb-1">Name</div>
+                 <div className="font-serif font-bold text-xl text-stone-900">{sessionSummary.employee_name}</div>
                </div>
                <div className="md:col-span-2">
-                 <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1.5">Email / Identifier</div>
-                 <div className="font-semibold text-lg text-slate-300">{sessionSummary.employee_email || `${sessionSummary.employee_name?.replace(' ', '').toLowerCase()}@gmail.com`}</div>
+                 <div className="text-[10px] font-mono text-stone-400 uppercase tracking-widest mb-1">Email / Identifier</div>
+                 <div className="font-medium text-sm text-stone-700">{sessionSummary.employee_email || `${sessionSummary.employee_name?.replace(' ', '').toLowerCase()}@gmail.com`}</div>
                </div>
                <div>
-                 <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1.5">Role</div>
-                 <div className="font-semibold text-lg text-slate-300">{sessionSummary.role || 'Developer'}</div>
+                 <div className="text-[10px] font-mono text-stone-400 uppercase tracking-widest mb-1">Role</div>
+                 <div className="font-medium text-sm text-stone-700">{sessionSummary.role || 'Developer'}</div>
                </div>
             </div>
           </div>
@@ -196,71 +195,70 @@ export const SessionDetailPage = () => {
             <div className="lg:col-span-8 space-y-8">
                 
                 {/* Onboarding Progress Card */}
-                <div className="bg-[#13131A] p-8 rounded-2xl border border-white/5 shadow-xl relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="bg-white p-8 rounded-md border border-stone-200 shadow-sm relative overflow-hidden group">
                     <div className="flex justify-between items-end mb-6 relative z-10">
                         <div>
-                            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-2">
-                                <Clock size={16} className="text-indigo-400" /> Administrative Tracker
+                            <h3 className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2 mb-2">
+                                <Clock size={14} className="text-stone-700" /> Administrative Tracker
                             </h3>
-                            <p className="text-5xl font-black text-white tracking-tighter">
-                                {checklistData?.percent_complete || 0}<span className="text-3xl text-slate-500">%</span>
+                            <p className="text-5xl font-serif font-bold text-stone-900 tracking-tight">
+                                {checklistData?.percent_complete || 0}<span className="text-2xl text-stone-400 font-sans">%</span>
                             </p>
                         </div>
                         <div className="text-right pb-1">
-                            <span className="text-sm font-medium text-slate-400">
+                            <span className="text-xs font-mono font-medium text-stone-500">
                                 {checklistData?.completed_count || 0} / {checklistData?.total_items || 0} Complete
                             </span>
                         </div>
                     </div>
-                    <div className="h-3 bg-[#0B0B0E] rounded-full overflow-hidden border border-white/5 relative z-10">
+                    <div className="h-2 bg-stone-100 rounded-sm overflow-hidden border border-stone-200 relative z-10">
                         <div 
-                            className="h-full bg-gradient-to-r from-indigo-500 to-[#22d3ee] transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]"
+                            className="h-full bg-stone-900 transition-all duration-700 ease-out"
                             style={{ width: `${checklistData?.percent_complete || 0}%` }}
                         />
                     </div>
                 </div>
 
                 {/* Task Checklist Array */}
-                <div className="bg-[#13131A] p-8 rounded-2xl border border-white/5 shadow-xl">
+                <div className="bg-white p-8 rounded-md border border-stone-200 shadow-sm">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                            <LayoutDashboard size={20} className="text-indigo-400" /> Onboarding Checklist
+                        <h3 className="text-base font-serif font-bold text-stone-900 tracking-tight flex items-center gap-2">
+                            <LayoutDashboard size={18} className="text-stone-700" /> Onboarding Checklist
                         </h3>
-                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
+                        <p className="text-[9px] text-blue-900 font-mono font-bold uppercase tracking-widest bg-blue-100 px-2 py-0.5 rounded-sm border border-blue-200">
                             Admin Status Override
                         </p>
                     </div>
                     
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                         {checklistData?.items?.map(task => {
                             const isComplete = task.status === 'completed';
                             return (
                                 <div 
                                     key={task.id} 
                                     onClick={() => handleToggleTask(task.id, task.status)}
-                                    className="flex items-center gap-4 bg-[#0B0B0E]/50 p-4 rounded-xl border border-white/5 hover:border-indigo-500/30 transition-colors group cursor-pointer"
+                                    className="flex items-center gap-3 bg-[#F2F0EA]/50 p-3.5 rounded-sm border border-stone-200 hover:border-stone-400 transition-colors group cursor-pointer"
                                 >
                                     <div className="flex-shrink-0 mt-0.5">
                                         {isComplete ? (
-                                            <CheckCircle2 size={20} className="text-emerald-400" />
+                                            <CheckCircle2 size={18} className="text-stone-900" />
                                         ) : (
-                                            <Circle size={20} className="text-slate-600 group-hover:text-indigo-400 transition-colors" />
+                                            <Circle size={18} className="text-stone-400 group-hover:text-stone-800 transition-colors" />
                                         )}
                                     </div>
                                     <div className="flex-1">
-                                        <p className={`text-sm font-medium transition-colors ${isComplete ? 'text-slate-500 line-through' : 'text-slate-200 group-hover:text-white'}`}>
+                                        <p className={`text-xs font-medium transition-colors ${isComplete ? 'text-stone-400 line-through' : 'text-stone-800 group-hover:text-stone-950'}`}>
                                             {task.title}
                                         </p>
                                     </div>
-                                    <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+                                    <div className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest">
                                         {isComplete ? 'Done' : 'Pending'}
                                     </div>
                                 </div>
                             );
                         })}
                         {(!checklistData?.items || checklistData.items.length === 0) && (
-                            <div className="bg-[#0B0B0E]/50 border border-white/5 p-8 rounded-xl text-center text-slate-500 text-sm font-bold tracking-widest uppercase">
+                            <div className="bg-[#F2F0EA] border border-stone-200 p-8 rounded-sm text-center text-stone-400 font-mono text-xs uppercase">
                                 No checklist items synced.
                             </div>
                         )}
@@ -269,38 +267,37 @@ export const SessionDetailPage = () => {
 
             </div>
 
-            {/* Right Column (Secondary Context / Placeholders) */}
-            <div className="lg:col-span-4 space-y-8">
+            {/* Right Column */}
+            <div className="lg:col-span-4 space-y-6">
                 
                 {/* Project Assignment */}
-                <div className="bg-[#13131A] p-6 rounded-2xl border border-white/5 shadow-xl relative">
-                    <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-6">
-                        <Briefcase size={16} className="text-slate-600" /> Current Deployment
+                <div className="bg-white p-6 rounded-md border border-stone-200 shadow-sm relative">
+                    <h3 className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+                        <Briefcase size={14} className="text-stone-400" /> Current Deployment
                     </h3>
-                    <div className="h-24 flex items-center justify-center border border-dashed border-white/10 rounded-xl bg-white/5">
-                        <p className="text-[10px] tracking-widest font-bold uppercase text-slate-600">Awaiting Data Sync...</p>
+                    <div className="h-20 flex items-center justify-center border border-dashed border-stone-200 rounded-sm bg-[#F2F0EA]/30">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-stone-400">Awaiting Data Sync...</p>
                     </div>
                 </div>
 
                 {/* Technical Skills Matrix */}
-                <div className="bg-[#13131A] p-6 rounded-2xl border border-white/5 shadow-xl relative">
-                    <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-6">
-                        <Database size={16} className="text-slate-600" /> Technical Matrix
+                <div className="bg-white p-6 rounded-md border border-stone-200 shadow-sm relative">
+                    <h3 className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+                        <Database size={14} className="text-stone-400" /> Technical Matrix
                     </h3>
-                    <div className="h-32 flex items-center justify-center border border-dashed border-white/10 rounded-xl bg-white/5">
-                        <p className="text-[10px] tracking-widest font-bold uppercase text-slate-600">Awaiting Data Sync...</p>
+                    <div className="h-24 flex items-center justify-center border border-dashed border-stone-200 rounded-sm bg-[#F2F0EA]/30">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-stone-400">Awaiting Data Sync...</p>
                     </div>
                 </div>
 
-                {/* Communication Log Placeholder Shell */}
-                <div className="bg-[#13131A] p-6 rounded-2xl border border-white/5 shadow-xl relative flex flex-col h-[280px]">
-                    <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2 mb-6">
-                        <MessageSquareText size={16} className="text-slate-600" /> Event Stream
+                {/* Communication Log Placeholder */}
+                <div className="bg-white p-6 rounded-md border border-stone-200 shadow-sm relative flex flex-col h-[240px]">
+                    <h3 className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+                        <MessageSquareText size={14} className="text-stone-400" /> Event Stream
                     </h3>
-                    <div className="flex-1 flex items-center justify-center border border-dashed border-white/10 rounded-xl bg-white/5">
-                        <p className="text-[10px] tracking-widest font-bold uppercase text-slate-600 text-center px-4">
-                            Event logs are currently mapped out to the dedicated log drawer. <br/><br/>
-                            <span className="text-indigo-400">Inline stream incoming next patch.</span>
+                    <div className="flex-1 flex items-center justify-center border border-dashed border-stone-200 rounded-sm bg-[#F2F0EA]/30 p-4">
+                        <p className="text-[10px] font-mono uppercase tracking-widest text-stone-400 text-center">
+                            Event logs mapped to dedicated drawer.
                         </p>
                     </div>
                 </div>

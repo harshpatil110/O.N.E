@@ -81,13 +81,13 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Dark Enterprise Backdrop overlay */}
+            {/* Backdrop overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-stone-900/40 z-40"
               onClick={onClose}
               aria-hidden="true"
             />
@@ -97,63 +97,62 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
-              className="fixed top-0 right-0 h-full w-full sm:w-[560px] bg-[#0B0B0E] shadow-2xl shadow-black/50 z-50 flex flex-col border-l border-white/5"
+              transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
+              className="fixed top-0 right-0 h-full w-full sm:w-[540px] bg-[#F7F5F0] shadow-xl z-50 flex flex-col border-l border-stone-200 text-stone-900 font-sans"
               role="dialog"
               aria-modal="true"
               aria-label="Conversation History"
             >
         {/* ─── Header ─── */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-[#13131A] relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-indigo-500 to-emerald-400" />
-            <div className="flex items-center gap-4 relative z-10">
-                <div className="size-10 bg-indigo-500/10 text-indigo-400 flex items-center justify-center rounded-xl border border-indigo-500/20">
-                    <MessageSquareText size={20} />
+        <div className="flex items-center justify-between px-6 py-5 border-b border-stone-200 bg-white">
+            <div className="flex items-center gap-3">
+                <div className="size-8 bg-stone-900 text-white flex items-center justify-center rounded-sm">
+                    <MessageSquareText size={16} />
                 </div>
                 <div>
-                <h2 className="text-lg font-bold text-white tracking-tight leading-tight">
+                <h2 className="text-base font-serif font-bold text-stone-900 tracking-tight">
                     Conversation Log
                 </h2>
-                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mt-1">
-                    {employeeName ? `User: ${employeeName}` : 'Session View'} <span className="text-slate-600 mx-1">•</span> {totalMessages} messages
+                <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-stone-400">
+                    {employeeName ? `User: ${employeeName}` : 'Session View'} • {totalMessages} messages
                 </p>
                 </div>
             </div>
 
             <button
                 onClick={onClose}
-                className="p-2 text-slate-500 hover:text-white bg-[#0B0B0E] rounded-lg border border-white/5 hover:border-slate-700 transition-all z-10"
+                className="p-1.5 text-stone-500 hover:text-stone-900 bg-stone-100 rounded-sm border border-stone-200 hover:bg-stone-200 transition-colors"
                 aria-label="Close drawer"
             >
-                <X size={18} />
+                <X size={16} />
             </button>
         </div>
 
         {/* ─── Body ─── */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-8 py-8 space-y-6 custom-scrollbar bg-[#0B0B0E]">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-6 bg-[#F7F5F0]">
           {/* Loading state */}
           {loading && (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-indigo-400">
-              <Loader2 className="w-8 h-8 animate-spin" />
-              <span className="text-xs font-bold uppercase tracking-widest animate-pulse">Decrypting Event Stream...</span>
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-stone-500">
+              <Loader2 className="w-6 h-6 animate-spin text-stone-900" />
+              <span className="text-xs font-mono uppercase tracking-widest">Loading Conversation Stream...</span>
             </div>
           )}
 
           {/* Error state */}
           {!loading && error && (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-rose-400">
-              <AlertCircle className="w-10 h-10 text-rose-500" />
-              <span className="text-sm font-medium text-center">{error}</span>
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-rose-800">
+              <AlertCircle className="w-8 h-8 text-rose-700" />
+              <span className="text-xs font-mono text-center">{error}</span>
               <button
                 onClick={() => {
                   setError('');
                   setLoading(true);
                   getSessionChatHistory(sessionId)
                     .then(data => { setMessages(data.messages || []); setTotalMessages(data.total_messages || 0); })
-                    .catch(() => setError('Database sync threshold failed. Please refresh the diagnostic pane.'))
+                    .catch(() => setError('Database sync threshold failed. Please refresh.'))
                     .finally(() => setLoading(false));
                 }}
-                className="px-4 py-2 mt-2 bg-rose-500/10 border border-rose-500/20 rounded-lg text-xs font-bold uppercase tracking-wider text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition-all"
+                className="px-3 py-1.5 mt-2 bg-rose-50 border border-rose-200 rounded-sm text-xs font-mono font-bold uppercase tracking-wider text-rose-800 hover:bg-rose-100 transition-colors"
               >
                 Attempt Re-Sync
               </button>
@@ -162,67 +161,56 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
 
           {/* Empty state */}
           {!loading && !error && messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-slate-500">
-              <div className="size-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10 mb-2">
-                 <MessageSquare className="w-8 h-8 text-slate-600" />
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-stone-400">
+              <div className="size-12 rounded-sm bg-white flex items-center justify-center border border-stone-200 mb-1">
+                 <MessageSquare className="w-6 h-6 text-stone-400" />
               </div>
-              <span className="text-sm font-bold uppercase tracking-widest text-slate-400">No conversation history yet</span>
-              <span className="text-xs text-slate-600 font-medium">The neural interface is standing by for initialization.</span>
+              <span className="text-xs font-mono font-bold uppercase tracking-widest text-stone-500">No conversation history yet</span>
             </div>
           )}
 
           {/* Messages */}
           {!loading && !error && messages.length > 0 && (
-            <div className="space-y-6 pb-4">
+            <div className="space-y-4 pb-4">
               {messages.map((msg, idx) => {
                 const isUser = msg.role === 'user';
                 return (
                   <div
                     key={idx}
-                    className={`flex gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'} animate-fade-in`}
-                    style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
+                    className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
                   >
                     {/* Avatar */}
                     <div
-                      className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center mt-1 border shadow-sm
+                      className={`w-7 h-7 rounded-sm flex-shrink-0 flex items-center justify-center mt-1 text-xs font-mono font-bold border shadow-sm
                         ${isUser
-                          ? 'bg-slate-800 text-slate-300 border-white/10'
-                          : 'bg-indigo-500 text-white border-indigo-400 shadow-indigo-500/20'
+                          ? 'bg-blue-200 text-blue-900 border-blue-300'
+                          : 'bg-stone-900 text-white border-stone-900'
                         }`}
                     >
-                      {isUser ? <User size={18} /> : 
-                       <div className="font-black text-[10px] tracking-tighter flex items-center">
-                            O.N.E.
-                       </div>
-                      }
+                      {isUser ? <User size={14} /> : 'O.'}
                     </div>
 
                     {/* Bubble */}
-                    <div className={`flex flex-col max-w-[80%] ${isUser ? 'items-end' : 'items-start'}`}>
-                      {/* Role label */}
-                      <span className="text-[10px] font-bold uppercase tracking-widest mb-1.5 px-1 shadow-sm">
-                        {isUser ? (
-                             <span className="text-slate-500">Subject Log</span>
-                        ) : (
-                             <span className="text-indigo-400">System Broadcast</span>
-                        )}
+                    <div className={`flex flex-col max-w-[82%] ${isUser ? 'items-end' : 'items-start'}`}>
+                      <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-stone-400 mb-1 px-1">
+                        {isUser ? 'User' : 'Assistant'}
                       </span>
 
                       <div
-                        className={`px-5 py-4 rounded-2xl text-sm leading-relaxed border
+                        className={`px-4 py-3 rounded-md text-xs leading-relaxed border shadow-sm
                           ${isUser
-                            ? 'bg-slate-800 text-slate-200 border-slate-700 rounded-tr-sm'
-                            : 'bg-indigo-500/10 text-indigo-100 border-indigo-500/20 rounded-tl-sm'
+                            ? 'bg-[#BFDBFE] text-stone-900 border-blue-300'
+                            : 'bg-white text-stone-900 border-stone-200'
                           }`}
                       >
-                        <div className="prose prose-sm prose-invert max-w-none text-opacity-90">
+                        <div className="prose prose-xs max-w-none text-stone-900 prose-headings:font-serif prose-code:font-mono">
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>
                       </div>
 
                       {/* Timestamp */}
                       {msg.timestamp && (
-                        <span className="text-[10px] text-slate-500 mt-2 px-1 font-bold tracking-wider uppercase">
+                        <span className="text-[9px] font-mono text-stone-400 mt-1 px-1 uppercase tracking-widest">
                           {formatTimestamp(msg.timestamp)}
                         </span>
                       )}
@@ -235,12 +223,12 @@ export const ChatHistoryDrawer = ({ isOpen, onClose, sessionId, employeeName }) 
         </div>
 
         {/* ─── Footer ─── */}
-        <div className="px-8 py-4 border-t border-white/5 bg-[#13131A] flex justify-between items-center">
-          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-            Read-only deployment stream
+        <div className="px-6 py-3.5 border-t border-stone-200 bg-white flex justify-between items-center">
+          <p className="text-[10px] font-mono text-stone-400 uppercase tracking-widest font-bold">
+            Read-only conversation log
           </p>
-          <p className="text-[10px] text-indigo-400 uppercase tracking-widest font-bold bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
-            {totalMessages} Total Packets
+          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-stone-700 bg-stone-100 px-2 py-0.5 rounded-sm border border-stone-200">
+            {totalMessages} Messages
           </p>
         </div>
       </motion.div>

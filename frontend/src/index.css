@@ -2,168 +2,87 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 :root {
   font: 100%/1.5 var(--font-sans);
 
-  /* LIGHT MODE (Apple Design defaults) */
-  --bg-app: #F5F5F7;
-  --text-main: #1D1D1F;
-  --text-muted: #86868B;
-  
-  --bg-material: rgba(255, 255, 255, 0.65);
-  --bg-card: rgba(255, 255, 255, 0.7);
-  
-  --border-card: rgba(0, 0, 0, 0.08);
-  --border-light: rgba(0, 0, 0, 0.04);
-  
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06);
-  
-  --input-bg: rgba(0, 0, 0, 0.03);
-  --input-border: rgba(0, 0, 0, 0.1);
-  --input-focus: rgba(0, 0, 0, 0.06);
-  --input-ring: rgba(0, 0, 0, 0.05);
-  
-  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
-  --scrollbar-hover: rgba(0, 0, 0, 0.3);
+  /* WARM EDITORIAL MINIMALISM DESIGN SYSTEM (UISkill.md) */
+  --canvas: #F7F5F0;
+  --canvas-warm: #F2F0EA;
 
-  /* Disable backgrounds for light mode compatibility */
-  --bg-grid-opacity: 0.1;
-}
+  --surface: #FFFFFF;
+  --surface-elevated: #FAFAF9;
 
-.dark {
-  /* DARK MODE */
-  --bg-app: #000000;
-  --text-main: #e2e8f0;
-  --text-muted: #94a3b8;
-  
-  --bg-material: rgba(20, 20, 20, 0.65);
-  --bg-card: rgba(30, 30, 30, 0.5);
-  
-  --border-card: rgba(255, 255, 255, 0.12);
-  --border-light: rgba(255, 255, 255, 0.05);
-  
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
-  
-  --input-bg: rgba(255, 255, 255, 0.06);
-  --input-border: rgba(255, 255, 255, 0.1);
-  --input-focus: rgba(255, 255, 255, 0.1);
-  --input-ring: rgba(255, 255, 255, 0.05);
-  
-  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
-  --scrollbar-hover: rgba(255, 255, 255, 0.3);
+  --text-primary: #1C1917; /* stone-900 */
+  --text-secondary: #78716C; /* stone-500 */
+  --text-muted: #A8A29E; /* stone-400 */
 
-  --bg-grid-opacity: 0.4;
+  --border: #E7E5E4; /* stone-200 */
+  --border-subtle: #F5F5F4; /* stone-100 */
+  --border-strong: rgba(0, 0, 0, 0.12);
+
+  --accent: #BFDBFE; /* blue-200 */
+  --accent-action: #93C5FD; /* blue-300 */
+  --accent-focus: #60A5FA; /* blue-400 */
+  --accent-text: #1E40AF; /* blue-800 */
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-soft: 0 4px 12px rgba(0,0,0,0.05);
+
+  --scrollbar-thumb: #D6D3D1;
+  --scrollbar-hover: #A8A29E;
 }
 
 @layer base {
   body {
-    background-color: var(--bg-app) !important;
-    color: var(--text-main) !important;
-    transition: background-color 0.4s ease, color 0.4s ease;
-  }
-  
-  /* Override Tailwind hardcoded text and background colors for global theme support */
-  .text-white, .text-slate-200, .text-slate-300 {
-    color: var(--text-main) !important;
-  }
-  .text-slate-400, .text-slate-500, .text-slate-600 {
-    color: var(--text-muted) !important;
-  }
-  
-  /* Apple Typography - Tracking and Leading */
-  h1, h2, h3, .display {
-    @apply font-heading;
-    letter-spacing: -0.022em !important;
-    line-height: 1.05 !important;
-    font-optical-sizing: auto;
-  }
-  
-  h4, h5, h6 {
-    @apply font-heading;
-    letter-spacing: -0.01em !important;
+    background-color: var(--canvas) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* Feedback lives on the press */
-  button, a, .btn, [role="button"], input[type="submit"] {
-    transition: transform 100ms ease-out, opacity 100ms ease-out, background-color 200ms ease, box-shadow 200ms ease !important;
-    cursor: pointer;
-  }
-  
-  button:active, a:active, .btn:active, [role="button"]:active {
-    transform: scale(0.97) !important;
+  /* Editorial Scale & Typography */
+  h1, h2, h3 {
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
   }
 
-  /* Translucency */
-  header, aside, .drawer-panel, [class*="backdrop-blur"] {
-    background: var(--bg-material) !important;
-    backdrop-filter: blur(25px) saturate(200%) !important;
-    -webkit-backdrop-filter: blur(25px) saturate(200%) !important;
-    border-color: var(--border-light) !important;
+  /* Structural UI borders & Surfaces override for dark hardcoded classes */
+  .bg-\[\#0a0a0c\], .bg-\[\#0B0B0E\], .bg-\[\#111114\], .bg-\[\#13131A\] {
+    background-color: var(--canvas) !important;
   }
 
-  main section, .bg-\[\#111114\], [class*="bg-[#111114]"], .bg-\[\#13131A\], .bg-\[\#0B0B0E\] {
-    background: var(--bg-card) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    border-top: 1px solid var(--border-card) !important;
-    border-left: 1px solid var(--border-light) !important;
-    border-right: 1px solid var(--border-light) !important;
-    border-bottom: 1px solid var(--border-light) !important;
-    border-radius: 16px !important;
-    box-shadow: var(--shadow-card) !important;
+  /* Interactive elements press feedback */
+  button, a, .btn, [role="button"] {
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
   }
 
   input, textarea {
-    background: var(--input-bg) !important;
-    border: 1px solid var(--input-border) !important;
-    border-radius: 10px !important;
-    color: var(--text-main) !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-primary) !important;
+    border-radius: var(--radius-md) !important;
   }
-  
+
   input:focus, textarea:focus {
-    background: var(--input-focus) !important;
-    border-color: var(--text-muted) !important;
-    box-shadow: 0 0 0 4px var(--input-ring) !important;
+    border-color: var(--text-primary) !important;
     outline: none !important;
-  }
-
-  header {
-    border-bottom: 1px solid var(--border-card) !important;
-  }
-
-  /* Reduced motion */
-  @media (prefers-reduced-motion: reduce) {
-    *, ::before, ::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-      transform: none !important;
-    }
-  }
-
-  @media (prefers-reduced-transparency: reduce) {
-    header, aside, .drawer-panel, [class*="backdrop-blur"], main section, .bg-\[\#111114\] {
-      background: var(--bg-app) !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-    }
+    box-shadow: 0 0 0 2px var(--accent) !important;
   }
 }
 
 /* Custom Scrollbars */
-:root {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) transparent;
-}
-
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -172,7 +91,7 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
-  border-radius: 10px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

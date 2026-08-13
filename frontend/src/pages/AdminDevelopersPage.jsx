@@ -80,9 +80,9 @@ export const AdminDevelopersPage = () => {
   };
 
   const determineStatus = (percent) => {
-    if (percent === 0) return { label: 'JUST STARTED', classes: 'text-indigo-400 bg-indigo-400/10 ring-indigo-400/20' };
-    if (percent > 0 && percent <= 20) return { label: 'BLOCKED', classes: 'text-rose-500 bg-rose-500/10 ring-rose-500/20' };
-    return { label: 'ON TRACK', classes: 'text-emerald-400 bg-emerald-400/10 ring-emerald-400/20' };
+    if (percent === 0) return { label: 'JUST STARTED', classes: 'text-stone-700 bg-stone-100 border border-stone-300' };
+    if (percent > 0 && percent <= 20) return { label: 'BLOCKED', classes: 'text-rose-800 bg-rose-100 border border-rose-300' };
+    return { label: 'ON TRACK', classes: 'text-blue-800 bg-blue-100 border border-blue-300' };
   };
 
   const formatDate = (dateString) => {
@@ -92,43 +92,43 @@ export const AdminDevelopersPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0E] text-slate-400 font-sans flex">
+    <div className="min-h-screen bg-[#F7F5F0] text-stone-900 font-sans flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-white/5 bg-[#0B0B0E] flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-white/5">
-          <div className="flex items-center gap-2 font-semibold text-white text-lg tracking-wide">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+      <aside className="w-64 border-r border-stone-200 bg-[#F2F0EA] flex flex-col hidden md:flex">
+        <div className="p-6 border-b border-stone-200">
+          <div className="flex items-center gap-2.5 font-serif font-bold text-stone-900 text-lg tracking-tight">
+            <div className="w-7 h-7 rounded-sm bg-stone-900 flex items-center justify-center text-stone-100 font-mono text-xs">
               O
             </div>
-            O.N.E. <span className="text-indigo-500">Admin</span>
+            O.N.E. <span className="font-sans text-xs uppercase font-mono tracking-widest text-stone-400">Admin</span>
           </div>
         </div>
         
-        <nav className="flex-1 px-4 space-y-2 mt-6 text-sm font-medium">
-          <Link to="/admin" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
-            <LayoutDashboard size={18} />
+        <nav className="flex-1 px-4 space-y-1 mt-6 text-xs font-medium">
+          <Link to="/admin" className="px-3 py-2.5 rounded-sm text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors flex items-center gap-3">
+            <LayoutDashboard size={16} />
             Dashboard
           </Link>
-          <Link to="/admin/developers" className="px-3 py-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 flex items-center gap-3">
-            <Users size={18} />
+          <Link to="/admin/developers" className="px-3 py-2.5 rounded-sm bg-stone-900 text-stone-100 flex items-center gap-3 shadow-sm">
+            <Users size={16} />
             Developers
           </Link>
-          <Link to="/admin/analytics" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
-            <BarChart2 size={18} />
+          <Link to="/admin/analytics" className="px-3 py-2.5 rounded-sm text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors flex items-center gap-3">
+            <BarChart2 size={16} />
             Analytics
           </Link>
         </nav>
 
-        <div className="p-4 border-t border-white/5">
-           <Link to="/admin/settings" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#13131A] cursor-pointer transition-colors">
-              <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex flex-shrink-0 items-center justify-center text-indigo-400 text-xs font-bold">
-                {adminProfile?.name ? adminProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : <UserIcon size={16} />}
+        <div className="p-4 border-t border-stone-200">
+           <Link to="/admin/settings" className="flex items-center gap-3 px-2 py-2 rounded-sm hover:bg-stone-200/60 cursor-pointer transition-colors">
+              <div className="w-7 h-7 rounded-sm bg-stone-200 flex flex-shrink-0 items-center justify-center text-stone-800 text-xs font-mono font-bold border border-stone-300">
+                {adminProfile?.name ? adminProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : <UserIcon size={14} />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{adminProfile?.name || 'Loading...'}</p>
-                <p className="text-xs text-slate-500 truncate capitalize">{adminProfile?.role?.replace('_', ' ') || '...'}</p>
+                <p className="text-xs font-semibold text-stone-900 truncate">{adminProfile?.name || 'Loading...'}</p>
+                <p className="text-[10px] text-stone-500 font-mono truncate capitalize">{adminProfile?.role?.replace('_', ' ') || '...'}</p>
               </div>
-              <Settings size={16} className="text-slate-500" />
+              <Settings size={14} className="text-stone-400" />
            </Link>
         </div>
       </aside>
@@ -142,7 +142,7 @@ export const AdminDevelopersPage = () => {
 
         <div className="px-8 pb-12 w-full max-w-full">
           {error && (
-            <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm flex items-center gap-3 mb-6">
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-sm text-xs font-mono flex items-center gap-3 mb-6">
               <AlertTriangle size={16} />
               {error}
             </div>
@@ -150,111 +150,98 @@ export const AdminDevelopersPage = () => {
 
           <div className="flex items-center justify-between mt-2 mb-8">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Developer Directory</h1>
-              <p className="text-sm font-medium text-slate-500">Live overview of onboarding progression and access statuses.</p>
+              <h1 className="text-2xl font-bold font-serif tracking-tight text-stone-900 mb-1">Developer Directory</h1>
+              <p className="text-xs font-mono uppercase tracking-widest text-stone-500">Live overview of onboarding progression and access statuses.</p>
             </div>
           </div>
 
           {/* Full-width Data Table */}
-          <div className="w-full bg-[#13131A] border border-white/5 rounded-xl shadow-xl overflow-hidden">
+          <div className="w-full bg-white border border-stone-200 rounded-md shadow-sm overflow-hidden">
             <div className="overflow-x-auto w-full">
-              <table className="w-full text-left text-sm whitespace-nowrap">
-                <thead className="bg-[#0B0B0E]/80 text-slate-500 text-[11px] uppercase tracking-widest font-bold border-b border-white/5">
+              <table className="w-full text-left text-xs whitespace-nowrap">
+                <thead className="bg-[#F2F0EA] text-stone-500 text-[10px] uppercase font-mono tracking-widest font-semibold border-b border-stone-200">
                   <tr>
-                    <th className="px-6 py-4">Developer</th>
-                    <th className="px-6 py-4">Start Date</th>
-                    <th className="px-6 py-4">Current Phase</th>
-                    <th className="px-6 py-4">Overall Progress</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
+                    <th className="px-6 py-3.5">Developer</th>
+                    <th className="px-6 py-3.5">Start Date</th>
+                    <th className="px-6 py-3.5">Current Phase</th>
+                    <th className="px-6 py-3.5">Overall Progress</th>
+                    <th className="px-6 py-3.5">Status</th>
+                    <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-stone-100">
                   {loadingSessions ? (
-                    // Skeleton Loading
                     [...Array(5)].map((_, i) => (
                       <tr key={i} className="animate-pulse">
-                        <td className="px-6 py-5 flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-white/5"></div>
-                          <div className="space-y-2">
-                            <div className="h-4 bg-white/5 rounded w-24"></div>
-                            <div className="h-3 bg-white/5 rounded w-32"></div>
+                        <td className="px-6 py-4 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-sm bg-stone-100"></div>
+                          <div className="space-y-1">
+                            <div className="h-3 bg-stone-100 rounded w-24"></div>
+                            <div className="h-2 bg-stone-100 rounded w-32"></div>
                           </div>
                         </td>
-                        <td className="px-6 py-5"><div className="h-4 bg-white/5 rounded w-20"></div></td>
-                        <td className="px-6 py-5"><div className="h-4 bg-white/5 rounded w-32"></div></td>
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-3 w-40">
-                            <div className="h-2 bg-white/5 rounded-full flex-1"></div>
-                            <div className="h-4 bg-white/5 rounded w-6"></div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5"><div className="h-6 bg-white/5 rounded w-20"></div></td>
-                        <td className="px-6 py-5 text-right"><div className="h-4 bg-white/5 rounded w-16 ml-auto"></div></td>
+                        <td className="px-6 py-4"><div className="h-3 bg-stone-100 rounded w-20"></div></td>
+                        <td className="px-6 py-4"><div className="h-3 bg-stone-100 rounded w-32"></div></td>
+                        <td className="px-6 py-4"><div className="h-3 bg-stone-100 rounded w-28"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 bg-stone-100 rounded w-16"></div></td>
+                        <td className="px-6 py-4 text-right"><div className="h-3 bg-stone-100 rounded w-16 ml-auto"></div></td>
                       </tr>
                     ))
                   ) : sessionsData.items.length === 0 ? (
-                    <tr><td colSpan="6" className="px-6 py-16 text-center text-slate-500 font-medium">No developers found in database.</td></tr>
+                    <tr><td colSpan="6" className="px-6 py-16 text-center text-stone-400 font-mono">No developers found in database.</td></tr>
                   ) : (
                     sessionsData.items.map(session => {
                        const statusObj = determineStatus(session.percent_complete);
                        const name = session.employee_name || 'Unknown';
-                       const email = session.user_email || `${name.toLowerCase().replace(' ', '')}@gmail.com`; // Fallback elegantly
+                       const email = session.user_email || `${name.toLowerCase().replace(' ', '')}@gmail.com`;
                        const initial = name.charAt(0).toUpperCase();
                        
                        return (
-                         <tr key={session.session_id} className="hover:bg-white/[0.02] transition-colors group">
-                           <td className="px-6 py-5">
-                              <div className="flex items-center gap-4">
-                                 <div className="w-10 h-10 rounded-full bg-[#0B0B0E] flex items-center justify-center text-indigo-300 font-bold text-sm flex-shrink-0 border border-indigo-500/20 shadow-inner group-hover:border-indigo-500/50 transition-colors">
+                         <tr key={session.session_id} className="hover:bg-stone-50 transition-colors group">
+                           <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                 <div className="w-8 h-8 rounded-sm bg-stone-100 flex items-center justify-center text-stone-800 font-mono font-bold text-xs flex-shrink-0 border border-stone-200">
                                    {initial}
                                  </div>
                                  <div>
-                                    <div className="text-white font-medium group-hover:text-indigo-400 transition-colors mb-0.5">
+                                    <div className="text-stone-900 font-medium group-hover:text-blue-800 transition-colors mb-0.5">
                                       {name}
                                     </div>
-                                    <div className="text-xs font-medium text-slate-500">{email}</div>
+                                    <div className="text-[11px] font-mono text-stone-400">{email}</div>
                                  </div>
                               </div>
                            </td>
-                           <td className="px-6 py-5 text-slate-300 font-medium font-mono text-[13px]">
+                           <td className="px-6 py-4 text-stone-600 font-mono text-xs">
                              {formatDate(session.started_at)}
                            </td>
-                           <td className="px-6 py-5 text-slate-300 font-medium tracking-wide">
+                           <td className="px-6 py-4 text-stone-700 font-medium">
                               {determinePhase(session.percent_complete)}
                            </td>
-                           <td className="px-6 py-5">
-                              <div className="flex items-center gap-3 w-48">
-                                 <div className="flex-1 h-2 bg-[#0B0B0E] border border-white/5 rounded-full overflow-hidden">
+                           <td className="px-6 py-4">
+                              <div className="flex items-center gap-3 w-44">
+                                 <div className="flex-1 h-1.5 bg-stone-100 border border-stone-200 rounded-sm overflow-hidden">
                                     <div 
-                                      className="h-full bg-indigo-500 rounded-full shadow-[0_0_10px_currentColor] transition-all duration-500 ease-out" 
+                                      className="h-full bg-stone-900 rounded-sm transition-all duration-300" 
                                       style={{ width: `${session.percent_complete}%` }}
                                     />
                                  </div>
-                                 <span className="text-[13px] font-bold text-slate-300 w-8">{session.percent_complete}%</span>
+                                 <span className="text-xs font-mono font-bold text-stone-700 w-8">{session.percent_complete}%</span>
                               </div>
                            </td>
-                           <td className="px-6 py-5">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black tracking-widest ring-1 ring-inset ${statusObj.classes}`}>
+                           <td className="px-6 py-4">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold tracking-wider ${statusObj.classes}`}>
                                 {statusObj.label}
                               </span>
                            </td>
-                           <td className="px-6 py-5 text-right">
-                              <div className="flex items-center justify-end gap-4">
+                           <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-3">
                                 <button
                                   onClick={() => handleViewChats(session.user_id, name)}
-                                  className="text-sm font-semibold text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
+                                  className="text-xs font-medium text-stone-600 hover:text-stone-900 flex items-center gap-1 transition-colors border border-stone-200 px-2.5 py-1 rounded-sm bg-stone-50"
                                 >
-                                  <MessageSquare size={14} />
+                                  <MessageSquare size={13} />
                                   View Chats
                                 </button>
-                                <Link 
-                                  to={`/dashboard/sessions/${session.session_id}`} 
-                                  className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 transition-colors group-hover:translate-x-0.5"
-                                >
-                                  View Details
-                                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                                </Link>
                               </div>
                            </td>
                          </tr>
@@ -271,34 +258,34 @@ export const AdminDevelopersPage = () => {
 
       {/* Chat Transcript Modal */}
       {isChatModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111114] border border-[#1f1f23] rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs">
+          <div className="bg-white border border-stone-200 rounded-md w-full max-w-2xl max-h-[85vh] flex flex-col shadow-lg">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200 bg-[#F2F0EA]">
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <MessageSquare size={18} className="text-indigo-400" />
+                <h2 className="text-base font-serif font-bold text-stone-900 flex items-center gap-2">
+                  <MessageSquare size={16} className="text-stone-700" />
                   Chat Transcript
                 </h2>
-                <p className="text-sm text-slate-500">History with {selectedUserForChat}</p>
+                <p className="text-xs font-mono text-stone-500">History with {selectedUserForChat}</p>
               </div>
               <button 
                 onClick={() => setIsChatModalOpen(false)}
-                className="text-slate-400 hover:text-white p-2 rounded-lg hover:bg-white/5 transition-colors"
+                className="text-stone-400 hover:text-stone-900 p-1.5 rounded-sm hover:bg-stone-200 transition-colors"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F7F5F0]">
               {loadingChats ? (
                 <div className="flex justify-center items-center h-40">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-stone-400 border-t-stone-900"></div>
                 </div>
               ) : chatTranscript.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-40 text-slate-500 space-y-3">
-                  <MessageSquare size={32} className="opacity-20" />
+                <div className="flex flex-col items-center justify-center h-40 text-stone-400 font-mono text-xs space-y-2">
+                  <MessageSquare size={24} className="opacity-30" />
                   <p>No chat history found for this developer.</p>
                 </div>
               ) : (
@@ -306,17 +293,17 @@ export const AdminDevelopersPage = () => {
                   const isAssistant = chat.role === 'assistant';
                   return (
                     <div key={chat.id} className={`flex w-full ${isAssistant ? 'justify-start' : 'justify-end'}`}>
-                      <div className={`max-w-[80%] rounded-2xl px-5 py-3.5 ${
+                      <div className={`max-w-[80%] rounded-sm px-4 py-3 text-xs leading-relaxed ${
                         isAssistant 
-                          ? 'bg-[#1a1a24] text-slate-300 border border-white/5 rounded-tl-sm' 
-                          : 'bg-indigo-600 text-white rounded-tr-sm shadow-lg shadow-indigo-500/20'
+                          ? 'bg-white text-stone-900 border border-stone-200 shadow-sm' 
+                          : 'bg-[#BFDBFE] text-stone-900 border border-blue-300 shadow-sm'
                       }`}>
-                        <div className="flex items-center gap-2 mb-1 opacity-70 text-[11px] font-medium uppercase tracking-wider">
-                          {isAssistant ? 'O.N.E. Assistant' : selectedUserForChat}
-                          <span className="opacity-50">•</span>
+                        <div className="flex items-center gap-2 mb-1 text-[10px] font-mono uppercase tracking-wider text-stone-500">
+                          <span>{isAssistant ? 'O.N.E. Assistant' : selectedUserForChat}</span>
+                          <span>•</span>
                           <span>{formatDate(chat.created_at)}</span>
                         </div>
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                        <div className="text-xs whitespace-pre-wrap font-sans">
                           {chat.content}
                         </div>
                       </div>

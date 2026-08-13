@@ -93,53 +93,53 @@ export const AdminDashboardPage = () => {
   };
 
   const determineStatus = (session) => {
-    if (session.status === 'completed') return { label: 'COMPLETED', classes: 'text-teal-400 bg-teal-400/10 ring-teal-400/20' };
+    if (session.status === 'completed') return { label: 'COMPLETED', classes: 'text-emerald-800 bg-emerald-100/80 border border-emerald-300' };
     
     // Simulate some variance based on percent
-    if (session.percent_complete < 20 && session.percent_complete > 0) return { label: 'BLOCKED', classes: 'text-rose-500 bg-rose-500/10 ring-rose-500/20' };
-    if (session.percent_complete === 45) return { label: 'AT RISK', classes: 'text-amber-400 bg-amber-400/10 ring-amber-400/20' };
+    if (session.percent_complete < 20 && session.percent_complete > 0) return { label: 'BLOCKED', classes: 'text-rose-800 bg-rose-100/80 border border-rose-300' };
+    if (session.percent_complete === 45) return { label: 'AT RISK', classes: 'text-amber-800 bg-amber-100/80 border border-amber-300' };
     
-    return { label: 'ON TRACK', classes: 'text-emerald-400 bg-emerald-400/10 ring-emerald-400/20' };
+    return { label: 'ON TRACK', classes: 'text-blue-800 bg-blue-100/80 border border-blue-300' };
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0E] text-slate-400 font-sans flex">
+    <div className="min-h-screen bg-[#F7F5F0] text-stone-900 font-sans flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-white/5 bg-[#0B0B0E] flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-white/5">
-          <div className="flex items-center gap-2 font-semibold text-white text-lg tracking-wide">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+      <aside className="w-64 border-r border-stone-200 bg-[#F2F0EA] flex flex-col hidden md:flex">
+        <div className="p-6 border-b border-stone-200">
+          <div className="flex items-center gap-2.5 font-serif font-bold text-stone-900 text-lg tracking-tight">
+            <div className="w-7 h-7 rounded-sm bg-stone-900 flex items-center justify-center text-stone-100 font-mono text-xs">
               O
             </div>
-            O.N.E. <span className="text-indigo-500">Admin</span>
+            O.N.E. <span className="font-sans text-xs uppercase font-mono tracking-widest text-stone-400">Admin</span>
           </div>
         </div>
         
-        <nav className="flex-1 px-4 space-y-2 mt-6 text-sm font-medium">
-          <Link to="/admin" className="px-3 py-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 flex items-center gap-3">
-            <LayoutDashboard size={18} />
+        <nav className="flex-1 px-4 space-y-1 mt-6 text-xs font-medium">
+          <Link to="/admin" className="px-3 py-2.5 rounded-sm bg-stone-900 text-stone-100 flex items-center gap-3 shadow-sm">
+            <LayoutDashboard size={16} />
             Dashboard
           </Link>
-          <Link to="/admin/developers" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
-            <Users size={18} />
+          <Link to="/admin/developers" className="px-3 py-2.5 rounded-sm text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors flex items-center gap-3">
+            <Users size={16} />
             Developers
           </Link>
-          <Link to="/admin/analytics" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
-            <BarChart2 size={18} />
+          <Link to="/admin/analytics" className="px-3 py-2.5 rounded-sm text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors flex items-center gap-3">
+            <BarChart2 size={16} />
             Analytics
           </Link>
         </nav>
 
-        <div className="p-4 border-t border-white/5">
-           <Link to="/admin/settings" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#13131A] cursor-pointer transition-colors">
-              <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex flex-shrink-0 items-center justify-center text-indigo-400 text-xs font-bold">
-                {adminProfile?.name ? adminProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : <UserIcon size={16} />}
+        <div className="p-4 border-t border-stone-200">
+           <Link to="/admin/settings" className="flex items-center gap-3 px-2 py-2 rounded-sm hover:bg-stone-200/60 cursor-pointer transition-colors">
+              <div className="w-7 h-7 rounded-sm bg-stone-200 flex flex-shrink-0 items-center justify-center text-stone-800 text-xs font-mono font-bold border border-stone-300">
+                {adminProfile?.name ? adminProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : <UserIcon size={14} />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{adminProfile?.name || 'Loading...'}</p>
-                <p className="text-xs text-slate-500 truncate capitalize">{adminProfile?.role?.replace('_', ' ') || '...'}</p>
+                <p className="text-xs font-semibold text-stone-900 truncate">{adminProfile?.name || 'Loading...'}</p>
+                <p className="text-[10px] text-stone-500 font-mono truncate capitalize">{adminProfile?.role?.replace('_', ' ') || '...'}</p>
               </div>
-              <Settings size={16} className="text-slate-500" />
+              <Settings size={14} className="text-stone-400" />
            </Link>
         </div>
       </aside>
@@ -162,17 +162,14 @@ export const AdminDashboardPage = () => {
           {/* KPI Metrics */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* KPI 1 */}
-            <div className="bg-[#13131A] rounded-xl p-6 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors">
-               <div className="absolute -top-4 -right-4 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                 <Users size={80} className="text-white" />
-               </div>
+            <div className="bg-white rounded-md p-6 border border-stone-200 shadow-sm relative overflow-hidden group">
                <div className="relative z-10">
-                 <p className="text-slate-400 text-sm font-medium tracking-wide">Developers Onboarding</p>
+                 <p className="text-stone-500 text-[10px] font-mono uppercase tracking-widest font-semibold">Developers Onboarding</p>
                  <div className="mt-4 flex items-baseline gap-3">
-                    <span className="text-3xl font-semibold text-white tracking-tight">
+                    <span className="text-4xl font-bold font-serif text-stone-900 tracking-tight">
                       {loadingMetrics ? '...' : metrics?.active_sessions || 0}
                     </span>
-                    <span className="text-emerald-400 text-sm font-medium flex items-center">
+                    <span className="text-stone-500 text-xs font-mono">
                       ↑ 2 this week
                     </span>
                  </div>
@@ -180,17 +177,14 @@ export const AdminDashboardPage = () => {
             </div>
 
             {/* KPI 2 */}
-            <div className="bg-[#13131A] rounded-xl p-6 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors">
-               <div className="absolute -top-4 -right-4 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                 <Activity size={80} className="text-indigo-400" />
-               </div>
+            <div className="bg-white rounded-md p-6 border border-stone-200 shadow-sm relative overflow-hidden group">
                <div className="relative z-10">
-                 <p className="text-slate-400 text-sm font-medium tracking-wide">Average Completion Rate</p>
+                 <p className="text-stone-500 text-[10px] font-mono uppercase tracking-widest font-semibold">Average Completion Rate</p>
                  <div className="mt-4 flex items-baseline gap-3">
-                    <span className="text-3xl font-semibold text-indigo-400 tracking-tight">
+                    <span className="text-4xl font-bold font-serif text-stone-900 tracking-tight">
                       {loadingMetrics ? '...' : `${completionRate}%`}
                     </span>
-                    <span className="text-emerald-400 text-sm font-medium flex items-center">
+                    <span className="text-stone-500 text-xs font-mono">
                       ↑ 5%
                     </span>
                  </div>
@@ -198,17 +192,14 @@ export const AdminDashboardPage = () => {
             </div>
 
             {/* KPI 3 */}
-            <div className="bg-[#13131A] rounded-xl p-6 border border-white/5 relative overflow-hidden group hover:border-white/10 transition-colors">
-               <div className="absolute -top-4 -right-4 p-8 opacity-[0.03] group-hover:opacity-10 transition-opacity">
-                 <Clock size={80} className="text-white" />
-               </div>
+            <div className="bg-white rounded-md p-6 border border-stone-200 shadow-sm relative overflow-hidden group">
                <div className="relative z-10">
-                 <p className="text-slate-400 text-sm font-medium tracking-wide">Avg. Time to Onboard</p>
+                 <p className="text-stone-500 text-[10px] font-mono uppercase tracking-widest font-semibold">Avg. Time to Onboard</p>
                  <div className="mt-4 flex items-baseline gap-3">
-                    <span className="text-3xl font-semibold text-white tracking-tight">
+                    <span className="text-4xl font-bold font-serif text-stone-900 tracking-tight">
                       {loadingMetrics ? '...' : `${avgDays} days`}
                     </span>
-                    <span className="text-rose-400 text-sm font-medium flex items-center">
+                    <span className="text-stone-500 text-xs font-mono">
                       ↓ 0.5d
                     </span>
                  </div>
@@ -216,18 +207,18 @@ export const AdminDashboardPage = () => {
             </div>
           </section>
 
-          {/* Critical Alert Banner */}
-          <section className="bg-indigo-900/30 border border-indigo-500/30 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-[0_0_20px_rgba(79,70,229,0.1)]">
-             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 flex-shrink-0 animate-pulse">
-                  <AlertTriangle size={20} />
+          {/* Alert Banner */}
+          <section className="bg-rose-50/80 border border-rose-200 rounded-md p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+             <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-sm bg-rose-100 flex items-center justify-center text-rose-800 flex-shrink-0 border border-rose-200">
+                  <AlertTriangle size={16} />
                 </div>
                 <div>
-                   <h3 className="text-indigo-100 font-medium tracking-wide">Critical Status Update</h3>
-                   <p className="text-indigo-300 text-sm mt-0.5">3 Developers are currently stuck on Environment Setup for more than 48 hours.</p>
+                   <h3 className="text-rose-950 text-xs font-bold tracking-wide">Status Advisory</h3>
+                   <p className="text-rose-800 text-xs mt-0.5">3 Developers are currently stuck on Environment Setup for more than 48 hours.</p>
                 </div>
              </div>
-             <button className="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-5 py-2.5 rounded-lg font-medium whitespace-nowrap transition-colors flex-shrink-0 shadow-md">
+             <button className="bg-stone-900 hover:bg-stone-800 text-white text-xs px-4 py-2 rounded-sm font-medium whitespace-nowrap transition-colors flex-shrink-0 shadow-sm">
                Investigate Now
              </button>
           </section>
@@ -236,63 +227,63 @@ export const AdminDashboardPage = () => {
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             {/* Left Column (Table) */}
-            <div className="lg:col-span-2 bg-[#13131A] border border-white/5 rounded-xl flex flex-col overflow-hidden shadow-xl">
-               <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between">
-                 <h2 className="text-white font-medium tracking-wide">Onboarding Progress</h2>
+            <div className="lg:col-span-2 bg-white border border-stone-200 rounded-md flex flex-col overflow-hidden shadow-sm">
+               <div className="px-6 py-4 border-b border-stone-200 flex items-center justify-between bg-[#F2F0EA]/50">
+                 <h2 className="text-stone-900 font-serif font-bold text-base tracking-tight">Onboarding Progress</h2>
                </div>
                
                <div className="overflow-x-auto flex-1">
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead className="bg-[#0B0B0E]/80 text-slate-500 text-xs uppercase tracking-wider font-semibold border-b border-white/5">
+                  <table className="w-full text-left text-xs whitespace-nowrap">
+                    <thead className="bg-[#F2F0EA] text-stone-500 text-[10px] uppercase font-mono tracking-widest font-semibold border-b border-stone-200">
                       <tr>
-                        <th className="px-6 py-4">Developer</th>
-                        <th className="px-6 py-4">Current Phase</th>
-                        <th className="px-6 py-4">Progress</th>
-                        <th className="px-6 py-4 text-right">Status</th>
+                        <th className="px-6 py-3.5">Developer</th>
+                        <th className="px-6 py-3.5">Current Phase</th>
+                        <th className="px-6 py-3.5">Progress</th>
+                        <th className="px-6 py-3.5 text-right">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-stone-100">
                       {loadingSessions ? (
-                         <tr><td colSpan="4" className="px-6 py-12 text-center text-slate-500 tracking-widest text-xs uppercase animate-pulse">Scanning database...</td></tr>
+                         <tr><td colSpan="4" className="px-6 py-12 text-center text-stone-400 font-mono text-xs uppercase">Scanning database...</td></tr>
                       ) : sessionsData.items.length === 0 ? (
-                         <tr><td colSpan="4" className="px-6 py-12 text-center text-slate-500">No developers found.</td></tr>
+                         <tr><td colSpan="4" className="px-6 py-12 text-center text-stone-400">No developers found.</td></tr>
                       ) : (
                         sessionsData.items.map(session => {
                            const statusObj = determineStatus(session);
                            const initial = session.employee_name ? session.employee_name.charAt(0).toUpperCase() : '?';
                            return (
-                             <tr key={session.session_id} className="hover:bg-white/[0.02] transition-colors group">
+                             <tr key={session.session_id} className="hover:bg-stone-50 transition-colors group">
                                <td className="px-6 py-4">
                                   <div className="flex items-center gap-3">
-                                     <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-indigo-300 font-semibold text-sm flex-shrink-0 border border-indigo-500/20 shadow-inner">
+                                     <div className="w-8 h-8 rounded-sm bg-stone-100 flex items-center justify-center text-stone-800 font-mono font-bold text-xs flex-shrink-0 border border-stone-200">
                                        {initial}
                                      </div>
                                      <div>
-                                        <div className="text-white font-medium group-hover:text-indigo-400 transition-colors">
+                                        <div className="text-stone-900 font-medium group-hover:text-blue-800 transition-colors">
                                           <Link to={`/admin/sessions/${session.session_id}`}>
                                             {session.employee_name}
                                           </Link>
                                         </div>
-                                        <div className="text-xs text-slate-500 mt-0.5">{session.role}</div>
+                                        <div className="text-[11px] text-stone-500">{session.role}</div>
                                      </div>
                                   </div>
                                </td>
-                               <td className="px-6 py-4 text-slate-300 text-sm">
+                               <td className="px-6 py-4 text-stone-600 font-medium">
                                   {determinePhase(session.percent_complete)}
                                </td>
                                <td className="px-6 py-4">
                                   <div className="flex items-center gap-3 max-w-[140px]">
-                                     <div className="flex-1 h-2 bg-[#0B0B0E] border border-white/5 rounded-full overflow-hidden">
+                                     <div className="flex-1 h-1.5 bg-stone-100 border border-stone-200 rounded-sm overflow-hidden">
                                         <div 
-                                          className={`h-full rounded-full ${session.percent_complete === 100 ? 'bg-teal-400' : 'bg-indigo-500'} shadow-[0_0_10px_currentColor]`} 
+                                          className={`h-full rounded-sm ${session.percent_complete === 100 ? 'bg-emerald-600' : 'bg-stone-900'}`} 
                                           style={{ width: `${session.percent_complete}%` }}
                                         />
                                      </div>
-                                     <span className="text-xs font-semibold text-slate-300 w-8">{session.percent_complete}%</span>
+                                     <span className="text-xs font-mono font-semibold text-stone-700 w-8">{session.percent_complete}%</span>
                                   </div>
                                </td>
                                <td className="px-6 py-4 text-right">
-                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold tracking-widest ring-1 ring-inset ${statusObj.classes}`}>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] font-mono font-bold tracking-wider ${statusObj.classes}`}>
                                     {statusObj.label}
                                   </span>
                                </td>
@@ -306,35 +297,35 @@ export const AdminDashboardPage = () => {
             </div>
 
             {/* Right Column (Analytics) */}
-            <div className="space-y-8 flex flex-col h-full">
+            <div className="space-y-6 flex flex-col h-full">
               {/* Chart Card */}
-              <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 shadow-xl">
-                 <div className="flex items-center justify-between mb-8">
-                   <h3 className="text-white font-medium tracking-wide">Onboarding Volume</h3>
+              <div className="bg-white border border-stone-200 rounded-md p-6 shadow-sm">
+                 <div className="flex items-center justify-between mb-6">
+                   <h3 className="text-stone-900 font-serif font-bold text-sm tracking-tight">Onboarding Volume</h3>
                  </div>
                  {/* Dynamic Bar Chart */}
                  <div className="h-44 flex items-end justify-between gap-3 px-2">
                     {analyticsData.length > 0 ? analyticsData.map((item, idx) => {
                       const maxVolume = Math.max(...analyticsData.map(d => d.volume), 1);
                       return (
-                      <div key={idx} className="flex flex-col items-center gap-3 flex-1 group">
-                         <div className="w-full bg-[#0B0B0E] border border-white/5 hover:border-white/10 transition-colors rounded-t-md flex items-end justify-center relative overflow-hidden h-full">
+                      <div key={idx} className="flex flex-col items-center gap-2 flex-1 group">
+                         <div className="w-full bg-stone-100 border border-stone-200 rounded-t-sm flex items-end justify-center relative overflow-hidden h-full">
                             {/* The Bar */}
                             <div 
-                              className="w-full bg-gradient-to-t from-indigo-900 to-indigo-500 rounded-t-sm transition-all duration-300 group-hover:to-indigo-400 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
+                              className="w-full bg-stone-900 rounded-t-sm transition-all duration-300 group-hover:bg-blue-600" 
                               style={{ height: `${(item.volume / maxVolume) * 100}%` }}
                             />
                             {/* Tooltip */}
-                            <div className="absolute -top-2 bg-[#13131A] border border-white/10 text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10 transform -translate-y-full">
+                            <div className="absolute -top-2 bg-stone-900 text-white text-[10px] font-mono px-2 py-0.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity z-10 transform -translate-y-full">
                               {item.volume}
                             </div>
                          </div>
-                         <span className="text-[10px] text-slate-500 font-bold mt-1 tracking-widest">
+                         <span className="text-[10px] text-stone-500 font-mono tracking-wider">
                            {item.day}
                          </span>
                       </div>
                     )}) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">
+                      <div className="w-full h-full flex items-center justify-center text-stone-400 text-xs font-mono">
                         Loading volume data...
                       </div>
                     )}
@@ -342,47 +333,40 @@ export const AdminDashboardPage = () => {
               </div>
 
               {/* AI Insights Card */}
-              <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 flex flex-col flex-1 shadow-xl">
+              <div className="bg-white border border-stone-200 rounded-md p-6 flex flex-col flex-1 shadow-sm">
                  <div className="flex items-center gap-2 mb-6">
-                   <MessageSquare size={18} className="text-indigo-400" />
-                   <h3 className="text-white font-medium tracking-wide">AI Assistant Insights</h3>
+                   <MessageSquare size={16} className="text-stone-700" />
+                   <h3 className="text-stone-900 font-serif font-bold text-sm tracking-tight">AI Assistant Insights</h3>
                  </div>
                  
-                 <div className="space-y-6 flex-1">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Common Questions Asked</p>
+                 <div className="space-y-5 flex-1">
+                    <p className="text-[10px] font-mono uppercase tracking-widest text-stone-400 font-semibold mb-3">Common Developer Inquiries</p>
                     
-                    <div className="space-y-5">
+                    <div className="space-y-4">
                       {commonQuestions.length > 0 ? commonQuestions.map((q, idx) => {
                         const maxCount = Math.max(...commonQuestions.map(cq => cq.count), 1);
                         const widthPct = Math.round((q.count / maxCount) * 100);
-                        const colors = [
-                          'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]',
-                          'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]',
-                          'bg-indigo-300/80 shadow-[0_0_8px_rgba(165,180,252,0.6)]',
-                          'bg-indigo-200/60 shadow-[0_0_8px_rgba(199,210,254,0.4)]',
-                          'bg-indigo-200/40 shadow-[0_0_8px_rgba(199,210,254,0.3)]',
-                        ];
                         return (
                           <div key={idx} className="group">
-                            <div className="flex justify-between text-sm mb-2">
-                              <span className="text-slate-300 group-hover:text-white transition-colors truncate mr-4">{q.question}</span>
-                              <span className="text-slate-400 font-medium tabular-nums flex-shrink-0">{q.count}</span>
+                            <div className="flex justify-between text-xs mb-1.5">
+                              <span className="text-stone-800 group-hover:text-stone-950 transition-colors truncate mr-4 font-medium">{q.question}</span>
+                              <span className="text-stone-500 font-mono text-[11px] flex-shrink-0">{q.count}</span>
                             </div>
-                            <div className="h-1.5 bg-[#0B0B0E] border border-white/5 rounded-full overflow-hidden">
-                               <div className={`h-full rounded-full ${colors[idx] || colors[colors.length - 1]}`} style={{ width: `${widthPct}%` }}></div>
+                            <div className="h-1 bg-stone-100 rounded-sm overflow-hidden border border-stone-200">
+                               <div className="h-full bg-stone-800 rounded-sm" style={{ width: `${widthPct}%` }}></div>
                             </div>
                           </div>
                         );
                       }) : (
-                        <p className="text-slate-500 text-sm">No questions data available yet.</p>
+                        <p className="text-stone-400 text-xs font-mono">No inquiry data recorded.</p>
                       )}
                     </div>
                  </div>
 
-                 <button className="mt-8 w-full py-3 rounded-lg border border-white/5 bg-[#0B0B0E] text-slate-300 text-sm font-medium hover:bg-white/5 hover:text-white transition-colors flex items-center justify-center gap-2 shadow-sm">
+                 <Link to="/admin/developers" className="mt-6 w-full py-2.5 rounded-sm border border-stone-200 bg-[#F2F0EA] text-stone-800 text-xs font-medium hover:bg-stone-200 transition-colors flex items-center justify-center gap-2">
                    View Chat Transcripts
                    <ArrowRight size={14} />
-                 </button>
+                 </Link>
               </div>
 
             </div>

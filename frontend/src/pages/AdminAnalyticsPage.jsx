@@ -290,50 +290,50 @@ export const AdminAnalyticsPage = () => {
         });
     }
 
-    const COLORS = ['#6366f1', '#34d399', '#fb7185', '#22d3ee', '#fbbf24'];
+    const COLORS = ['#1C1917', '#93C5FD', '#78716C', '#BFDBFE', '#A8A29E'];
 
     const getSeverityColor = (severity) => {
-        if (severity === 'High') return '#fb7185';
-        if (severity === 'Medium') return '#fbbf24';
-        return '#34d399';
+        if (severity === 'High') return '#e11d48';
+        if (severity === 'Medium') return '#d97706';
+        return '#059669';
     };
 
     return (
-        <div className="min-h-screen bg-[#0B0B0E] text-slate-400 font-sans flex">
+        <div className="min-h-screen bg-[#F7F5F0] text-stone-900 font-sans flex">
             {/* Sidebar */}
-            <aside className="w-64 border-r border-white/5 bg-[#0B0B0E] flex flex-col hidden md:flex flex-shrink-0">
-                <div className="p-6 border-b border-white/5">
-                <div className="flex items-center gap-2 font-semibold text-white text-lg tracking-wide">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">O</div>
-                    O.N.E. <span className="text-indigo-500">Admin</span>
+            <aside className="w-64 border-r border-stone-200 bg-[#F2F0EA] flex flex-col hidden md:flex flex-shrink-0">
+                <div className="p-6 border-b border-stone-200">
+                <div className="flex items-center gap-2.5 font-serif font-bold text-stone-900 text-lg tracking-tight">
+                    <div className="w-7 h-7 rounded-sm bg-stone-900 flex items-center justify-center text-stone-100 font-mono text-xs">O</div>
+                    O.N.E. <span className="font-sans text-xs uppercase font-mono tracking-widest text-stone-400">Admin</span>
                 </div>
                 </div>
                 
-                <nav className="flex-1 px-4 space-y-2 mt-6 text-sm font-medium">
-                <Link to="/admin" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
-                    <LayoutDashboard size={18} />
+                <nav className="flex-1 px-4 space-y-1 mt-6 text-xs font-medium">
+                <Link to="/admin" className="px-3 py-2.5 rounded-sm text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors flex items-center gap-3">
+                    <LayoutDashboard size={16} />
                     Dashboard
                 </Link>
-                <Link to="/admin/developers" className="px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#13131A] transition-colors flex items-center gap-3">
-                    <Users size={18} />
+                <Link to="/admin/developers" className="px-3 py-2.5 rounded-sm text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 transition-colors flex items-center gap-3">
+                    <Users size={16} />
                     Developers
                 </Link>
-                <Link to="/admin/analytics" className="px-3 py-2.5 rounded-lg bg-indigo-600/10 text-indigo-400 flex items-center gap-3 cursor-pointer">
-                    <BarChart2 size={18} />
+                <Link to="/admin/analytics" className="px-3 py-2.5 rounded-sm bg-stone-900 text-stone-100 flex items-center gap-3 shadow-sm cursor-pointer">
+                    <BarChart2 size={16} />
                     Analytics
                 </Link>
                 </nav>
 
-                <div className="p-4 border-t border-white/5">
-                <Link to="/admin/settings" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[#13131A] cursor-pointer transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex flex-shrink-0 items-center justify-center text-indigo-400 text-xs font-bold">
-                        {adminProfile?.name ? adminProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : <UserIcon size={16} />}
+                <div className="p-4 border-t border-stone-200">
+                <Link to="/admin/settings" className="flex items-center gap-3 px-2 py-2 rounded-sm hover:bg-stone-200/60 cursor-pointer transition-colors">
+                    <div className="w-7 h-7 rounded-sm bg-stone-200 flex flex-shrink-0 items-center justify-center text-stone-800 text-xs font-mono font-bold border border-stone-300">
+                        {adminProfile?.name ? adminProfile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : <UserIcon size={14} />}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{adminProfile?.name || 'Loading...'}</p>
-                        <p className="text-xs text-slate-500 truncate capitalize">{adminProfile?.role?.replace('_', ' ') || '...'}</p>
+                        <p className="text-xs font-semibold text-stone-900 truncate">{adminProfile?.name || 'Loading...'}</p>
+                        <p className="text-[10px] text-stone-500 font-mono truncate capitalize">{adminProfile?.role?.replace('_', ' ') || '...'}</p>
                     </div>
-                    <Settings size={16} className="text-slate-500" />
+                    <Settings size={14} className="text-stone-400" />
                 </Link>
                 </div>
             </aside>
@@ -342,23 +342,23 @@ export const AdminAnalyticsPage = () => {
             <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto overflow-x-hidden">
                 {/* Header */}
                 <header className="px-8 py-6 flex flex-col md:flex-row md:justify-start items-center gap-4">
-                    {/* Clean header, preserving space for future controls */}
+                    {/* Clean header */}
                 </header>
 
                 <div className="px-8 pb-12 w-full max-w-7xl mx-auto space-y-8">
                     {/* Header Title */}
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Analytics & AI Insights</h1>
-                        <p className="text-sm font-medium text-slate-500">Qualitative and quantitative diagnostics powered by LLM.</p>
+                        <h1 className="text-2xl font-bold font-serif tracking-tight text-stone-900 mb-1">Analytics & AI Insights</h1>
+                        <p className="text-xs font-mono uppercase tracking-widest text-stone-500">Qualitative and quantitative diagnostics powered by LLM.</p>
                     </div>
 
                     {loading ? (
-                         <div className="w-full h-64 bg-[#13131A] border border-white/5 rounded-xl shadow-xl flex flex-col items-center justify-center animate-pulse">
-                              <div className="size-10 rounded-full border-4 border-indigo-500/30 border-t-indigo-500 animate-spin mb-4" />
-                              <p className="text-sm font-bold uppercase tracking-widest text-indigo-400">AI Processing Chat Transcripts & Aggregating Metrics...</p>
+                         <div className="w-full h-64 bg-white border border-stone-200 rounded-md shadow-sm flex flex-col items-center justify-center animate-pulse">
+                              <div className="size-8 rounded-full border-2 border-stone-300 border-t-stone-900 animate-spin mb-3" />
+                              <p className="text-xs font-mono uppercase tracking-widest text-stone-500">Processing Chat Transcripts & Aggregating Metrics...</p>
                          </div>
                     ) : error ? (
-                        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm flex items-center gap-3">
+                        <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-sm text-xs font-mono flex items-center gap-3">
                             <AlertTriangle size={16} />
                             {error}
                         </div>
@@ -366,16 +366,16 @@ export const AdminAnalyticsPage = () => {
                         <>
                             {/* AI Insights Alert Banner */}
                             {data?.qualitative?.lagging_developer && data.qualitative.lagging_developer.developer_id && (
-                                <section className="bg-rose-900/20 border border-rose-500/30 rounded-xl p-5 shadow-[0_0_20px_rgba(251,113,133,0.05)]">
+                                <section className="bg-rose-50 border border-rose-200 rounded-md p-5 shadow-sm">
                                     <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400 flex-shrink-0">
-                                            <AlertTriangle size={20} />
+                                        <div className="w-8 h-8 rounded-sm bg-rose-100 flex items-center justify-center text-rose-800 flex-shrink-0 border border-rose-200">
+                                            <AlertTriangle size={16} />
                                         </div>
                                         <div>
-                                            <h3 className="text-rose-200 font-bold tracking-wide flex items-center gap-2">
-                                                Intervention Required <span className="px-2 py-0.5 rounded text-[10px] font-black tracking-widest bg-rose-500 text-white uppercase">Critical</span>
+                                            <h3 className="text-rose-950 font-serif font-bold text-sm tracking-tight flex items-center gap-2">
+                                                Intervention Required <span className="px-2 py-0.5 rounded-sm text-[9px] font-mono font-bold tracking-widest bg-rose-800 text-white uppercase">Critical</span>
                                             </h3>
-                                            <p className="text-rose-200/80 text-sm mt-1 leading-relaxed">
+                                            <p className="text-rose-800 text-xs mt-1 leading-relaxed">
                                                 {data.qualitative.lagging_developer.risk_summary}
                                             </p>
                                         </div>
@@ -387,55 +387,52 @@ export const AdminAnalyticsPage = () => {
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 
                                 {/* Chart 1: Cohort Progress */}
-                                <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 shadow-xl flex flex-col h-[400px]">
-                                    <h3 className="text-white text-sm font-bold tracking-wide mb-6">Cohort Progress Tracker</h3>
+                                <div className="bg-white border border-stone-200 rounded-md p-6 shadow-sm flex flex-col h-[380px]">
+                                    <h3 className="text-stone-900 font-serif font-bold text-sm tracking-tight mb-6">Cohort Progress Tracker</h3>
                                     <div className="flex-1 w-full min-h-0">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={data?.quantitative?.completion_matrix || []}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                                <XAxis dataKey="employee_name" stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} tickLine={false} axisLine={false} />
-                                                <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} tickLine={false} axisLine={false} domain={[0, 100]} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" vertical={false} />
+                                                <XAxis dataKey="employee_name" stroke="#78716C" tick={{fill: '#78716C', fontSize: 11}} tickLine={false} axisLine={false} />
+                                                <YAxis stroke="#78716C" tick={{fill: '#78716C', fontSize: 11}} tickLine={false} axisLine={false} domain={[0, 100]} />
                                                 <Tooltip 
-                                                    cursor={{fill: '#ffffff05'}}
-                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
-                                                    itemStyle={{color: '#6366f1'}}
-                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
+                                                    cursor={{fill: '#F7F5F0'}}
+                                                    contentStyle={{backgroundColor: '#FFFFFF', borderColor: '#E7E5E4', color: '#1C1917', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '12px'}}
+                                                    itemStyle={{color: '#1C1917', fontWeight: 'bold'}}
                                                 />
-                                                <Bar dataKey="percent_complete" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                                <Bar dataKey="percent_complete" fill="#1C1917" radius={[2, 2, 0, 0]} maxBarSize={36} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
 
                                 {/* Chart 2: Task Velocity */}
-                                <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 shadow-xl flex flex-col h-[400px]">
-                                    <h3 className="text-white text-sm font-bold tracking-wide mb-6">Task Velocity (Avg Hours)</h3>
+                                <div className="bg-white border border-stone-200 rounded-md p-6 shadow-sm flex flex-col h-[380px]">
+                                    <h3 className="text-stone-900 font-serif font-bold text-sm tracking-tight mb-6">Task Velocity (Avg Hours)</h3>
                                     <div className="flex-1 w-full min-h-0">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <AreaChart data={data?.quantitative?.task_velocity || []}>
                                                 <defs>
                                                     <linearGradient id="colorVelocity" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
-                                                        <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                                                        <stop offset="5%" stopColor="#BFDBFE" stopOpacity={0.6}/>
+                                                        <stop offset="95%" stopColor="#BFDBFE" stopOpacity={0}/>
                                                     </linearGradient>
                                                 </defs>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                                <XAxis dataKey="title" stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 10}} tickLine={false} axisLine={false} tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val} />
-                                                <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} tickLine={false} axisLine={false} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" vertical={false} />
+                                                <XAxis dataKey="title" stroke="#78716C" tick={{fill: '#78716C', fontSize: 10}} tickLine={false} axisLine={false} tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val} />
+                                                <YAxis stroke="#78716C" tick={{fill: '#78716C', fontSize: 11}} tickLine={false} axisLine={false} />
                                                 <Tooltip 
-                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
-                                                    itemStyle={{color: '#22d3ee'}}
-                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
+                                                    contentStyle={{backgroundColor: '#FFFFFF', borderColor: '#E7E5E4', color: '#1C1917', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '12px'}}
                                                 />
-                                                <Area type="monotone" dataKey="avg_duration_hours" stroke="#22d3ee" strokeWidth={3} fillOpacity={1} fill="url(#colorVelocity)" />
+                                                <Area type="monotone" dataKey="avg_duration_hours" stroke="#1E40AF" strokeWidth={2} fillOpacity={1} fill="url(#colorVelocity)" />
                                             </AreaChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
 
                                 {/* Chart 3: Topic Distribution */}
-                                <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 shadow-xl flex flex-col h-[400px]">
-                                    <h3 className="text-white text-sm font-bold tracking-wide mb-6">AI Conversational Topic Distribution</h3>
+                                <div className="bg-white border border-stone-200 rounded-md p-6 shadow-sm flex flex-col h-[380px]">
+                                    <h3 className="text-stone-900 font-serif font-bold text-sm tracking-tight mb-6">AI Conversational Topic Distribution</h3>
                                     <div className="flex-1 w-full min-h-0 relative">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
@@ -445,51 +442,41 @@ export const AdminAnalyticsPage = () => {
                                                     nameKey="topic"
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius={80}
-                                                    outerRadius={110}
+                                                    innerRadius={70}
+                                                    outerRadius={100}
                                                     stroke="none"
-                                                    paddingAngle={5}
+                                                    paddingAngle={4}
                                                 >
                                                     {(data?.qualitative?.topic_distribution || []).map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                                     ))}
                                                 </Pie>
                                                 <Tooltip 
-                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
-                                                    itemStyle={{color: '#CBD5E1'}}
-                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
+                                                    contentStyle={{backgroundColor: '#FFFFFF', borderColor: '#E7E5E4', color: '#1C1917', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '12px'}}
                                                     formatter={(value) => `${value}%`}
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
-                                        {/* Inner Label */}
                                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                            <span className="text-2xl font-bold text-white tracking-tight">100%</span>
-                                            <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Topics</span>
+                                            <span className="text-xl font-bold font-serif text-stone-900 tracking-tight">100%</span>
+                                            <span className="text-[9px] uppercase font-mono tracking-widest text-stone-400 font-semibold">Topics</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Chart 4: Proficiency Matrix */}
-                                <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 shadow-xl flex flex-col h-[400px]">
-                                    <h3 className="text-white text-sm font-bold tracking-wide mb-6">Developer Proficiency Matrix</h3>
+                                <div className="bg-white border border-stone-200 rounded-md p-6 shadow-sm flex flex-col h-[380px]">
+                                    <h3 className="text-stone-900 font-serif font-bold text-sm tracking-tight mb-6">Developer Proficiency Matrix</h3>
                                     <div className="flex-1 w-full min-h-0">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                                                <XAxis type="number" dataKey="percent_complete" name="Progression" unit="%" stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} domain={[0, 100]} />
-                                                <YAxis type="number" dataKey="question_complexity_score" name="Complexity Score" stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} domain={[1, 10]} />
+                                            <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" />
+                                                <XAxis type="number" dataKey="percent_complete" name="Progression" unit="%" stroke="#78716C" tick={{fill: '#78716C', fontSize: 11}} domain={[0, 100]} />
+                                                <YAxis type="number" dataKey="question_complexity_score" name="Complexity Score" stroke="#78716C" tick={{fill: '#78716C', fontSize: 11}} domain={[1, 10]} />
                                                 <ZAxis type="category" dataKey="name" name="Developer" />
                                                 <Tooltip 
-                                                    cursor={{strokeDasharray: '3 3', stroke: '#ffffff30'}}
-                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
-                                                    itemStyle={{color: '#CBD5E1'}}
-                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
-                                                    formatter={(value, name) => {
-                                                        if (name === "Developer") return [value, name];
-                                                        if (name === "Complexity Score") return [value, name];
-                                                        return [value, "Progression"];
-                                                    }}
+                                                    cursor={{strokeDasharray: '3 3', stroke: '#E7E5E4'}}
+                                                    contentStyle={{backgroundColor: '#FFFFFF', borderColor: '#E7E5E4', color: '#1C1917', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '12px'}}
                                                 />
                                                 <Scatter name="Developers" data={scatterData}>
                                                     {
@@ -500,38 +487,36 @@ export const AdminAnalyticsPage = () => {
                                                 </Scatter>
                                             </ScatterChart>
                                         </ResponsiveContainer>
-                                        <div className="flex justify-center gap-6 mt-4">
-                                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-[#fb7185]"></div><span className="text-[10px] uppercase font-bold text-slate-500">High Severity</span></div>
-                                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-[#fbbf24]"></div><span className="text-[10px] uppercase font-bold text-slate-500">Med Severity</span></div>
-                                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-[#34d399]"></div><span className="text-[10px] uppercase font-bold text-slate-500">Low Severity</span></div>
+                                        <div className="flex justify-center gap-6 mt-2">
+                                            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-rose-600"></div><span className="text-[10px] uppercase font-mono text-stone-500">High</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-600"></div><span className="text-[10px] uppercase font-mono text-stone-500">Med</span></div>
+                                            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-600"></div><span className="text-[10px] uppercase font-mono text-stone-500">Low</span></div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Chart 5: Developer Frustration Index */}
-                                <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 shadow-xl flex flex-col h-[400px]">
-                                    <h3 className="text-white text-sm font-bold tracking-wide mb-6">Developer Frustration Index</h3>
+                                <div className="bg-white border border-stone-200 rounded-md p-6 shadow-sm flex flex-col h-[380px]">
+                                    <h3 className="text-stone-900 font-serif font-bold text-sm tracking-tight mb-6">Developer Frustration Index</h3>
                                     <div className="flex-1 w-full min-h-0">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={data?.qualitative?.sentiment_index || []}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                                                <XAxis dataKey="employee_name" stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} tickLine={false} axisLine={false} />
-                                                <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8', fontSize: 12}} tickLine={false} axisLine={false} domain={[0, 100]} />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F4" vertical={false} />
+                                                <XAxis dataKey="employee_name" stroke="#78716C" tick={{fill: '#78716C', fontSize: 11}} tickLine={false} axisLine={false} />
+                                                <YAxis stroke="#78716C" tick={{fill: '#78716C', fontSize: 11}} tickLine={false} axisLine={false} domain={[0, 100]} />
                                                 <Tooltip 
-                                                    cursor={{fill: '#ffffff05'}}
-                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
-                                                    itemStyle={{color: '#CBD5E1'}}
-                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
+                                                    cursor={{fill: '#F7F5F0'}}
+                                                    contentStyle={{backgroundColor: '#FFFFFF', borderColor: '#E7E5E4', color: '#1C1917', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '12px'}}
                                                     formatter={(value, name, props) => {
                                                         const emotion = props.payload.primary_emotion || 'Unknown';
                                                         return [`${value} (${emotion})`, 'Frustration Level'];
                                                     }}
                                                 />
-                                                <Bar dataKey="frustration_score" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                                                <Bar dataKey="frustration_score" radius={[2, 2, 0, 0]} maxBarSize={36}>
                                                     {(data?.qualitative?.sentiment_index || []).map((entry, index) => {
-                                                        let color = '#6366f1'; // Indigo
-                                                        if (entry.frustration_score > 70) color = '#fb7185'; // Rose
-                                                        if (entry.frustration_score < 30) color = '#34d399'; // Emerald
+                                                        let color = '#1C1917';
+                                                        if (entry.frustration_score > 70) color = '#e11d48';
+                                                        if (entry.frustration_score < 30) color = '#059669';
                                                         return <Cell key={`cell-${index}`} fill={color} />;
                                                     })}
                                                 </Bar>
@@ -541,20 +526,18 @@ export const AdminAnalyticsPage = () => {
                                 </div>
 
                                 {/* Chart 6: Autonomy vs AI Reliance */}
-                                <div className="bg-[#13131A] border border-white/5 rounded-xl p-6 shadow-xl flex flex-col h-[400px]">
-                                    <h3 className="text-white text-sm font-bold tracking-wide mb-6">Autonomy vs. AI Reliance</h3>
+                                <div className="bg-white border border-stone-200 rounded-md p-6 shadow-sm flex flex-col h-[380px]">
+                                    <h3 className="text-stone-900 font-serif font-bold text-sm tracking-tight mb-6">Autonomy vs. AI Reliance</h3>
                                     <div className="flex-1 w-full min-h-0">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data?.qualitative?.autonomy_scores || []}>
-                                                <PolarGrid stroke="#ffffff20" />
-                                                <PolarAngleAxis dataKey="employee_name" tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                                                <PolarRadiusAxis angle={30} domain={[0, 10]} tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                            <RadarChart cx="50%" cy="50%" outerRadius="65%" data={data?.qualitative?.autonomy_scores || []}>
+                                                <PolarGrid stroke="#E7E5E4" />
+                                                <PolarAngleAxis dataKey="employee_name" tick={{ fill: '#78716C', fontSize: 11 }} />
+                                                <PolarRadiusAxis angle={30} domain={[0, 10]} tick={{ fill: '#78716C', fontSize: 10 }} axisLine={false} tickLine={false} />
                                                 <Tooltip 
-                                                    contentStyle={{backgroundColor: '#13131A', borderColor: 'rgba(255,255,255,0.05)', color: '#F8FAFC', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.5)'}}
-                                                    itemStyle={{color: '#22d3ee'}}
-                                                    labelStyle={{color: '#F8FAFC', fontWeight: 'bold', marginBottom: '4px'}}
+                                                    contentStyle={{backgroundColor: '#FFFFFF', borderColor: '#E7E5E4', color: '#1C1917', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '12px'}}
                                                 />
-                                                <Radar name="Independence Rating" dataKey="independence_rating" stroke="#22d3ee" fill="#22d3ee" fillOpacity={0.2} strokeWidth={2} />
+                                                <Radar name="Independence Rating" dataKey="independence_rating" stroke="#1E40AF" fill="#BFDBFE" fillOpacity={0.4} strokeWidth={2} />
                                             </RadarChart>
                                         </ResponsiveContainer>
                                     </div>
