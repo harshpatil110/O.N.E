@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 class Settings(BaseSettings):
     # Nvidia NIM / OpenAI
@@ -24,10 +25,20 @@ class Settings(BaseSettings):
     CHROMA_PERSIST_DIRECTORY: str = "./chroma_db"
     CHROMA_COLLECTION_NAME: str = "one_knowledge_base"
 
+    # GitHub
+    GITHUB_TOKEN: Optional[str] = None
+    GITHUB_CLIENT_ID: Optional[str] = None
+    GITHUB_CLIENT_SECRET: Optional[str] = None
+    GITHUB_TARGET_REPO: Optional[str] = "O.N.E"
+
     # App
     APP_ENV: str = "development"
     FRONTEND_URL: str = "http://localhost:5173"
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore",
+        case_sensitive=False
+    )
 
 settings = Settings()
