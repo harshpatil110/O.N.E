@@ -66,57 +66,52 @@ export const KnowledgeBasePage = () => {
 
     const getIcon = (category) => {
         switch(category) {
-            case 'Setup Guides': return <Terminal size={20} className="text-emerald-400" />;
-            case 'Architecture': return <Cpu size={20} className="text-[#4c6ef5]" />;
-            case 'Troubleshooting': return <ShieldAlert size={20} className="text-rose-400" />;
-            default: return <FileCode2 size={20} className="text-indigo-400" />;
+            case 'Setup Guides': return <Terminal size={18} className="text-stone-700" />;
+            case 'Architecture': return <Cpu size={18} className="text-blue-800" />;
+            case 'Troubleshooting': return <ShieldAlert size={18} className="text-rose-700" />;
+            default: return <FileCode2 size={18} className="text-stone-700" />;
         }
     };
 
     // Keep Sidebar identical to Developer Dashboard to fulfill identical layout flow
     const Sidebar = () => (
-        <aside className="w-64 bg-[#111114] border-r border-[#1f1f23] flex flex-col z-10 hidden md:flex h-full flex-shrink-0">
-          <div className="h-16 px-6 flex items-center border-b border-[#1f1f23] bg-transparent">
+        <aside className="w-64 bg-[#F2F0EA] border-r border-stone-200 flex flex-col z-10 hidden md:flex h-full flex-shrink-0">
+          <div className="h-16 px-6 flex items-center border-b border-stone-200 bg-transparent">
             <div className="flex items-center gap-2.5">
-              <div className="size-7 bg-[#4c6ef5] rounded flex items-center justify-center text-white shadow-lg shadow-[#4c6ef5]/20">
-                <span className="font-bold font-mono text-sm tracking-tighter">O.</span>
+              <div className="size-7 bg-stone-900 rounded-sm flex items-center justify-center text-stone-100 shadow-sm">
+                <span className="font-bold font-mono text-xs tracking-tighter">O.</span>
               </div>
-              <h2 className="text-white text-lg font-extrabold tracking-tight">O.N.E</h2>
+              <h2 className="text-stone-900 text-lg font-serif font-bold tracking-tight">O.N.E.</h2>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
             <div className="space-y-1">
-              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-2 mb-3">Onboarding Nav</h3>
+              <h3 className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest pl-2 mb-2">Navigation</h3>
               
-              <Link to="/dashboard" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm group">
-                <LayoutDashboard size={18} />
+              <Link to="/dashboard" className="flex items-center gap-3 px-3 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-sm transition-colors font-medium text-xs">
+                <LayoutDashboard size={16} />
                 Dashboard
               </Link>
               
-              <Link to="/chat" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">
-                <MessageSquare size={18} />
+              <Link to="/chat" className="flex items-center gap-3 px-3 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-sm transition-colors font-medium text-xs">
+                <MessageSquare size={16} />
                 Chat Assistant
               </Link>
                
-              <Link to="#" className="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">
-                <ListChecks size={18} />
-                Checklist
-              </Link>
-               
-              <Link to="/docs" className="flex items-center gap-3 px-3 py-2 bg-[#4c6ef5]/10 text-[#4c6ef5] rounded-xl transition-colors font-medium text-sm group">
-                <BookOpen size={18} />
+               <Link to="/docs" className="flex items-center gap-3 px-3 py-2 bg-stone-900 text-stone-100 rounded-sm font-medium text-xs shadow-sm">
+                <BookOpen size={16} />
                 Docs
               </Link>
             </div>
 
-            <div className="mt-auto space-y-3 pb-2">
-              <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-2 mb-3">Integrations</h3>
-               <button className="flex items-center gap-3 px-3 py-2 w-full text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">
-                <Code size={16} /> GitHub
+            <div className="mt-auto space-y-2 pb-2">
+              <h3 className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest pl-2 mb-2">Integrations</h3>
+               <button className="flex items-center gap-3 px-3 py-2 w-full text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-sm transition-colors font-medium text-xs">
+                <Code size={14} /> GitHub
               </button>
-               <button className="flex items-center gap-3 px-3 py-2 w-full text-slate-400 hover:text-slate-200 hover:bg-white/5 rounded-xl transition-colors font-medium text-sm">
-                <MessageSquare size={16} /> Slack
+               <button className="flex items-center gap-3 px-3 py-2 w-full text-stone-600 hover:text-stone-900 hover:bg-stone-200/60 rounded-sm transition-colors font-medium text-xs">
+                <MessageSquare size={14} /> Slack
               </button>
             </div>
           </div>
@@ -124,12 +119,12 @@ export const KnowledgeBasePage = () => {
     );
 
     return (
-        <div className="flex h-screen bg-[#0a0a0c] text-white overflow-hidden font-sans selection:bg-[#4c6ef5]/30 relative">
+        <div className="flex h-screen bg-[#F7F5F0] text-stone-900 overflow-hidden font-sans selection:bg-blue-100 relative">
             <div 
-                className="absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen"
+                className="absolute inset-0 z-0 pointer-events-none opacity-40"
                 style={{
-                  backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)',
-                  backgroundSize: '24px 24px'
+                  backgroundImage: 'radial-gradient(circle at 1px 1px, #E7E5E4 1px, transparent 0)',
+                  backgroundSize: '20px 20px'
                 }}
             />
             
@@ -137,26 +132,25 @@ export const KnowledgeBasePage = () => {
 
             <main className="flex-1 overflow-y-auto z-10 relative">
                 {selectedDoc ? (
-                    <div className="absolute inset-0 bg-[#0a0a0c] z-50 flex flex-col overflow-hidden">
-                        <div className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#1f1f23] bg-[#111114]/50 backdrop-blur-md sticky top-0 z-10">
+                    <div className="absolute inset-0 bg-[#F7F5F0] z-50 flex flex-col overflow-hidden">
+                        <div className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-stone-200 bg-white sticky top-0 z-10">
                             <div className="flex items-center gap-4">
-                                <button onClick={handleCloseDoc} className="size-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 border border-white/10 hover:bg-[#4c6ef5]/10 hover:text-[#4c6ef5] hover:border-[#4c6ef5]/20 transition-all">
-                                    <X size={18} />
+                                <button onClick={handleCloseDoc} className="size-7 flex items-center justify-center rounded-sm bg-stone-100 text-stone-700 border border-stone-200 hover:bg-stone-900 hover:text-white transition-colors">
+                                    <X size={16} />
                                 </button>
-                                <span className="text-sm font-bold tracking-tight text-white">{selectedDoc.title}</span>
+                                <span className="text-sm font-serif font-bold text-stone-900">{selectedDoc.title}</span>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6 lg:p-12 scrollbar-hide">
-                            <div className="max-w-3xl mx-auto">
+                        <div className="flex-1 overflow-y-auto p-6 lg:p-12">
+                            <div className="max-w-3xl mx-auto bg-white border border-stone-200 p-8 rounded-md shadow-sm">
                                 {loadingDoc ? (
                                     <div className="animate-pulse space-y-4">
-                                        <div className="h-8 bg-white/5 rounded-lg w-1/3 mb-8"></div>
-                                        <div className="h-4 bg-white/5 rounded w-full"></div>
-                                        <div className="h-4 bg-white/5 rounded w-5/6"></div>
-                                        <div className="h-4 bg-white/5 rounded w-4/6"></div>
+                                        <div className="h-6 bg-stone-100 rounded w-1/3 mb-6"></div>
+                                        <div className="h-3 bg-stone-100 rounded w-full"></div>
+                                        <div className="h-3 bg-stone-100 rounded w-5/6"></div>
                                     </div>
                                 ) : (
-                                    <div className="prose prose-invert prose-slate max-w-none prose-headings:text-white prose-a:text-[#4c6ef5] prose-pre:bg-[#111114] prose-pre:border prose-pre:border-[#1f1f23] prose-code:text-[#4c6ef5] prose-p:text-slate-400 prose-ul:text-slate-400 marker:text-[#4c6ef5] prose-strong:text-white">
+                                    <div className="prose prose-stone max-w-none prose-headings:font-serif prose-headings:text-stone-900 prose-a:text-blue-800 prose-pre:bg-stone-100 prose-pre:border prose-pre:border-stone-200 prose-code:font-mono prose-code:text-stone-800">
                                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                             {docContent}
                                         </ReactMarkdown>
@@ -167,37 +161,37 @@ export const KnowledgeBasePage = () => {
                     </div>
                 ) : (
                     <div className="p-6 md:p-10 lg:p-12 max-w-[1400px] mx-auto">
-                        <header className="mb-12">
-                            <h1 className="text-4xl font-extrabold tracking-tight text-white mb-4">
+                        <header className="mb-10">
+                            <h1 className="text-3xl font-serif font-bold tracking-tight text-stone-900 mb-2">
                                 Knowledge Base
                             </h1>
-                            <p className="text-base text-slate-400 max-w-xl font-medium">
-                                Explore our comprehensive guides, technical snippets, and powerful tools to help you build faster with O.N.E.
+                            <p className="text-xs font-mono uppercase tracking-widest text-stone-500 max-w-xl">
+                                Architectural reference, setup guides, and system documentation.
                             </p>
                             
-                            <div className="mt-8 relative max-w-2xl">
-                                <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#4c6ef5]" size={18} />
+                            <div className="mt-6 relative max-w-xl">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={16} />
                                 <input 
                                     type="text" 
-                                    placeholder="Search documentation... (CMD + K)" 
+                                    placeholder="Search documentation..." 
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full bg-[#111114]/80 border border-[#1f1f23] text-white placeholder-slate-500 font-medium rounded-xl pl-12 pr-4 py-4 outline-none focus:border-[#4c6ef5]/50 focus:ring-4 focus:ring-[#4c6ef5]/10 transition-all backdrop-blur-sm shadow-xl"
+                                    className="w-full bg-white border border-stone-300 text-stone-900 placeholder:text-stone-400 font-medium rounded-md pl-10 pr-4 py-3 outline-none focus:border-stone-900 transition-colors shadow-sm text-xs"
                                 />
                             </div>
                         </header>
 
                         {loading ? (
-                             <div className="p-12 text-center text-slate-500 text-xs tracking-widest uppercase font-bold animate-pulse bg-[#111114]/20 rounded-2xl border border-[#1f1f23]">Scanning Knowledge Base Data...</div>
+                             <div className="p-12 text-center text-stone-400 font-mono text-xs tracking-widest uppercase animate-pulse bg-white rounded-md border border-stone-200">Scanning Knowledge Base Data...</div>
                         ) : filteredCategories.length === 0 ? (
-                            <div className="p-12 text-center text-slate-500 bg-[#111114]/20 rounded-2xl border border-[#1f1f23] font-medium tracking-tight">No documents found matching your search. Try different keywords.</div>
+                            <div className="p-12 text-center text-stone-400 font-mono text-xs bg-white rounded-md border border-stone-200">No documents found matching your search.</div>
                         ) : (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {filteredCategories.map((category) => (
-                                    <div key={category.category} className="space-y-6">
-                                        <div className="flex items-center gap-3 border-b border-[#1f1f23] pb-3">
+                                    <div key={category.category} className="space-y-4">
+                                        <div className="flex items-center gap-2.5 border-b border-stone-200 pb-2">
                                             {getIcon(category.category)}
-                                            <h2 className="text-lg font-bold text-white tracking-tight">{category.category}</h2>
+                                            <h2 className="text-base font-serif font-bold text-stone-900 tracking-tight">{category.category}</h2>
                                         </div>
                                         
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -205,19 +199,18 @@ export const KnowledgeBasePage = () => {
                                                 <div 
                                                     key={article.id} 
                                                     onClick={() => handleOpenDoc(article)}
-                                                    className="bg-[#111114]/40 border border-[#1f1f23] rounded-xl p-5 hover:border-[#4c6ef5]/30 hover:bg-[#111114] transition-all cursor-pointer group flex flex-col justify-between min-h-[140px] shadow-sm relative overflow-hidden"
+                                                    className="bg-white border border-stone-200 rounded-md p-5 hover:border-stone-900 transition-colors cursor-pointer group flex flex-col justify-between min-h-[130px] shadow-sm relative"
                                                 >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-[#4c6ef5]/0 to-[#4c6ef5]/0 group-hover:to-[#4c6ef5]/[0.02] pointer-events-none transition-colors" />
-                                                    <div className="relative z-10">
-                                                        <h3 className="text-sm font-bold text-slate-200 group-hover:text-[#4c6ef5] transition-colors mb-2 leading-snug">
+                                                    <div>
+                                                        <h3 className="text-xs font-bold text-stone-900 group-hover:text-blue-800 transition-colors mb-1.5 leading-snug">
                                                             {article.title}
                                                         </h3>
-                                                        <p className="text-[11px] font-medium text-slate-500 line-clamp-2 leading-relaxed">
+                                                        <p className="text-[11px] text-stone-500 font-mono line-clamp-2 leading-relaxed">
                                                             {article.excerpt || "No excerpt provided."}
                                                         </p>
                                                     </div>
-                                                    <div className="mt-4 flex items-center text-[10px] font-bold uppercase tracking-widest text-slate-600 group-hover:text-[#4c6ef5] transition-colors gap-1 relative z-10">
-                                                        Read Docs <ArrowRight size={12} className="relative group-hover:translate-x-0.5 transition-transform" />
+                                                    <div className="mt-4 flex items-center text-[10px] font-mono font-bold uppercase tracking-widest text-stone-400 group-hover:text-stone-900 transition-colors gap-1">
+                                                        Read <ArrowRight size={10} className="relative group-hover:translate-x-0.5 transition-transform" />
                                                     </div>
                                                 </div>
                                             ))}

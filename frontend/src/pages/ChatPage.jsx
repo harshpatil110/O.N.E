@@ -41,36 +41,37 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
   }, [messages, isLoading]);
 
   return (
-    <div className="flex h-screen bg-[#0a0a0c] text-slate-300 overflow-hidden font-sans selection:bg-[#4c6ef5]/30">
+    <div className="flex h-screen bg-[#F7F5F0] text-stone-900 overflow-hidden font-sans selection:bg-blue-100">
       
-      {/* Background Pattern */}
+      {/* Editorial Grid Pattern */}
       <div 
-        className="absolute inset-0 z-0 pointer-events-none opacity-40 mix-blend-screen"
+        className="absolute inset-0 z-0 pointer-events-none opacity-40"
         style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)',
-          backgroundSize: '24px 24px'
+          backgroundImage: 'radial-gradient(circle at 1px 1px, #E7E5E4 1px, transparent 0)',
+          backgroundSize: '20px 20px'
         }}
       />
 
       {/* LEFT PANEL: Chat Interface */}
-      <div className="relative flex flex-col z-10 transition-all duration-300 ease-in-out w-full">
+      <div className="relative flex flex-col z-10 w-full h-full">
         
         {/* Header */}
-        <div className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-[#1f1f23] bg-transparent backdrop-blur-md">
-          <div className="flex items-center gap-2.5">
-            <div className="size-7 bg-[#4c6ef5] rounded flex items-center justify-center text-white shadow-lg shadow-[#4c6ef5]/20">
-              <span className="font-bold font-mono text-sm tracking-tighter">O.</span>
+        <div className="h-16 px-6 lg:px-12 flex items-center justify-between border-b border-stone-200 bg-[#F7F5F0]/90 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="size-7 bg-stone-900 rounded-sm flex items-center justify-center text-stone-100 shadow-sm">
+              <span className="font-bold font-mono text-xs tracking-tighter">O.</span>
             </div>
-            <h2 className="text-white text-lg font-extrabold tracking-tight">O.N.E</h2>
+            <h2 className="text-stone-900 text-lg font-serif font-bold tracking-tight">O.N.E.</h2>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-stone-400 border-l border-stone-200 pl-3">Onboarding System</span>
           </div>
         </div>
 
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 scroll-smooth">
           {initError ? (
-             <div className="text-center text-red-400 bg-red-400/10 border border-red-400/20 p-4 rounded-xl text-sm max-w-lg mx-auto mt-10">{initError}</div>
+             <div className="text-center text-rose-700 bg-rose-50 border border-rose-200 p-4 rounded-md text-xs font-mono max-w-lg mx-auto mt-10">{initError}</div>
           ) : messages.length === 0 && !isLoading ? (
-             <div className="text-center text-slate-500 text-xs font-bold uppercase tracking-widest mt-20">Initializing secure connection...</div>
+             <div className="text-center text-stone-400 text-xs font-mono uppercase tracking-widest mt-20">Initializing secure session...</div>
           ) : (
             messages.map((msg, idx) => (
               <MessageBubble 
@@ -87,7 +88,7 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 sm:p-6 lg:p-8 bg-gradient-to-t from-[#0a0a0c] via-[#0a0a0c] to-transparent">
+        <div className="p-4 sm:p-6 lg:p-8 bg-[#F7F5F0] border-t border-stone-200/60">
           <ChatInput onSendMessage={sendMessage} disabled={isLoading || !sessionId} />
         </div>
 
