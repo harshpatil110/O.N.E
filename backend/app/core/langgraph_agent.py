@@ -76,21 +76,42 @@ Respond with ONLY ONE word: 'task', 'rag', or 'general'.""")
 
 def onboarding_node(state: AgentState) -> Dict[str, Any]:
     """
-    Onboarding Node: Guides 0% progress users through initial registration/role assignment.
+    Onboarding Node: Guides 0% progress users through a deterministic 3-question loop for registration.
     """
     messages = state.get("messages", [])
+    
+    # Count how many messages have been sent by the human in this session so far
+    human_count = sum(1 for m in messages if isinstance(m, HumanMessage))
 
-    prompt = SystemMessage(content="""You are the O.N.E. Onboarding Assistant. The user has 0% onboarding progress and needs to complete their profile setup.
-Your goal is to collect their Name, Email, and Department Role (e.g., 'frontend dev', 'backend dev', 'AI dev', 'cloud', 'IT', 'database dev').
-Be welcoming, professional, and ask clearly for any missing information.""")
-
-    input_messages = [prompt] + messages
-    try:
-        response = llm.invoke(input_messages)
-        content = str(response.content)
-    except Exception as e:
-        logger.warning(f"[ONBOARDING NODE] Ollama offline ({e}). Generating fallback response...")
-        content = "Welcome to O.N.E.! Please provide your Name, Email, and Department Role (frontend dev, backend dev, AI dev, cloud, IT, or database dev) to get started."
+    if human_count == 1:
+        content = "Hi! I'm O.N.E — your Onboarding Navigation Environment. I'm here to guide you through your first days at the company. Let's start with the basics — what's your full name?"
+    elif human_count == 2:
+        content = "What is your email id?"
+    elif human_count == 3:
+        content = "What is your position? (Choose from: frontend dev, backend dev, AI dev, cloud, IT, database dev)"
+    else:
+        # Step 3 completion (human_count >= 4)
+        latest_human_msg = messages[-1].content if messages else ""
+        valid_roles = ["frontend dev", "backend dev", "ai dev", "cloud", "it", "database dev"]
+        msg_lower = str(latest_human_msg).lower()
+        
+        extracted_role = next((role for role in valid_roles if role in msg_lower), str(latest_human_msg).strip())
+        
+        # Action 6.5: Database Mutation
+        try:
+            from app.core.database import SessionLocal
+            from app.models.user import User
+            with SessionLocal() as db:
+                user = db.query(User).filter(User.id == state["user_id"]).first()
+                if user:
+                    user.department_role = extracted_role
+                    user.onboarding_progress = 5
+                    user.tasks_completed = 0
+                    db.commit()
+            content = "Awesome! Your profile is set up and your onboarding checklist has been generated. What would you like to do next?"
+        except Exception as e:
+            logger.error(f"[ONBOARDING NODE] DB Update Error: {e}")
+            content = "An error occurred while setting up your profile. Please try again."
 
     return {
         "messages": messages + [AIMessage(content=content)],
