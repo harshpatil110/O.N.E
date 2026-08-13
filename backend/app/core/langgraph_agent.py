@@ -12,6 +12,7 @@ from langgraph.graph import StateGraph, END
 
 from app.core.graph_state import AgentState
 from app.core.rag_tool import search_corporate_knowledge
+from app.core.task_tools import get_current_task, mark_task_complete
 
 logger = logging.getLogger(__name__)
 
@@ -127,20 +128,48 @@ def task_node(state: AgentState) -> Dict[str, Any]:
     current_task = state.get("current_task", "No current task assigned.")
     user_role = state.get("user_role", "Developer")
     progress = state.get("progress", 0)
+    user_id = state.get("user_id", "")
 
+    # Action 5.3: Dynamic Prompt Injection based on current state variables
     prompt = SystemMessage(content=f"""You are the O.N.E. Task Manager Mentor.
 User Role: {user_role}
 Current Onboarding Progress: {progress}%
 Assigned Current Task: "{current_task}"
 
-Provide clear, helpful instructions to help the user complete their assigned task. If they indicate they have finished it, congratulate them and encourage them to move forward.""")
+Provide clear, helpful instructions to help the user complete their assigned task. If they indicate they have finished it, congratulate them and encourage them to move forward. You have tools available to check tasks and mark them complete.""")
 
     input_messages = [prompt] + messages
+    llm_with_tools = llm.bind_tools([get_current_task, mark_task_complete])
+    
     try:
-        response = llm.invoke(input_messages)
-        content = str(response.content)
+        response = llm_with_tools.invoke(input_messages)
+        
+        # Check if the LLM decided to call a tool
+        if hasattr(response, "tool_calls") and response.tool_calls:
+            from langchain_core.messages import ToolMessage
+            
+            tool_messages = []
+            for tc in response.tool_calls:
+                tool_name = tc["name"]
+                
+                if tool_name == "get_current_task":
+                    output = get_current_task.invoke({"user_id": user_id})
+                elif tool_name == "mark_task_complete":
+                    output = mark_task_complete.invoke({"user_id": user_id})
+                else:
+                    output = "Unknown tool."
+                
+                tool_messages.append(ToolMessage(content=str(output), tool_call_id=tc["id"]))
+            
+            # Pass tool outputs back to LLM for final response
+            final_messages = input_messages + [response] + tool_messages
+            final_response = llm_with_tools.invoke(final_messages)
+            content = str(final_response.content)
+        else:
+            content = str(response.content)
+            
     except Exception as e:
-        logger.warning(f"[TASK NODE] Ollama offline ({e}). Generating fallback response...")
+        logger.warning(f"[TASK NODE] Execution error ({e}). Generating fallback response...")
         content = f"Here is guidance for your current task: '{current_task}'. Follow the instructions in your role checklist to proceed."
 
     return {
