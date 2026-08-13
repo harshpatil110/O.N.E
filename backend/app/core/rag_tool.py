@@ -12,7 +12,21 @@ logger = logging.getLogger(__name__)
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers.ensemble import EnsembleRetriever # type: ignore
+# --- Resilient EnsembleRetriever Import ---
+try:
+    # Standard path for LangChain 0.2.x and 0.3.x
+    from langchain.retrievers import EnsembleRetriever
+except ImportError:
+    try:
+        # Fallback for community packages
+        from langchain_community.retrievers import EnsembleRetriever
+    except ImportError:
+        try:
+            # Legacy deep path
+            from langchain.retrievers.ensemble import EnsembleRetriever
+        except ImportError as e:
+            logger.error(f"Critical Error: Cannot find EnsembleRetriever in any LangChain namespace. {e}")
+            EnsembleRetriever = None # Failsafe
 
 # ─── Path Resolution ─────────────────────────────────────────────────────────
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -88,10 +102,14 @@ def _init_hybrid_retriever():
     bm25_retriever.k = 2
 
     # 4. Ensemble Retriever (50/50 Dense & Sparse)
-    _hybrid_retriever = EnsembleRetriever(
-        retrievers=[vector_retriever, bm25_retriever],
-        weights=[0.5, 0.5],
-    )
+    if EnsembleRetriever is not None:
+        _hybrid_retriever = EnsembleRetriever(
+            retrievers=[vector_retriever, bm25_retriever],
+            weights=[0.5, 0.5],
+        )
+    else:
+        logger.warning("EnsembleRetriever failed to import. Falling back to vector search only.")
+        _hybrid_retriever = vector_retriever
 
     logger.info("Hybrid EnsembleRetriever successfully initialized.")
     return _hybrid_retriever
