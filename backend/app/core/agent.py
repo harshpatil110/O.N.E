@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict, Any
-from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.prebuilt import create_react_agent
 from app.core.rag_tool import search_company_knowledge_base
@@ -10,14 +10,11 @@ def get_hermes_agent():
     Initializes the Hermes LLM Supervisor agent with the Hybrid Search RAG tool.
     Returns a runnable graph.
     """
-    api_key = os.getenv("NVIDIA_API_KEY", "dummy-key")
-    
-    # Initialize the LLM
-    llm = ChatOpenAI(
-        model="meta/llama-3.1-70b-instruct",
-        api_key=api_key,
-        base_url="https://integrate.api.nvidia.com/v1",
-        temperature=0.2
+    # Initialize the local Qwen 2.5 (3B) model
+    llm = ChatOllama(
+        model="qwen2.5:3b",
+        temperature=0.2, # Keep low for technical/agentic accuracy
+        base_url="http://localhost:11434" # Default local Ollama port
     )
 
     # Bind the hybrid search tool to the LLM
