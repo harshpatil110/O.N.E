@@ -139,44 +139,35 @@ def onboarding_node(state: AgentState) -> Dict[str, Any]:
     }
 
 
-def task_node(state: AgentState) -> Dict[str, Any]:
-    """
-    Task Node: Handles task assistance, task explanation, and checklist guidance based on state["current_task"].
-    """
+def task_node(state: AgentState) -> dict:
+    print("🤖 [TASK NODE EXECUTING]")
     messages = state.get("messages", [])
-    current_task = state.get("current_task", "No current task assigned.")
+    current_task = state.get("current_task", "None")
     user_role = state.get("user_role", "Developer")
     user_email = state.get("user_email", "a developer")
     progress = state.get("progress", 0)
     user_id = state.get("user_id", "")
 
-    logger.info(f"--- TASK NODE EXECUTING: LLM received {len(messages)} messages in context window ---")
-
-    prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor.
-You are talking to {user_email}. Their role is {user_role} and they are at {progress}% progress.
+    try:
+        sys_prompt = f"""You are O.N.E., a strict but helpful Senior Staff Engineer.
+You are talking to {user_email}.
 Their current assigned task is: '{current_task}'.
 
-CRITICAL RULE: You have been given the full conversation history below. Read ALL previous messages carefully before responding. Do not repeat yourself. Do not ask questions that have already been answered. Reference what the user has already told you.
-
-INSTRUCTIONS FOR EXPLAINING TASKS:
-1. Break the task down into 3 to 4 actionable, bite-sized sub-tasks.
-2. Explain the "Why": Briefly explain why this task is important for the company's architecture.
-3. Explain the "How": Provide a specific terminal command, file path, or coding concept to get them started.
-4. Format your response using Markdown bullet points and bold text for readability.
-5. End your response by asking: "Do you need a code example to get started, or are you ready to try this yourself?"
-
-Do NOT echo or repeat the user's message. Generate an original, helpful response.""")
-
-    input_messages = [prompt] + messages
-    llm_with_tools = llm.bind_tools([get_current_task, mark_task_complete])
-    
-    try:
-        response = llm_with_tools.invoke(input_messages)
+CRITICAL BEHAVIORAL RULES:
+1. If the user asks "What is my task?" or "Explain my task", you MUST ONLY explain the task. Break it down into smaller steps.
+2. DO NOT assume they have finished it. DO NOT mark it as complete.
+3. End your explanation by asking: "Let me know when you have explicitly finished this, and I will mark it as complete."
+4. ONLY trigger the task completion tool if the user explicitly says "I am done", "I finished it", or "mark it complete"."""
+        
+        sys_msg = SystemMessage(content=sys_prompt)
+        messages_to_pass = [sys_msg] + messages
+        
+        llm_with_tools = llm.bind_tools([get_current_task, mark_task_complete])
+        response = llm_with_tools.invoke(messages_to_pass)
         
         # Check if the LLM decided to call a tool
         if hasattr(response, "tool_calls") and response.tool_calls:
             from langchain_core.messages import ToolMessage
-            
             tool_messages = []
             for tc in response.tool_calls:
                 tool_name = tc["name"]
@@ -191,23 +182,20 @@ Do NOT echo or repeat the user's message. Generate an original, helpful response
                 tool_messages.append(ToolMessage(content=str(output), tool_call_id=tc["id"]))
             
             # Pass tool outputs back to LLM for final response
-            final_messages = input_messages + [response] + tool_messages
+            final_messages = messages_to_pass + [response] + tool_messages
             final_response = llm_with_tools.invoke(final_messages)
-            content = str(final_response.content)
+            reply_text = str(final_response.content)
         else:
-            content = str(response.content)
-            
+            reply_text = response.content if hasattr(response, 'content') else str(response)
+        
+        # Echo Prevention Failsafe
+        reply_text = _echo_guard(reply_text, messages, user_email)
+
+        return {"messages": [AIMessage(content=reply_text)], "next_route": "end"}
+        
     except Exception as e:
-        logger.warning(f"[TASK NODE] Execution error ({e}). Generating fallback response...")
-        content = "I encountered a slight system error while looking that up. Could you rephrase your request?"
-
-    # Echo Prevention Failsafe
-    content = _echo_guard(content, messages, user_email)
-
-    return {
-        "messages": messages + [AIMessage(content=content)],
-        "next_route": "end",
-    }
+        print(f"❌ [TASK NODE ERROR] {e}")
+        return {"messages": [AIMessage(content="I encountered an error managing your tasks.")], "next_route": "end"}
 
 
 def rag_node(state: AgentState) -> Dict[str, Any]:
