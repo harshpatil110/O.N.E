@@ -56,13 +56,14 @@ async def send_message(
         current_task_obj = get_next_task(db, str(current_user.id))
         current_task_string = current_task_obj.title if current_task_obj else "No pending tasks."
         
-        # Action 5.1: Fetch Chat History (last 10 messages)
+        # Action 5.1: Fetch Chat History (last 6 messages for VRAM-safe context)
         history_logs = db.query(ConversationLog)\
             .filter_by(session_id=session_id)\
             .filter(ConversationLog.role != "system")\
-            .order_by(ConversationLog.created_at.asc())\
-            .limit(5)\
+            .order_by(ConversationLog.created_at.desc())\
+            .limit(6)\
             .all()
+        history_logs.reverse()  # Chronological order
             
         # Action 5.2: Format Messages to LangChain classes
         formatted_messages = []

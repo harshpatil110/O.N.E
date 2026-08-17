@@ -209,14 +209,19 @@ def rag_node(state: AgentState) -> Dict[str, Any]:
     progress = state.get("progress", 0)
     current_task = state.get("current_task", "No current task assigned.")
 
-    prompt = SystemMessage(content=f"""Role: {user_role} | Task: {current_task}
-Answer using the knowledge base context below. Be extremely concise.
+    prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor.
+Role: {user_role} | Progress: {progress}% | Task: {current_task}
+Answer the user's question using the knowledge base context below. Be concise and helpful.
+Use the conversation history to understand what the user has already discussed.
 
---- CONTEXT ---
+--- KNOWLEDGE BASE CONTEXT ---
 {rag_context}""")
 
+    # Combine System Prompt + Full History (so LLM has conversational context)
+    full_context = [prompt] + messages
+
     try:
-        response = llm.invoke([prompt, HumanMessage(content=latest_msg)])
+        response = llm.invoke(full_context)
         content = str(response.content)
     except Exception as e:
         logger.warning(f"[RAG NODE] Ollama offline or execution error ({e}). Returning fallback...")
