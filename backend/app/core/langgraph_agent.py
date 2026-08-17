@@ -262,6 +262,39 @@ Do NOT echo or repeat the user's message. Generate an original, helpful response
     }
 
 
+def general_node(state: AgentState) -> dict:
+    print(f"🤖 [NODE EXECUTING] Processing {len(state['messages'])} messages in context.")
+    try:
+        user_name = state.get('user_email', 'Developer').split('@')[0].capitalize()
+        
+        sys_prompt = f"""You are O.N.E., the Senior Onboarding AI.
+You are talking to: {user_name} ({state.get('user_email')}).
+Role: {state.get('user_role', 'Unknown')} | Progress: {state.get('progress', 0)}%.
+
+INSTRUCTIONS:
+1. Answer the user's latest question using the provided context.
+2. NEVER repeat the user's exact phrase back to them.
+3. If they ask for their name, tell them they are {user_name}."""
+
+        messages_to_pass = [SystemMessage(content=sys_prompt)] + state["messages"]
+        response = llm.invoke(messages_to_pass)
+        
+        reply_text = response.content if hasattr(response, 'content') else str(response)
+        last_human_msg = state["messages"][-1].content if state["messages"] else ""
+        
+        # 🛡️ THE ANTI-ECHO SHIELD 🛡️
+        if reply_text.strip().lower() == last_human_msg.strip().lower() or reply_text.strip() == "":
+            print("🚨 ECHO DETECTED! Intercepting LLM hallucination.")
+            reply_text = f"I am O.N.E. You are {user_name}. I am reviewing your chat history to assist you. How can I help with your current tasks?"
+
+        print(f"📤 [NODE RETURNING] {reply_text[:50]}...")
+        return {"messages": [AIMessage(content=reply_text)]}
+        
+    except Exception as e:
+        print(f"❌ [NODE ERROR] {e}")
+        return {"messages": [AIMessage(content="System error resolving context.")]}
+
+
 def github_node(state: AgentState) -> Dict[str, Any]:
     """
     GitHub Node: Fetches data from GitHub API.
@@ -324,7 +357,7 @@ def route_next(state: AgentState) -> str:
     Conditional routing function reading supervisor's next_route decision.
     """
     route = state.get("next_route", "general")
-    if route not in ["onboarding", "task", "rag", "github"]:
+    if route not in ["onboarding", "task", "rag", "github", "general"]:
         return END
     return route
 
@@ -337,6 +370,7 @@ workflow.add_node("onboarding", onboarding_node)
 workflow.add_node("task", task_node)
 workflow.add_node("rag", rag_node)
 workflow.add_node("github", github_node)
+workflow.add_node("general", general_node)
 
 # Set Entry Point
 workflow.set_entry_point("supervisor")
@@ -350,6 +384,7 @@ workflow.add_conditional_edges(
         "task": "task",
         "rag": "rag",
         "github": "github",
+        "general": "general",
         END: END,
     },
 )
@@ -359,6 +394,7 @@ workflow.add_edge("onboarding", END)
 workflow.add_edge("task", END)
 workflow.add_edge("rag", END)
 workflow.add_edge("github", END)
+workflow.add_edge("general", END)
 
 # Compile Graph
 app_graph = workflow.compile()
