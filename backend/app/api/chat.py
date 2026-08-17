@@ -56,33 +56,38 @@ async def send_message(
         current_task_obj = get_next_task(db, str(current_user.id))
         current_task_string = current_task_obj.title if current_task_obj else "No pending tasks."
         
-        # Action 5.1: Fetch Chat History (last 6 messages for VRAM-safe context)
-        history_logs = db.query(ConversationLog)\
-            .filter_by(session_id=session_id)\
-            .filter(ConversationLog.role != "system")\
-            .order_by(ConversationLog.created_at.desc())\
-            .limit(6)\
-            .all()
-        history_logs.reverse()  # Chronological order
-            
-        # Action 5.2: Format Messages to LangChain classes
-        formatted_messages = []
-        for log in history_logs:
-            if log.role == "user":
-                formatted_messages.append(HumanMessage(content=log.content))
-            elif log.role == "assistant":
-                formatted_messages.append(AIMessage(content=log.content))
-                
-        # CRITICAL FIX: Deduplication - only append the new message if it isn't already the last entry
-        if not formatted_messages or formatted_messages[-1].content.strip() != request.message.strip():
-            formatted_messages.append(HumanMessage(content=request.message))
-        else:
-            logger.info("[CHAT] Skipped duplicate message append — already present in DB history.")
+        print("\n" + "="*40)
+        print(f"🚀 INCOMING CHAT REQUEST FROM: {user_model.email}")
+        print(f"💬 MESSAGE: {request.message}")
+
+        # 1. Fetch from Database
+        db_history = db.query(ConversationLog).filter(
+            ConversationLog.session_id == session_id,
+            ConversationLog.role != "system"
+        ).order_by(ConversationLog.created_at.desc()).limit(6).all()
         
+        db_history.reverse() # Oldest to newest
+        print(f"📦 FETCHED DB HISTORY: {len(db_history)} messages found.")
+
+        # 2. Format Messages
+        formatted_messages = []
+        for log in db_history:
+            if log.role == 'user':
+                formatted_messages.append(HumanMessage(content=log.content))
+            elif log.role == 'assistant':
+                formatted_messages.append(AIMessage(content=log.content))
+
+        # 3. Strict Deduplication
+        if not formatted_messages or formatted_messages[-1].content.strip().lower() != request.message.strip().lower():
+            formatted_messages.append(HumanMessage(content=request.message))
+            print("✅ Message deduplicated and appended.")
+        else:
+            print("⚠️ WARNING: Duplicate message detected. Not appending.")
+
         # End the current transaction so connection can be recycled if needed
         db.commit()
-        
-        # Action 5.2: State Initialization
+
+        # 4. Build State
         initial_state = {
             "messages": formatted_messages,
             "user_id": str(user_model.id),
@@ -93,8 +98,10 @@ async def send_message(
             "next_route": ""
         }
         
-        # Invoke the compiled LangGraph workflow
+        print("🧠 INVOKING LANGGRAPH...")
         response_state = app_graph.invoke(initial_state)
+        print("✅ LANGGRAPH INVOCATION COMPLETE.")
+        print("="*40 + "\n")
         
         # Extract the final AI response
         final_messages = response_state.get("messages", [])

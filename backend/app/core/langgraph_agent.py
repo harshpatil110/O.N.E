@@ -150,20 +150,22 @@ def task_node(state: AgentState) -> Dict[str, Any]:
     progress = state.get("progress", 0)
     user_id = state.get("user_id", "")
 
+    logger.info(f"--- TASK NODE EXECUTING: LLM received {len(messages)} messages in context window ---")
+
     prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor.
 You are talking to {user_email}. Their role is {user_role} and they are at {progress}% progress.
 Their current assigned task is: '{current_task}'.
 
-CRITICAL INSTRUCTIONS FOR EXPLAINING TASKS:
-When the user asks for information about their task, or says they are ready to proceed, you MUST NOT just repeat the task name. You MUST do the following:
+CRITICAL RULE: You have been given the full conversation history below. Read ALL previous messages carefully before responding. Do not repeat yourself. Do not ask questions that have already been answered. Reference what the user has already told you.
+
+INSTRUCTIONS FOR EXPLAINING TASKS:
 1. Break the task down into 3 to 4 actionable, bite-sized sub-tasks.
 2. Explain the "Why": Briefly explain why this task is important for the company's architecture.
 3. Explain the "How": Provide a specific terminal command, file path, or coding concept to get them started.
-4. Format your response beautifully using Markdown bullet points and bold text for readability.
+4. Format your response using Markdown bullet points and bold text for readability.
 5. End your response by asking: "Do you need a code example to get started, or are you ready to try this yourself?"
 
-Do not be repetitive. Be highly detailed, technical, and encouraging.
-Do NOT echo the user's message back. Generate an original, helpful response.""")
+Do NOT echo or repeat the user's message. Generate an original, helpful response.""")
 
     input_messages = [prompt] + messages
     llm_with_tools = llm.bind_tools([get_current_task, mark_task_complete])
@@ -215,6 +217,8 @@ def rag_node(state: AgentState) -> Dict[str, Any]:
     messages = state.get("messages", [])
     latest_msg = messages[-1].content if messages and hasattr(messages[-1], "content") else ""
 
+    logger.info(f"--- RAG NODE EXECUTING: LLM received {len(messages)} messages in context window ---")
+
     # Execute Hybrid RAG tool query
     try:
         rag_context = search_corporate_knowledge.invoke(latest_msg)
@@ -230,14 +234,16 @@ def rag_node(state: AgentState) -> Dict[str, Any]:
     prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor.
 You are talking to {user_email}. Their role is {user_role} and they are at {progress}% progress.
 Current task: {current_task}
-Answer the user's question using the knowledge base context below. Be concise and helpful.
-Use the conversation history to understand what the user has already discussed.
-Do NOT echo the user's message back. Generate an original, helpful response.
+
+CRITICAL RULE: You have been given the full conversation history below. Read ALL previous messages carefully before responding. Do not repeat yourself. Do not ask questions that have already been answered. Reference what the user has already told you.
+
+Answer the user's latest question using the knowledge base context below. Be concise and helpful.
+Do NOT echo or repeat the user's message. Generate an original, helpful response.
 
 --- KNOWLEDGE BASE CONTEXT ---
 {rag_context}""")
 
-    # Combine System Prompt + Full History (so LLM has conversational context)
+    # Combine System Prompt + Full History
     full_context = [prompt] + messages
 
     try:
@@ -262,10 +268,14 @@ def github_node(state: AgentState) -> Dict[str, Any]:
     """
     messages = state.get("messages", [])
     user_email = state.get("user_email", "a developer")
+
+    logger.info(f"--- GITHUB NODE EXECUTING: LLM received {len(messages)} messages in context window ---")
+
     prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer. You are talking to {user_email}.
 The user is asking about the GitHub repository. Use the provided tools to fetch real-time data and summarize it clearly in Markdown.
 If the tools return no data, inform the user.
-Do NOT echo the user's message back. Generate an original, helpful response.""")
+
+CRITICAL RULE: Read the conversation history. Do not repeat yourself. Do NOT echo or repeat the user's message.""")
     
     input_messages = [prompt] + messages
     llm_with_github_tools = llm.bind_tools([get_open_pull_requests, get_recent_commits, get_repository_issues])
