@@ -73,8 +73,11 @@ async def send_message(
             elif log.role == "assistant":
                 formatted_messages.append(AIMessage(content=log.content))
                 
-        # Append the new incoming message
-        formatted_messages.append(HumanMessage(content=request.message))
+        # CRITICAL FIX: Deduplication - only append the new message if it isn't already the last entry
+        if not formatted_messages or formatted_messages[-1].content.strip() != request.message.strip():
+            formatted_messages.append(HumanMessage(content=request.message))
+        else:
+            logger.info("[CHAT] Skipped duplicate message append — already present in DB history.")
         
         # End the current transaction so connection can be recycled if needed
         db.commit()

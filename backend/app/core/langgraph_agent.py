@@ -17,6 +17,19 @@ from app.core.github_tools import get_open_pull_requests, get_recent_commits, ge
 
 logger = logging.getLogger(__name__)
 
+
+def _echo_guard(content: str, messages: list, user_email: str) -> str:
+    """
+    Echo Prevention Failsafe: If the LLM echoed the user's last message,
+    return a sensible fallback instead.
+    """
+    if messages:
+        last_human = next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), "")
+        if content.strip() == last_human.strip():
+            logger.warning(f"[ECHO GUARD] Detected echo for '{user_email}'. Replacing with fallback.")
+            return f"I'm O.N.E., your onboarding mentor. How can I help you with your current task today, {user_email}?"
+    return content
+
 # Initialize local LLM (Qwen 2.5 3B via Ollama)
 llm = ChatOllama(
     model="qwen2.5:3b",
@@ -186,6 +199,9 @@ Do NOT echo the user's message back. Generate an original, helpful response.""")
         logger.warning(f"[TASK NODE] Execution error ({e}). Generating fallback response...")
         content = "I encountered a slight system error while looking that up. Could you rephrase your request?"
 
+    # Echo Prevention Failsafe
+    content = _echo_guard(content, messages, user_email)
+
     return {
         "messages": messages + [AIMessage(content=content)],
         "next_route": "end",
@@ -230,6 +246,9 @@ Do NOT echo the user's message back. Generate an original, helpful response.
     except Exception as e:
         logger.warning(f"[RAG NODE] Ollama offline or execution error ({e}). Returning fallback...")
         content = "I encountered a slight system error while looking that up. Could you rephrase your request?"
+
+    # Echo Prevention Failsafe
+    content = _echo_guard(content, messages, user_email)
 
     return {
         "messages": messages + [AIMessage(content=content)],
@@ -279,6 +298,9 @@ Do NOT echo the user's message back. Generate an original, helpful response.""")
     except Exception as e:
         logger.warning(f"[GITHUB NODE] Execution error ({e}). Generating fallback response...")
         content = "I encountered a slight system error while checking GitHub. Could you rephrase your request?"
+
+    # Echo Prevention Failsafe
+    content = _echo_guard(content, messages, user_email)
 
     return {
         "messages": messages + [AIMessage(content=content)],

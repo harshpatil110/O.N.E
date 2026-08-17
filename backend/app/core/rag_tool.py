@@ -11,22 +11,6 @@ logger = logging.getLogger(__name__)
 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-from langchain_community.retrievers import BM25Retriever
-# --- Resilient EnsembleRetriever Import ---
-try:
-    # Standard path for LangChain 0.2.x and 0.3.x
-    from langchain.retrievers import EnsembleRetriever
-except ImportError:
-    try:
-        # Fallback for community packages
-        from langchain_community.retrievers import EnsembleRetriever
-    except ImportError:
-        try:
-            # Legacy deep path
-            from langchain.retrievers.ensemble import EnsembleRetriever
-        except ImportError as e:
-            logger.error(f"Critical Error: Cannot find EnsembleRetriever in any LangChain namespace. {e}")
-            EnsembleRetriever = None # Failsafe
 
 # ─── Path Resolution ─────────────────────────────────────────────────────────
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -37,15 +21,15 @@ COLLECTION_NAME = "one_knowledge_base"
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 
 # ─── Lazy Singleton Initialization ────────────────────────────────────────────
-_hybrid_retriever = None
+_vector_retriever = None
 
 
-def _init_hybrid_retriever():
-    global _hybrid_retriever
-    if _hybrid_retriever is not None:
-        return _hybrid_retriever
+def _init_vector_retriever():
+    global _vector_retriever
+    if _vector_retriever is not None:
+        return _vector_retriever
 
-    logger.info("Initializing Hybrid Search Engine (ChromaDB + BM25)...")
+    logger.info("Initializing Vector Search Engine (ChromaDB)...")
 
     # 1. Load and Split Knowledge Base Documents
     loader = DirectoryLoader(
@@ -95,24 +79,10 @@ def _init_hybrid_retriever():
             persist_directory=CHROMA_DIR,
         )
 
-    vector_retriever = chroma_vectorstore.as_retriever(search_kwargs={"k": 2})
+    _vector_retriever = chroma_vectorstore.as_retriever(search_kwargs={"k": 3})
 
-    # 3. Sparse Retriever (BM25)
-    bm25_retriever = BM25Retriever.from_documents(chunks)
-    bm25_retriever.k = 2
-
-    # 4. Ensemble Retriever (50/50 Dense & Sparse)
-    if EnsembleRetriever is not None:
-        _hybrid_retriever = EnsembleRetriever(
-            retrievers=[vector_retriever, bm25_retriever],
-            weights=[0.5, 0.5],
-        )
-    else:
-        logger.warning("EnsembleRetriever failed to import. Falling back to vector search only.")
-        _hybrid_retriever = vector_retriever
-
-    logger.info("Hybrid EnsembleRetriever successfully initialized.")
-    return _hybrid_retriever
+    logger.info("ChromaDB Vector Retriever successfully initialized.")
+    return _vector_retriever
 
 
 # D. LangChain Tool Wrapper
@@ -122,7 +92,7 @@ def search_corporate_knowledge(query: str) -> str:
     codebase architecture, terminal commands, and role checklists.
     Input MUST be a specific search query string."""
     try:
-        retriever = _init_hybrid_retriever()
+        retriever = _init_vector_retriever()
         if retriever is not None:
             docs = retriever.invoke(query)
             if not docs:
@@ -130,14 +100,14 @@ def search_corporate_knowledge(query: str) -> str:
             
             # Format and truncate to 1500 chars max to protect Qwen 3B VRAM
             formatted_docs = []
-            for d in docs[:2]:
+            for d in docs[:3]:
                 src = d.metadata.get('source', 'Knowledge Base')
-                content = d.page_content[:600]
+                content = d.page_content[:500]
                 formatted_docs.append(f"Source: {src}\nContent: {content}")
             
             return "\n\n---\n\n".join(formatted_docs)
         else:
-            return "Knowledge base search tool is initializing or operating in basic mode."
+            return "Knowledge base search tool is initializing. Please try again."
             
     except Exception as e:
         logger.error(f"RAG Retrieval Error: {str(e)}", exc_info=True)
@@ -155,7 +125,7 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
     print("=" * 70)
-    print("      Hybrid Search Engine Verification (ChromaDB + BM25)")
+    print("      Vector Search Engine Verification (ChromaDB)")
     print("=" * 70)
 
     # Test 1: Semantic Query
@@ -181,5 +151,6 @@ if __name__ == "__main__":
     print("..." if len(res3) > 1000 else "")
 
     print("\n" + "=" * 70)
-    print("      All Hybrid Search Tests Completed Successfully!")
+    print("      All Vector Search Tests Completed Successfully!")
     print("=" * 70)
+
