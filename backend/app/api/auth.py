@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import OperationalError
 from app.models.user import User
 
 from app.core.database import get_db
@@ -56,31 +57,46 @@ async def login(
     """
     Login with email and password to receive a JWT token.
     """
-    # Find user by email
-    user = db.query(User).filter(User.email == request.email).first()
-    
-    # Verify password and existence
-    if not user or not verify_password(request.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-            headers={"WWW-Authenticate": "Bearer"},
+    try:
+        # Find user by email
+        user = db.query(User).filter(User.email == request.email).first()
+        
+        # Verify password and existence
+        if not user or not verify_password(request.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Create JWT token payload. Custom payload logic goes here
+        access_token = create_access_token(
+            data={
+                "sub": str(user.id), 
+                "role": user.role,
+                "email": user.email,
+                "department_role": user.department_role,
+                "onboarding_progress": user.onboarding_progress or 0
+            }
         )
-    
-    # Create JWT token payload. Custom payload logic goes here
-    access_token = create_access_token(
-        data={
-            "sub": str(user.id), 
-            "role": user.role,
-            "email": user.email,
-            "department_role": user.department_role,
-            "onboarding_progress": user.onboarding_progress or 0
-        }
-    )
-    
-    return TokenResponse(
-        access_token=access_token,
-        token_type="bearer",
-        role=user.role,
-        onboarding_progress=user.onboarding_progress or 0
-    )
+        
+        return TokenResponse(
+            access_token=access_token,
+            token_type="bearer",
+            role=user.role,
+            onboarding_progress=user.onboarding_progress or 0
+        )
+    except OperationalError:
+        # Catch database offline / unreachable errors
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The database is currently unreachable or waking up. Please try again in a few moments."
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        # Catch any other unforeseen errors gracefully
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An internal server error occurred during authentication."
+        )
