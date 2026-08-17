@@ -133,13 +133,13 @@ def task_node(state: AgentState) -> Dict[str, Any]:
     messages = state.get("messages", [])
     current_task = state.get("current_task", "No current task assigned.")
     user_role = state.get("user_role", "Developer")
+    user_email = state.get("user_email", "a developer")
     progress = state.get("progress", 0)
     user_id = state.get("user_id", "")
 
-    # Action 5.3 & 10.3: Concise System Prompt Injection -> Overhauled for detailed AI Mentorship
-    prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor. 
-The current user is a {user_role} with {progress}% progress. 
-Their current assigned task is: '{current_task}'. 
+    prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor.
+You are talking to {user_email}. Their role is {user_role} and they are at {progress}% progress.
+Their current assigned task is: '{current_task}'.
 
 CRITICAL INSTRUCTIONS FOR EXPLAINING TASKS:
 When the user asks for information about their task, or says they are ready to proceed, you MUST NOT just repeat the task name. You MUST do the following:
@@ -149,7 +149,8 @@ When the user asks for information about their task, or says they are ready to p
 4. Format your response beautifully using Markdown bullet points and bold text for readability.
 5. End your response by asking: "Do you need a code example to get started, or are you ready to try this yourself?"
 
-Do not be repetitive. Be highly detailed, technical, and encouraging.""")
+Do not be repetitive. Be highly detailed, technical, and encouraging.
+Do NOT echo the user's message back. Generate an original, helpful response.""")
 
     input_messages = [prompt] + messages
     llm_with_tools = llm.bind_tools([get_current_task, mark_task_complete])
@@ -206,13 +207,16 @@ def rag_node(state: AgentState) -> Dict[str, Any]:
         rag_context = "No relevant corporate documentation found."
 
     user_role = state.get("user_role", "Developer")
+    user_email = state.get("user_email", "a developer")
     progress = state.get("progress", 0)
     current_task = state.get("current_task", "No current task assigned.")
 
     prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor.
-Role: {user_role} | Progress: {progress}% | Task: {current_task}
+You are talking to {user_email}. Their role is {user_role} and they are at {progress}% progress.
+Current task: {current_task}
 Answer the user's question using the knowledge base context below. Be concise and helpful.
 Use the conversation history to understand what the user has already discussed.
+Do NOT echo the user's message back. Generate an original, helpful response.
 
 --- KNOWLEDGE BASE CONTEXT ---
 {rag_context}""")
@@ -238,7 +242,11 @@ def github_node(state: AgentState) -> Dict[str, Any]:
     GitHub Node: Fetches data from GitHub API.
     """
     messages = state.get("messages", [])
-    prompt = SystemMessage(content="You are O.N.E., a Senior Staff Engineer. The user is asking about the GitHub repository. Use the provided tools to fetch real-time data and summarize it clearly in Markdown. If the tools return no data, inform the user.")
+    user_email = state.get("user_email", "a developer")
+    prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer. You are talking to {user_email}.
+The user is asking about the GitHub repository. Use the provided tools to fetch real-time data and summarize it clearly in Markdown.
+If the tools return no data, inform the user.
+Do NOT echo the user's message back. Generate an original, helpful response.""")
     
     input_messages = [prompt] + messages
     llm_with_github_tools = llm.bind_tools([get_open_pull_requests, get_recent_commits, get_repository_issues])
@@ -341,6 +349,7 @@ if __name__ == "__main__":
     state_0pct: AgentState = {
         "messages": [HumanMessage(content="Hello, I just joined.")],
         "user_id": "test-uuid-1",
+        "user_email": "test@example.com",
         "user_role": None,
         "progress": 0,
         "current_task": None,
@@ -356,6 +365,7 @@ if __name__ == "__main__":
     state_task: AgentState = {
         "messages": [HumanMessage(content="What should I do next for my onboarding?")],
         "user_id": "test-uuid-2",
+        "user_email": "dev@example.com",
         "user_role": "frontend dev",
         "progress": 30,
         "current_task": "Install Node.js v20 LTS and NVM",
@@ -371,6 +381,7 @@ if __name__ == "__main__":
     state_rag: AgentState = {
         "messages": [HumanMessage(content="What is the PTO and leave policy?")],
         "user_id": "test-uuid-3",
+        "user_email": "rag@example.com",
         "user_role": "backend dev",
         "progress": 50,
         "current_task": "Review Core Application Architecture",

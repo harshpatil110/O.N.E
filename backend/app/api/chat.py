@@ -83,6 +83,7 @@ async def send_message(
         initial_state = {
             "messages": formatted_messages,
             "user_id": str(user_model.id),
+            "user_email": user_model.email,
             "user_role": user_model.department_role,
             "progress": user_model.onboarding_progress,
             "current_task": current_task_string,

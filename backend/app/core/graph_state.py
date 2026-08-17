@@ -8,6 +8,7 @@ class AgentState(TypedDict):
     """
     messages: List[BaseMessage]
     user_id: str
+    user_email: str
     user_role: Optional[str]
     progress: int
     current_task: Optional[str]
