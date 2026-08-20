@@ -53,8 +53,7 @@ async def send_message(
         if not user_model:
             raise HTTPException(status_code=404, detail="User not found")
             
-        current_task_obj = get_next_task(db, str(current_user.id))
-        current_task_string = current_task_obj.title if current_task_obj else "No pending tasks."
+        current_task_string = get_next_task(db, str(current_user.id))
         
         print("\n" + "="*40)
         print(f"🚀 INCOMING CHAT REQUEST FROM: {user_model.email}")

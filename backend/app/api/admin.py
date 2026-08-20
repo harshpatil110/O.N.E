@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, cast, String
+from pydantic import BaseModel
+from typing import List
 from app.core.database import get_db
 from app.models.user import User
 from app.models.conversation_log import ConversationLog
@@ -422,6 +424,43 @@ def seed_dummy_pending_task(db: Session = Depends(get_db)):
         
         db.commit()
         return {"status": "success", "message": f"Task '{active_task.task_name}' seeded as pending_verification."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+class RestoreProgressRequest(BaseModel):
+    user_id: str
+    completed_count: int
+
+@router.post("/verification/restore-progress")
+def restore_developer_progress(req: RestoreProgressRequest, db: Session = Depends(get_db)):
+    """Restores a developer's DB state (e.g. 14 done, 1 active) based on an integer count."""
+    from app.models.developer_task_state import DeveloperTaskState
+    from app.api.tasks import initialize_tasks_for_user
+    try:
+        user = db.query(User).filter(User.id == req.user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+        initialize_tasks_for_user(db, user)
+            
+        tasks = db.query(DeveloperTaskState).filter(
+            DeveloperTaskState.user_id == user.id
+        ).order_by(DeveloperTaskState.task_sequence_number.asc()).all()
+        
+        for idx, task in enumerate(tasks):
+            if idx < req.completed_count:
+                task.status = 'verified'
+            elif idx == req.completed_count:
+                task.status = 'active'
+            else:
+                task.status = 'locked'
+        
+        user.tasks_completed = req.completed_count
+        user.onboarding_progress = min(100, int((req.completed_count / max(len(tasks), 1)) * 100))
+        
+        db.commit()
+        return {"status": "success", "message": f"Restored {user.email} to task #{req.completed_count + 1}."}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

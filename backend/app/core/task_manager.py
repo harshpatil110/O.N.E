@@ -6,10 +6,11 @@ from app.models.user import User
 from app.models.tasks import RoleTask
 
 
+from app.models.developer_task_state import DeveloperTaskState
+
 def get_next_task(db: Session, user_id: Union[UUID, str]) -> str:
     """
-    Fetch the user's next sequential onboarding task based on their 
-    department_role and tasks_completed integer index.
+    Fetch the user's current active task directly from the DeveloperTaskState ledger.
     """
     if isinstance(user_id, str):
         try:
@@ -21,26 +22,30 @@ def get_next_task(db: Session, user_id: Union[UUID, str]) -> str:
     if not user:
         return "User not found."
 
-    department_role = user.department_role
-    if not department_role:
-        return "User has no assigned department role."
+    # Try to find the active task first
+    active_task = db.query(DeveloperTaskState).filter(
+        DeveloperTaskState.user_id == user.id,
+        DeveloperTaskState.status == "active"
+    ).first()
+    
+    if active_task:
+        return active_task.task_name
+        
+    # If no active task, check if one is pending
+    pending_task = db.query(DeveloperTaskState).filter(
+        DeveloperTaskState.user_id == user.id,
+        DeveloperTaskState.status == "pending_verification"
+    ).first()
+    
+    if pending_task:
+        return f"{pending_task.task_name} (Currently Pending Admin Verification)"
 
-    tasks_completed = user.tasks_completed or 0
+    # If no active or pending tasks, check if initialized
+    total_tasks = db.query(DeveloperTaskState).filter(
+        DeveloperTaskState.user_id == user.id
+    ).count()
+    
+    if total_tasks == 0:
+        return f"No tasks initialized yet for role '{user.department_role}'."
 
-    role_task_record = (
-        db.query(RoleTask)
-        .filter(RoleTask.department_role == department_role)
-        .first()
-    )
-    if not role_task_record or not role_task_record.tasks:
-        return f"No onboarding tasklist found for role '{department_role}'."
-
-    tasks = role_task_record.tasks
-
-    if tasks_completed >= len(tasks):
-        return "All onboarding tasks completed!"
-
-    if tasks_completed < 0:
-        tasks_completed = 0
-
-    return tasks[tasks_completed]
+    return "All onboarding tasks completed!"

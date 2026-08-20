@@ -9,12 +9,6 @@ export default function TaskVerification() {
   
   const navigate = useNavigate();
   
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('access_token');
-    navigate('/login');
-  };
-
   const loadTasks = async () => {
     try {
       setLoading(true);
@@ -40,45 +34,7 @@ export default function TaskVerification() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] font-sans text-[#1A1A1A] flex">
-      {/* 1. Structural Sidebar Navigation */}
-      <aside className="w-64 border-r border-[#E5E0D8] bg-[#FBF9F5] flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-[#E5E0D8]">
-          <h1 className="font-serif text-2xl tracking-tight text-[#1A1A1A]">O.N.E.</h1>
-          <p className="text-[10px] uppercase font-mono tracking-widest text-[#7A756D] mt-2">Admin Terminal</p>
-        </div>
-        
-        <nav className="flex-1 py-6">
-          <div className="px-4 mb-2 text-xs font-mono uppercase text-[#7A756D]">System</div>
-          <div className="space-y-1">
-            <a href="/admin" className="flex items-center px-4 py-3 text-[#1A1A1A] hover:bg-[#F2EFE9] text-sm transition-colors rounded-sm">
-              <span className="mr-3 text-lg opacity-60">⌘</span> Dashboard
-            </a>
-            
-            <a href="/admin/developers" className="flex items-center px-4 py-3 text-[#1A1A1A] hover:bg-[#F2EFE9] text-sm transition-colors rounded-sm">
-              <span className="mr-3 text-lg opacity-60">👥</span> Developers
-            </a>
-
-            {/* Active State (Task Verification) */}
-            <a href="/admin/verification" className="flex items-center px-4 py-3 bg-[#1A1A1A] text-white text-sm transition-colors rounded-none">
-              <span className="mr-3 text-lg opacity-80">✓</span> Task Verification
-            </a>
-            
-            <a href="/admin/analytics" className="flex items-center px-4 py-3 text-[#1A1A1A] hover:bg-[#F2EFE9] text-sm transition-colors rounded-sm">
-              <span className="mr-3 text-lg opacity-60">📊</span> Analytics
-            </a>
-          </div>
-        </nav>
-        
-        <div className="p-4 border-t border-[#E5E0D8]">
-          <button onClick={handleLogout} className="w-full py-2 px-4 border border-[#1A1A1A] text-[#1A1A1A] text-xs font-mono uppercase hover:bg-[#1A1A1A] hover:text-white transition-colors">
-            Terminate Session
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden">
         <header className="h-16 border-b border-[#E5E0D8] bg-[#FFFFFF] flex items-center px-8 justify-between shrink-0">
           <div className="flex items-center text-sm font-mono text-[#7A756D]">
             <span>/</span>
@@ -171,7 +127,6 @@ export default function TaskVerification() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
   );
 }

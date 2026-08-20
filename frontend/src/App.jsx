@@ -13,13 +13,11 @@ import { DeveloperDashboardPage } from './pages/DeveloperDashboardPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { ChecklistPage } from './pages/ChecklistPage';
 import { DashboardLayout } from './layouts/DashboardLayout';
-import { ThemeToggle } from './components/ThemeToggle';
+import { AdminLayout } from './components/AdminLayout';
 
 const App = () => {
   return (
-    <>
-      <ThemeToggle />
-      <Routes>
+    <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       
@@ -63,57 +61,18 @@ const App = () => {
         path="/admin" 
         element={
           <ProtectedRoute requiredRole="admin">
-            <AdminDashboardPage />
+            <AdminLayout />
           </ProtectedRoute>
         } 
-      />
-
-      <Route 
-        path="/admin/developers" 
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminDevelopersPage />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/admin/verification" 
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <TaskVerification />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/admin/analytics" 
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminAnalyticsPage />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/admin/settings" 
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminSettingsPage />
-          </ProtectedRoute>
-        } 
-      />
-
-      <Route 
-        path="/admin/sessions/:sessionId" 
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <SessionDetailPage />
-          </ProtectedRoute>
-        } 
-      />
+      >
+        <Route index element={<AdminDashboardPage />} />
+        <Route path="developers" element={<AdminDevelopersPage />} />
+        <Route path="verification" element={<TaskVerification />} />
+        <Route path="analytics" element={<AdminAnalyticsPage />} />
+        <Route path="settings" element={<AdminSettingsPage />} />
+        <Route path="sessions/:sessionId" element={<SessionDetailPage />} />
+      </Route>
     </Routes>
-    </>
   );
 };
 
