@@ -8,11 +8,25 @@ const getAuthHeaders = () => {
   };
 };
 
-export const fetchMyTaskStatuses = async (userId) => {
-  const res = await fetch(`${API_BASE_URL}/tasks/my-task-statuses/${userId}`, { 
+export const fetchTaskStates = async (userId) => {
+  const res = await fetch(`${API_BASE_URL}/tasks/states/${userId}`, { 
     credentials: 'omit', 
     headers: getAuthHeaders() 
   });
-  if (!res.ok) throw new Error('Failed to fetch task statuses');
+  if (!res.ok) throw new Error('Failed to fetch task states');
+  return res.json();
+};
+
+export const submitTaskForVerification = async (taskId) => {
+  const res = await fetch(`${API_BASE_URL}/tasks/submit`, {
+    method: 'POST',
+    credentials: 'omit',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ task_id: taskId })
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || 'Failed to submit task');
+  }
   return res.json();
 };

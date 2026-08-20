@@ -1,69 +1,64 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
-import { fetchMyTaskStatuses } from '../services/userService';
+import { fetchTaskStates, submitTaskForVerification } from '../services/userService';
 
 export const ChecklistPage = () => {
   const { user } = useAuth();
-  const [data, setData] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [role, setRole] = useState('');
   const [loading, setLoading] = useState(true);
-  const [taskStatuses, setTaskStatuses] = useState({});
+  const [submittingId, setSubmittingId] = useState(null);
+  const [error, setError] = useState(null);
 
-  const fetchTasks = async () => {
+  const loadTasks = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/tasks/${user.id}`);
-      if (res.ok) {
-        const json = await res.json();
-        setData(json);
+      const res = await fetchTaskStates(user.id);
+      if (res.status === 'success') {
+        setTasks(res.tasks);
+        setRole(res.role || '');
       }
     } catch (err) {
-      console.error('Failed to fetch tasks', err);
+      console.error('Failed to fetch task states', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTasks();
-    
-    const loadStatuses = async () => {
-      if (!user) return;
-      try {
-        const res = await fetchMyTaskStatuses(user.id);
-        if (res.status === 'success') {
-          setTaskStatuses(res.task_statuses);
-        }
-      } catch (err) {
-        console.error("Could not load task statuses", err);
-      }
-    };
-    loadStatuses();
-    
-    const interval = setInterval(loadStatuses, 10000);
+    loadTasks();
+    const interval = setInterval(loadTasks, 10000);
     return () => clearInterval(interval);
   }, [user]);
 
-  const markComplete = async () => {
+  const handleSubmitTask = async (taskId) => {
+    setSubmittingId(taskId);
+    setError(null);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/tasks/complete`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id }),
-      });
-      if (res.ok) {
-        fetchTasks();
-      }
+      await submitTaskForVerification(taskId);
+      // Immediately reflect in UI
+      setTasks(prev => prev.map(t => 
+        t.id === taskId ? { ...t, status: 'pending_verification' } : t
+      ));
     } catch (err) {
-      console.error('Failed to complete task', err);
+      setError(err.message);
+      console.error('Failed to submit task', err);
+    } finally {
+      setSubmittingId(null);
     }
   };
+
+  // Calculate progress from DB state
+  const verifiedCount = tasks.filter(t => t.status === 'verified').length;
+  const totalCount = tasks.length;
+  const progressPct = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 0;
 
   if (loading) {
     return <div className="p-12 text-stone-900 font-sans h-full bg-[#F7F5F0]">Loading checklist...</div>;
   }
 
-  if (!data) {
+  if (tasks.length === 0) {
     return <div className="p-12 text-stone-900 font-sans h-full bg-[#F7F5F0]">No tasks found.</div>;
   }
 
@@ -98,61 +93,85 @@ export const ChecklistPage = () => {
         <header className="mb-16">
           <h1 className="text-4xl font-serif font-light tracking-tight mb-3">Onboarding Checklist</h1>
           <p className="text-xs font-mono uppercase tracking-widest text-stone-500">
-            {data.role} &mdash; {data.progress_percentage}% Completed
+            {role} &mdash; {progressPct}% Completed
           </p>
         </header>
 
+        {error && (
+          <div className="mb-6 p-4 border border-[#EAE1C5] bg-[#FDFBF2] text-[#917624] text-xs font-mono">
+            ⚠ {error}
+          </div>
+        )}
+
         <div className="space-y-0">
-          {data.tasks_array.map((task, idx) => {
-            const isCompleted = idx < data.tasks_completed;
-            const isActive = idx === data.tasks_completed;
-            const isLocked = idx > data.tasks_completed;
-            
-            const taskName = typeof task === 'string' ? task : task.name;
-            const status = taskStatuses[taskName];
+          {tasks.map((task) => {
+            const isVerified = task.status === 'verified';
+            const isPending = task.status === 'pending_verification';
+            const isActive = task.status === 'active';
+            const isLocked = task.status === 'locked';
 
             return (
               <div 
-                key={idx} 
+                key={task.id} 
                 className={`group flex items-start p-6 border-l pl-8 transition-all ${
                   isActive 
                     ? 'border-stone-900 bg-white/60 shadow-sm backdrop-blur-sm relative left-[-1px]' 
-                    : isCompleted 
+                    : isVerified 
                       ? 'border-stone-300 opacity-60' 
-                      : 'border-stone-200 opacity-40'
+                      : isPending
+                        ? 'border-[#917624] bg-[#FDFBF2]/30'
+                        : 'border-stone-200 opacity-40'
                 }`}
               >
                 <div className="flex-1 pr-6">
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-stone-400">Step {idx + 1}</span>
-                    {isCompleted && (
-                      <span className="text-[10px] font-mono uppercase tracking-widest text-green-700 bg-green-50 px-2 py-0.5 rounded-sm">Done</span>
-                    )}
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-stone-400">Step {task.sequence}</span>
                     
-                    {/* STATUS BADGES - Strict Minimalist Styling */}
-                    {status === 'verified' ? (
+                    {/* STATUS BADGES — driven by DB state */}
+                    {isVerified && (
                       <span className="px-2 py-1 bg-[#F2EFE9] border border-[#E5E0D8] text-[#1A1A1A] text-[10px] font-mono uppercase tracking-widest">
                         Verified ✓
                       </span>
-                    ) : status === 'pending' ? (
+                    )}
+                    {isPending && (
                       <span className="px-2 py-1 bg-[#FDFBF2] border border-[#EAE1C5] text-[#917624] text-[10px] font-mono uppercase tracking-widest animate-pulse">
-                        Pending Review
+                        Pending Verification
                       </span>
-                    ) : null}
+                    )}
                   </div>
-                  <p className={`text-base md:text-lg font-light leading-relaxed ${isCompleted ? 'line-through text-stone-500' : isActive ? 'text-stone-900 font-normal' : 'text-stone-600'}`}>
-                    {task}
+                  <p className={`text-base md:text-lg font-light leading-relaxed ${
+                    isVerified ? 'line-through text-stone-500' 
+                    : isActive ? 'text-stone-900 font-normal' 
+                    : isPending ? 'text-[#917624]'
+                    : 'text-stone-600'
+                  }`}>
+                    {task.task_name}
                   </p>
                 </div>
                 
+                {/* Active: Show clickable button */}
                 {isActive && (
                   <button 
-                    onClick={markComplete}
-                    className="shrink-0 px-5 py-2.5 bg-stone-900 text-[#F7F5F0] text-[10px] font-mono uppercase tracking-widest hover:bg-stone-800 transition-colors rounded-sm shadow-sm"
+                    onClick={() => handleSubmitTask(task.id)}
+                    disabled={submittingId === task.id}
+                    className={`shrink-0 px-5 py-2.5 text-[10px] font-mono uppercase tracking-widest transition-colors rounded-sm shadow-sm ${
+                      submittingId === task.id
+                        ? 'bg-stone-400 text-stone-200 cursor-wait'
+                        : 'bg-stone-900 text-[#F7F5F0] hover:bg-stone-800'
+                    }`}
                   >
-                    Mark as Done
+                    {submittingId === task.id ? 'Submitting...' : 'Mark as Done'}
                   </button>
                 )}
+
+                {/* Pending: Show awaiting badge */}
+                {isPending && (
+                  <span className="shrink-0 px-5 py-2.5 bg-[#FDFBF2] border border-[#EAE1C5] text-[#917624] text-[10px] font-mono uppercase tracking-widest">
+                    Awaiting Admin
+                  </span>
+                )}
+
+                {/* Locked: Show lock icon */}
                 {isLocked && (
                   <div className="shrink-0 size-8 flex items-center justify-center pt-2">
                     <svg className="size-4 text-stone-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">

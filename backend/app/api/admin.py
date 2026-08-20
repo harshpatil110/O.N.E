@@ -308,24 +308,27 @@ def seed_dummy_analytics_data(db: Session = Depends(get_db)):
 
 @router.get("/verification/tasks")
 def get_pending_verifications(db: Session = Depends(get_db)):
-    """Fetches all tasks pending verification, joined with user data."""
+    """Fetches all tasks with status == 'pending_verification' from the strict state table."""
+    from app.models.developer_task_state import DeveloperTaskState
     try:
-        # Fetch tasks that are NOT verified
-        tasks = db.query(CompletedVerifyTask, User).join(
-            User, CompletedVerifyTask.user_id == User.id
-        ).filter(CompletedVerifyTask.is_verified == False).all()
+        tasks = db.query(DeveloperTaskState, User).join(
+            User, DeveloperTaskState.user_id == User.id
+        ).filter(
+            DeveloperTaskState.status == "pending_verification"
+        ).order_by(DeveloperTaskState.updated_at.desc()).all()
         
         result = []
         for task, user in tasks:
             result.append({
                 "task_id": task.id,
                 "user_name": user.email.split('@')[0],
-                "user_id": user.id,
+                "user_id": str(user.id),
                 "task_name": task.task_name,
+                "sequence": task.task_sequence_number,
                 "speed_analysis": task.speed_analysis,
                 "learning_curve": task.learning_curve,
                 "mistakes_made": task.mistakes_made,
-                "submitted_at": task.created_at.isoformat() if task.created_at else None
+                "submitted_at": task.updated_at.isoformat() if task.updated_at else None
             })
         return {"status": "success", "data": result}
     except Exception as e:
@@ -334,34 +337,91 @@ def get_pending_verifications(db: Session = Depends(get_db)):
 
 @router.post("/verification/tasks/{task_id}/verify")
 def verify_task(task_id: int, db: Session = Depends(get_db)):
-    """Marks a task as verified and increments the user's progress."""
+    """Strict state transition: pending_verification -> verified, then unlock next task."""
+    from app.models.developer_task_state import DeveloperTaskState
     try:
-        task = db.query(CompletedVerifyTask).filter(CompletedVerifyTask.id == task_id).first()
+        task = db.query(DeveloperTaskState).filter(DeveloperTaskState.id == task_id).first()
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
-            
-        task.is_verified = True
-        task.verified_at = datetime.utcnow()
+        if task.status != "pending_verification":
+            raise HTTPException(status_code=400, detail=f"Task status is '{task.status}', expected 'pending_verification'")
         
-        # Find user and increment progress organically upon verification
+        # 1. Transition: pending_verification -> verified
+        task.status = "verified"
+        task.updated_at = datetime.utcnow()
+        print(f"✅ Task #{task.task_sequence_number} '{task.task_name}' -> verified")
+        
+        # 2. Auto-unlock the next sequential task
+        next_task = db.query(DeveloperTaskState).filter(
+            DeveloperTaskState.user_id == task.user_id,
+            DeveloperTaskState.task_sequence_number == task.task_sequence_number + 1
+        ).first()
+        if next_task and next_task.status == "locked":
+            next_task.status = "active"
+            next_task.updated_at = datetime.utcnow()
+            print(f"🔓 Next task #{next_task.task_sequence_number} '{next_task.task_name}' -> active")
+        
+        # 3. Update user progress
         user = db.query(User).filter(User.id == task.user_id).first()
-        if user and user.onboarding_progress < 100:
-            user.onboarding_progress += 20
-            if user.onboarding_progress > 100:
-                user.onboarding_progress = 100
-                
-        # Inject notification log for the developer to see next time they load chat
+        if user:
+            total_tasks = db.query(DeveloperTaskState).filter(
+                DeveloperTaskState.user_id == user.id
+            ).count()
+            verified_count = db.query(DeveloperTaskState).filter(
+                DeveloperTaskState.user_id == user.id,
+                DeveloperTaskState.status == "verified"
+            ).count()
+            user.tasks_completed = verified_count
+            user.onboarding_progress = min(100, int((verified_count / max(total_tasks, 1)) * 100))
+        
+        # 4. Inject notification into chat
         session = db.query(OnboardingSession).filter(OnboardingSession.user_id == task.user_id).first()
         if session:
-            sys_log = ConversationLog(
+            db.add(ConversationLog(
                 session_id=session.id, role='system',
                 content=f"✅ Admin has verified your completion of: {task.task_name}. You may proceed to the next step.",
                 created_at=datetime.utcnow()
-            )
-            db.add(sys_log)
+            ))
         
         db.commit()
-        return {"status": "success", "message": "Task verified and user notified."}
+        return {"status": "success", "message": "Task verified and next task unlocked."}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/verification/seed-dummy-task")
+def seed_dummy_pending_task(db: Session = Depends(get_db)):
+    """Seeds a dummy pending_verification task for UI testing using DeveloperTaskState."""
+    from app.models.developer_task_state import DeveloperTaskState
+    from app.api.tasks import initialize_tasks_for_user
+    try:
+        user = db.query(User).filter(User.department_role.isnot(None)).first()
+        if not user:
+            return {"message": "No users with a department role exist in DB."}
+
+        # Ensure tasks are initialized
+        initialize_tasks_for_user(db, user)
+        
+        # Find the first 'active' task and flip it to pending
+        active_task = db.query(DeveloperTaskState).filter(
+            DeveloperTaskState.user_id == user.id,
+            DeveloperTaskState.status == "active"
+        ).first()
+        
+        if not active_task:
+            return {"message": "No active tasks to seed. All may be pending or verified."}
+        
+        active_task.status = "pending_verification"
+        active_task.speed_analysis = "Completed the task exceptionally fast within 15 minutes of assignment."
+        active_task.learning_curve = "Demonstrated clear understanding of git init and remote branch linking."
+        active_task.mistakes_made = "Initially attempted to push to main without a commit message, but quickly self-corrected."
+        active_task.updated_at = datetime.utcnow()
+        
+        db.commit()
+        return {"status": "success", "message": f"Task '{active_task.task_name}' seeded as pending_verification."}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
