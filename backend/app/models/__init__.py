@@ -7,6 +7,7 @@ from app.models.checklist_item import ChecklistItem
 from app.models.conversation_log import ConversationLog
 from app.models.checklist_template import ChecklistTemplate
 from app.models.tasks import RoleTask
+from app.models.completed_verify_task import CompletedVerifyTask
 
 __all__ = [
     "User",
@@ -15,4 +16,5 @@ __all__ = [
     "ConversationLog",
     "ChecklistTemplate",
     "RoleTask",
+    "CompletedVerifyTask",
 ]

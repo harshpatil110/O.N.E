@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
+import { fetchMyTaskStatuses } from '../services/userService';
 
 export const ChecklistPage = () => {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [taskStatuses, setTaskStatuses] = useState({});
 
   const fetchTasks = async () => {
     if (!user) return;
@@ -24,6 +26,22 @@ export const ChecklistPage = () => {
 
   useEffect(() => {
     fetchTasks();
+    
+    const loadStatuses = async () => {
+      if (!user) return;
+      try {
+        const res = await fetchMyTaskStatuses(user.id);
+        if (res.status === 'success') {
+          setTaskStatuses(res.task_statuses);
+        }
+      } catch (err) {
+        console.error("Could not load task statuses", err);
+      }
+    };
+    loadStatuses();
+    
+    const interval = setInterval(loadStatuses, 10000);
+    return () => clearInterval(interval);
   }, [user]);
 
   const markComplete = async () => {
@@ -89,6 +107,9 @@ export const ChecklistPage = () => {
             const isCompleted = idx < data.tasks_completed;
             const isActive = idx === data.tasks_completed;
             const isLocked = idx > data.tasks_completed;
+            
+            const taskName = typeof task === 'string' ? task : task.name;
+            const status = taskStatuses[taskName];
 
             return (
               <div 
@@ -107,6 +128,17 @@ export const ChecklistPage = () => {
                     {isCompleted && (
                       <span className="text-[10px] font-mono uppercase tracking-widest text-green-700 bg-green-50 px-2 py-0.5 rounded-sm">Done</span>
                     )}
+                    
+                    {/* STATUS BADGES - Strict Minimalist Styling */}
+                    {status === 'verified' ? (
+                      <span className="px-2 py-1 bg-[#F2EFE9] border border-[#E5E0D8] text-[#1A1A1A] text-[10px] font-mono uppercase tracking-widest">
+                        Verified ✓
+                      </span>
+                    ) : status === 'pending' ? (
+                      <span className="px-2 py-1 bg-[#FDFBF2] border border-[#EAE1C5] text-[#917624] text-[10px] font-mono uppercase tracking-widest animate-pulse">
+                        Pending Review
+                      </span>
+                    ) : null}
                   </div>
                   <p className={`text-base md:text-lg font-light leading-relaxed ${isCompleted ? 'line-through text-stone-500' : isActive ? 'text-stone-900 font-normal' : 'text-stone-600'}`}>
                     {task}

@@ -5,6 +5,7 @@ import { ChatPage } from './pages/ChatPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminDevelopersPage } from './pages/AdminDevelopersPage';
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
+import TaskVerification from './pages/TaskVerification';
 import { AdminSettingsPage } from './pages/AdminSettingsPage';
 import { SessionDetailPage } from './pages/SessionDetailPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -72,6 +73,15 @@ const App = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <AdminDevelopersPage />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/admin/verification" 
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <TaskVerification />
           </ProtectedRoute>
         } 
       />

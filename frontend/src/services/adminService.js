@@ -56,3 +56,19 @@ export const fetchAdvancedAnalytics = async () => {
   if (!res.ok) throw new Error('Failed to fetch advanced analytics');
   return res.json();
 };
+
+export const fetchPendingVerifications = async () => {
+  const res = await fetch(`${API_BASE_URL}/admin/verification/tasks`, { credentials: 'omit', headers: getAuthHeaders() });
+  if (!res.ok) throw new Error('Failed to fetch pending verifications');
+  return res.json();
+};
+
+export const verifyDeveloperTask = async (taskId) => {
+  const res = await fetch(`${API_BASE_URL}/admin/verification/tasks/${taskId}/verify`, { 
+    method: 'POST',
+    credentials: 'omit', 
+    headers: getAuthHeaders() 
+  });
+  if (!res.ok) throw new Error('Failed to verify task');
+  return res.json();
+};

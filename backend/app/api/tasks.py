@@ -6,6 +6,7 @@ from typing import List
 from app.core.database import get_db
 from app.models.user import User
 from app.models.tasks import RoleTask
+from app.models.completed_verify_task import CompletedVerifyTask
 
 router = APIRouter()
 
@@ -57,3 +58,17 @@ def complete_user_task(req: CompleteTaskRequest, db: Session = Depends(get_db)):
         "tasks_completed": user.tasks_completed,
         "progress_percentage": user.onboarding_progress
     }
+
+@router.get("/my-task-statuses/{user_id}")
+def get_my_task_statuses(user_id: str, db: Session = Depends(get_db)):
+    """Fetches the verification status of tasks submitted by the given developer."""
+    try:
+        tasks = db.query(CompletedVerifyTask).filter(CompletedVerifyTask.user_id == user_id).all()
+        
+        status_map = {}
+        for task in tasks:
+            status_map[task.task_name] = "verified" if task.is_verified else "pending"
+            
+        return {"status": "success", "task_statuses": status_map}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

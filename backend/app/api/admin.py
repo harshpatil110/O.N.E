@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.models.user import User
 from app.models.conversation_log import ConversationLog
 from app.models.onboarding_session import OnboardingSession
+from app.models.completed_verify_task import CompletedVerifyTask
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, HumanMessage
 from datetime import datetime, timedelta
@@ -301,6 +302,66 @@ def seed_dummy_analytics_data(db: Session = Depends(get_db)):
         db.add_all(logs_to_add)
         db.commit()
         return {"message": f"Successfully seeded {len(logs_to_add)} logs to populate charts."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/verification/tasks")
+def get_pending_verifications(db: Session = Depends(get_db)):
+    """Fetches all tasks pending verification, joined with user data."""
+    try:
+        # Fetch tasks that are NOT verified
+        tasks = db.query(CompletedVerifyTask, User).join(
+            User, CompletedVerifyTask.user_id == User.id
+        ).filter(CompletedVerifyTask.is_verified == False).all()
+        
+        result = []
+        for task, user in tasks:
+            result.append({
+                "task_id": task.id,
+                "user_name": user.email.split('@')[0],
+                "user_id": user.id,
+                "task_name": task.task_name,
+                "speed_analysis": task.speed_analysis,
+                "learning_curve": task.learning_curve,
+                "mistakes_made": task.mistakes_made,
+                "submitted_at": task.created_at.isoformat() if task.created_at else None
+            })
+        return {"status": "success", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/verification/tasks/{task_id}/verify")
+def verify_task(task_id: int, db: Session = Depends(get_db)):
+    """Marks a task as verified and increments the user's progress."""
+    try:
+        task = db.query(CompletedVerifyTask).filter(CompletedVerifyTask.id == task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+            
+        task.is_verified = True
+        task.verified_at = datetime.utcnow()
+        
+        # Find user and increment progress organically upon verification
+        user = db.query(User).filter(User.id == task.user_id).first()
+        if user and user.onboarding_progress < 100:
+            user.onboarding_progress += 20
+            if user.onboarding_progress > 100:
+                user.onboarding_progress = 100
+                
+        # Inject notification log for the developer to see next time they load chat
+        session = db.query(OnboardingSession).filter(OnboardingSession.user_id == task.user_id).first()
+        if session:
+            sys_log = ConversationLog(
+                session_id=session.id, role='system',
+                content=f"✅ Admin has verified your completion of: {task.task_name}. You may proceed to the next step.",
+                created_at=datetime.utcnow()
+            )
+            db.add(sys_log)
+        
+        db.commit()
+        return {"status": "success", "message": "Task verified and user notified."}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))

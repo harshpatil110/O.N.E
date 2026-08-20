@@ -128,6 +128,11 @@ export const AdminAnalyticsPage = () => {
               <span className="mr-3 text-lg opacity-60">👥</span> Developers
             </a>
             
+            {/* Inactive State (Task Verification) */}
+            <a href="/admin/verification" className="flex items-center px-4 py-3 text-[#1A1A1A] hover:bg-[#F2EFE9] text-sm transition-colors rounded-none">
+              <span className="mr-3 text-lg opacity-60">✓</span> Task Verification
+            </a>
+            
             <a href="/admin/analytics" className="flex items-center px-4 py-3 bg-[#1A1A1A] text-white text-sm transition-colors rounded-sm">
               <span className="mr-3 text-lg opacity-80">📊</span> Analytics
             </a>

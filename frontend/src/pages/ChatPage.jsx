@@ -90,13 +90,24 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
           ) : messages.length === 0 && !isLoading ? (
              <div className="text-center text-stone-400 text-xs font-mono uppercase tracking-widest mt-20">Initializing secure session...</div>
           ) : (
-            messages.map((msg, idx) => (
-              <MessageBubble 
-                key={msg.id || msg.tempId || idx} 
-                role={msg.role} 
-                content={msg.content} 
-              />
-            ))
+            messages.map((msg, idx) => {
+              if (msg.role === 'system') {
+                return (
+                  <div key={msg.id || msg.tempId || idx} className="w-full flex justify-center my-6">
+                    <span className="text-[10px] font-mono text-[#7A756D] uppercase tracking-widest border-b border-[#E5E0D8] pb-1 text-center max-w-[80%]">
+                      {msg.message || msg.content}
+                    </span>
+                  </div>
+                );
+              }
+              return (
+                <MessageBubble 
+                  key={msg.id || msg.tempId || idx} 
+                  role={msg.role} 
+                  content={msg.content} 
+                />
+              );
+            })
           )}
           {isLoading && (
             <MessageBubble role="agent" content="" isLoadingIndicator={true} />
