@@ -1,358 +1,306 @@
-import logging
-from typing import Optional, List
-from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, select, and_
-
-logger = logging.getLogger(__name__)
-
+from sqlalchemy import func, cast, String
 from app.core.database import get_db
-from app.core.auth_deps import get_hr_admin_user
 from app.models.user import User
-from app.models.onboarding_session import OnboardingSession
-from app.models.checklist_item import ChecklistItem
 from app.models.conversation_log import ConversationLog
-from app.schemas.admin import (
-    PaginatedSessions, SessionSummary, AdminMetrics,
-    SessionChatHistory, ChatHistoryMessage,
-    AdminProfileResponse, AdminProfileUpdate
-)
-from app.services.hr_notification_service import HRNotificationService
+from app.models.onboarding_session import OnboardingSession
+from langchain_ollama import ChatOllama
+from langchain_core.messages import SystemMessage, HumanMessage
+from datetime import datetime, timedelta
 
-router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_hr_admin_user)])
+router = APIRouter(prefix="/admin", tags=["Admin Analytics"])
 
-@router.get("/developers", response_model=PaginatedSessions)
-async def list_sessions(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
-    role: Optional[str] = None,
-    status: Optional[str] = None,
-    db: Session = Depends(get_db)
-):
-    """
-    List all onboarding sessions with pagination and filters.
-    Includes employee details and completion percentage.
-    """
-    query = db.query(OnboardingSession, User).join(User, OnboardingSession.user_id == User.id)
-    
-    if role:
-        query = query.filter(User.role == role)
-    if status:
-        query = query.filter(OnboardingSession.status == status)
-        
-    total = query.count()
-    
-    # Apply pagination
-    results = query.offset((page - 1) * page_size).limit(page_size).all()
-    
-    items = []
-    for session_record, user_record in results:
-        percent_complete = session_record.progress_percentage
-        
-        items.append(SessionSummary(
-            session_id=str(session_record.id),
-            user_id=str(user_record.id),
-            employee_name=user_record.name or "Unknown",
-            employee_email=user_record.email or "",
-            role=user_record.role or "employee",
-            status=session_record.status,
-            started_at=session_record.started_at,
-            completed_at=session_record.completed_at,
-            percent_complete=percent_complete
-        ))
-        
-    return PaginatedSessions(
-        items=items,
-        total=total,
-        page=page,
-        page_size=page_size
-    )
+# Initialize the local LLM for analytics processing
+analytics_llm = ChatOllama(model="qwen2.5:3b", temperature=0.2)
 
-@router.get("/metrics", response_model=AdminMetrics)
-async def get_metrics(db: Session = Depends(get_db)):
-    """
-    Calculate high-level metrics for the HR dashboard.
-    """
-    # Total sessions
-    total_sessions = db.query(OnboardingSession).count()
-    
-    # Active vs Completed
-    active_sessions = db.query(OnboardingSession).filter(OnboardingSession.status == "in_progress").count()
-    completed_sessions = db.query(OnboardingSession).filter(OnboardingSession.status == "completed").count()
-    
-    # Completion Rate
-    completion_rate = (completed_sessions / total_sessions * 100) if total_sessions > 0 else 0.0
-    
-    # Avg Duration in Hours for completed sessions
-    # Note: Using SQLAlchemy's func.avg and handling the interval if possible, 
-    # but simplest is to fetch and calculate or use a raw SQL approach if dialect allows.
-    # For PostgreSQL: AVG(completed_at - started_at)
-    avg_duration_query = db.query(
-        func.avg(OnboardingSession.completed_at - OnboardingSession.started_at)
-    ).filter(OnboardingSession.status == "completed").scalar()
-    
-    avg_duration_hours = 0.0
-    if avg_duration_query:
-        # avg_duration_query is typically a timedelta object in SQLAlchemy/Postgres
-        try:
-            if hasattr(avg_duration_query, "total_seconds"):
-                avg_duration_hours = avg_duration_query.total_seconds() / 3600.0
-            else:
-                # Fallback for unexpected types
-                logger.warning(f"Unexpected type for avg_duration_query: {type(avg_duration_query)}")
-        except Exception as e:
-            logger.error(f"Error calculating average duration: {str(e)}")
+@router.get("/dashboard-stats")
+def get_dashboard_stats(db: Session = Depends(get_db)):
+    try:
+        total_devs = db.query(User).count()
         
-    # Completions this week (last 7 days)
-    seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
-    completions_this_week = db.query(OnboardingSession).filter(
-        OnboardingSession.status == "completed",
-        OnboardingSession.completed_at >= seven_days_ago
-    ).count()
-    
-    return AdminMetrics(
-        total_sessions=total_sessions,
-        active_sessions=active_sessions,
-        completed_sessions=completed_sessions,
-        completion_rate=completion_rate,
-        avg_duration_hours=avg_duration_hours,
-        completions_this_week=completions_this_week
-    )
+        # Calculate Average Progress
+        avg_progress = db.query(func.avg(User.onboarding_progress)).scalar() or 0.0
+        
+        # Calculate how many devs are stuck (e.g., progress == 0)
+        stuck_devs = db.query(User).filter(User.onboarding_progress == 0).count()
+        
+        return {
+            "total_developers": total_devs,
+            "average_completion_rate": round(avg_progress, 1),
+            "stuck_developers": stuck_devs,
+            "avg_time_to_onboard_days": 0 # Placeholder for Phase 4 logic
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/analytics")
-async def get_analytics_volume(db: Session = Depends(get_db)):
-    """
-    Aggregate chat logs by day of the week to feed the Onboarding Volume bar chart.
-    Also returns the top common questions asked by developers.
-    """
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
-    
-    logs = db.query(ConversationLog.created_at).filter(
-        ConversationLog.created_at >= seven_days_ago
-    ).all()
-    
-    # Group by day of week
-    volume = {"Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0}
-    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    
-    for log in logs:
-        if log.created_at:
-            day_str = days[log.created_at.weekday()]
-            volume[day_str] += 1
-            
-    # Format for Recharts
-    chart_data = [{"day": k, "volume": v} for k, v in volume.items()]
-    
-    # Common questions: count frequency of user messages
-    user_logs = db.query(ConversationLog.content, func.count(ConversationLog.id).label("count")).filter(
-        ConversationLog.created_at >= seven_days_ago,
-        ConversationLog.role == "user"
-    ).group_by(ConversationLog.content).order_by(func.count(ConversationLog.id).desc()).limit(5).all()
-    
-    common_questions = [
-        {"question": row.content, "count": row.count}
-        for row in user_logs
+@router.get("/developers")
+def get_all_developers(db: Session = Depends(get_db)):
+    devs = db.query(User).all()
+    return [
+        {
+            "id": str(d.id),
+            "name": d.email.split('@')[0].capitalize() if d.email else "Unknown",
+            "email": d.email,
+            "progress": d.onboarding_progress or 0,
+            "role": d.department_role
+        } 
+        for d in devs
     ]
-    
-    return {"volume_data": chart_data, "common_questions": common_questions}
 
-@router.post("/notify-hr/{session_id}")
-async def resend_hr_notification(
-    session_id: str,
-    db: Session = Depends(get_db)
-):
-    """
-    Manually trigger the HR notification email for a specific session.
-    """
-    hr_service = HRNotificationService(db)
-    success = await hr_service.send_completion_email(session_id)
-    
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to send notification email. Please check server logs."
-        )
+@router.get("/analytics/topics")
+def get_topic_distribution(db: Session = Depends(get_db)):
+    try:
+        # Fetch all human queries
+        logs = db.query(ConversationLog).filter(ConversationLog.role == 'user').all()
         
-    return {"success": True}
+        categories = {
+            "knowledge_base": 0,
+            "task_list": 0,
+            "github": 0,
+            "conversation_history": 0,
+            "other": 0
+        }
+        
+        total_queries = len(logs)
+        if total_queries == 0:
+            return {"distribution": categories, "total": 0}
 
-@router.get("/sessions/{session_id}/chat-history", response_model=SessionChatHistory)
-async def get_session_chat_history(
-    session_id: str,
-    db: Session = Depends(get_db)
-):
-    """
-    Audit Trail: Returns the full chronological chat history for a specific
-    onboarding session. Reads from the denormalized JSONB column first,
-    falling back to conversation_logs for pre-existing sessions.
-    """
-    # 1. Load session + employee info
-    result = db.query(OnboardingSession, User)\
-        .join(User, OnboardingSession.user_id == User.id)\
-        .filter(OnboardingSession.id == session_id)\
-        .first()
+        # Simple Categorization Engine
+        for log in logs:
+            msg = log.content.lower() if log.content else ""
+            if any(kw in msg for kw in ["policy", "document", "how to", "setup", "guide", "manual"]):
+                categories["knowledge_base"] += 1
+            elif any(kw in msg for kw in ["task", "todo", "done", "complete", "next step", "checklist"]):
+                categories["task_list"] += 1
+            elif any(kw in msg for kw in ["github", "repo", "pull request", "pr", "commit", "branch"]):
+                categories["github"] += 1
+            elif any(kw in msg for kw in ["history", "previous", "earlier", "context", "my name"]):
+                categories["conversation_history"] += 1
+            else:
+                categories["other"] += 1
+                
+        # Calculate percentages
+        distribution = {k: round((v / total_queries) * 100, 1) for k, v in categories.items()}
+        
+        return {
+            "total_queries": total_queries,
+            "raw_counts": categories,
+            "percentages": distribution
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    if not result:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session not found"
-        )
+@router.get("/analytics/insights")
+def get_ai_insights(db: Session = Depends(get_db)):
+    try:
+        # 1. Gather live metrics
+        total_devs = db.query(User).count()
+        avg_progress = db.query(func.avg(User.onboarding_progress)).scalar() or 0.0
+        stuck_devs = db.query(User).filter(User.onboarding_progress == 0).count()
+        
+        logs = db.query(ConversationLog).filter(ConversationLog.role == 'user').all()
+        topics = {"knowledge_base": 0, "task_list": 0, "github": 0, "other": 0}
+        for log in logs:
+            msg = log.content.lower() if log.content else ""
+            if any(kw in msg for kw in ["policy", "document", "how to"]): topics["knowledge_base"] += 1
+            elif any(kw in msg for kw in ["task", "todo", "done"]): topics["task_list"] += 1
+            elif any(kw in msg for kw in ["github", "repo", "pr"]): topics["github"] += 1
+            else: topics["other"] += 1
 
-    session_record, user_record = result
+        top_topic = max(topics, key=topics.get).replace("_", " ").title() if logs else "None"
 
-    # 2. Try the fast path: denormalized JSONB column
-    raw_history = session_record.chat_history or []
+        # 2. Determine Intervention Level securely in Python
+        if stuck_devs > 0 or avg_progress < 20:
+            level = "CRITICAL"
+            title = "Intervention Required"
+        elif stuck_devs == 0 and avg_progress >= 80:
+            level = "NOMINAL"
+            title = "System Healthy"
+        else:
+            level = "WARNING"
+            title = "Monitor Progress"
 
-    if raw_history:
-        messages = [
-            ChatHistoryMessage(
-                role=msg.get("role", "unknown"),
-                content=msg.get("content", ""),
-                timestamp=msg.get("timestamp")
-            )
-            for msg in raw_history
-        ]
-    else:
-        # 3. Fallback: query conversation_logs table (for sessions created before migration)
-        logs = db.query(ConversationLog)\
-            .filter(ConversationLog.session_id == session_id)\
-            .filter(ConversationLog.role.in_(["user", "assistant"]))\
-            .order_by(ConversationLog.created_at.asc())\
-            .all()
+        # 3. Prompt the LLM for a qualitative insight
+        sys_prompt = "You are O.N.E., an AI administrative assistant analyzing developer onboarding metrics. Be extremely concise. Generate a 2-sentence insight summarizing the current team status and suggesting one action based on the data."
+        human_prompt = f"Data: {total_devs} total devs, {stuck_devs} stuck at 0%. Average progress: {round(avg_progress, 1)}%. Most asked topic: {top_topic}. Write the insight."
 
-        messages = [
-            ChatHistoryMessage(
-                role=log.role,
-                content=log.content,
-                timestamp=log.created_at.isoformat() if log.created_at else None
-            )
-            for log in logs
-        ]
+        response = analytics_llm.invoke([
+            SystemMessage(content=sys_prompt),
+            HumanMessage(content=human_prompt)
+        ])
+        
+        insight_text = response.content if hasattr(response, 'content') else str(response)
 
-    return SessionChatHistory(
-        session_id=str(session_record.id),
-        employee_name=user_record.name or "Unknown",
-        employee_email=user_record.email or "",
-        status=session_record.status,
-        messages=messages,
-        total_messages=len(messages)
-    )
+        return {
+            "advisory_level": level,
+            "advisory_title": title,
+            "stuck_count": stuck_devs,
+            "ai_insight": insight_text
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/developers/{user_id}/chats")
-async def get_developer_chats(
-    user_id: str,
-    db: Session = Depends(get_db)
-):
-    """
-    Retrieve chronological chat history for a specific developer (by user_id).
-    """
-    session = db.query(OnboardingSession).filter(OnboardingSession.user_id == user_id).first()
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Onboarding session not found for this user.")
+def get_developer_chats(user_id: str, db: Session = Depends(get_db)):
+    print(f"\n--- 🔍 ADMIN CHAT FETCH INITIATED ---")
+    print(f"Target User ID: {user_id}")
+    try:
+        session = db.query(OnboardingSession).filter(OnboardingSession.user_id == user_id).first()
+        if not session:
+            print(f"❌ No OnboardingSession found for user: {user_id}")
+            return {"status": "success", "logs": []}
+            
+        # Cast session_id to string to prevent UUID mapping errors in SQLAlchemy
+        logs = db.query(ConversationLog).filter(
+            cast(ConversationLog.session_id, String) == str(session.id)
+        ).order_by(ConversationLog.created_at.asc()).all()
         
-    logs = db.query(ConversationLog).filter(ConversationLog.session_id == session.id).order_by(ConversationLog.created_at.asc()).all()
-    
-    chat_history = [
-        {
-            "id": str(log.id),
-            "role": log.role,
-            "content": log.content,
-            "created_at": log.created_at.isoformat() if log.created_at else None
+        print(f"✅ Found {len(logs)} logs for this user (session {session.id}).")
+        
+        # Strictly format the output
+        formatted_logs = [
+            {
+                "role": log.role,
+                "message": log.content,
+                "timestamp": log.created_at.isoformat() if log.created_at else None
+            }
+            for log in logs
+        ]
+        
+        print(f"--- 📤 RETURNING DATA TO FRONTEND ---\n")
+        return {"status": "success", "logs": formatted_logs}
+        
+    except Exception as e:
+        print(f"❌ DATABASE FETCH ERROR: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/analytics/advanced")
+def get_advanced_analytics(db: Session = Depends(get_db)):
+    try:
+        users = db.query(User).all()
+        
+        frustration_index = []
+        autonomy_radar = []
+        proficiency_matrix = []
+        task_velocity = []
+
+        for user in users:
+            session = db.query(OnboardingSession).filter(OnboardingSession.user_id == user.id).first()
+            if not session:
+                continue
+                
+            logs = db.query(ConversationLog).filter(
+                ConversationLog.session_id == session.id,
+                ConversationLog.role == 'user'
+            ).order_by(ConversationLog.created_at.asc()).all()
+            
+            total_msgs = len(logs)
+            name = user.name or f"Dev {user.id}"
+            progress = user.onboarding_progress or 0
+            
+            # Use email split if available
+            display_name = user.email.split('@')[0] if hasattr(user, 'email') and user.email else name
+
+            # 1. Frustration Index
+            if total_msgs == 0:
+                frustration_score = 0
+            else:
+                neg_count = sum(1 for log in logs if log.content and any(kw in log.content.lower() for kw in ["error", "stuck", "fail", "bug", "help", "broken", "issue"]))
+                frustration_score = round((neg_count / total_msgs) * 100, 1)
+                
+            frustration_index.append({"name": display_name, "score": frustration_score})
+            
+            # 2. Autonomy vs AI Reliance
+            reliance = min(10, (total_msgs / 10.0))
+            autonomy = (progress / 10.0) - reliance
+            autonomy = max(0, min(10, autonomy + 5))
+            autonomy_radar.append({
+                "subject": display_name,
+                "autonomy": round(autonomy, 1),
+                "reliance": round(reliance, 1)
+            })
+
+            # 3. Proficiency Matrix
+            tech_kws = ["architecture", "database", "api", "auth", "deploy", "docker", "optimization"]
+            tech_depth = sum(10 for log in logs if log.content and any(kw in log.content.lower() for kw in tech_kws))
+            base_depth = 20 + tech_depth
+            proficiency_matrix.append({
+                "name": display_name, 
+                "progress": progress, 
+                "depth": min(100, base_depth)
+            })
+            
+            # 4. Task Velocity
+            all_logs = db.query(ConversationLog).filter(
+                ConversationLog.session_id == session.id
+            ).order_by(ConversationLog.created_at.asc()).all()
+            
+            if len(all_logs) < 2:
+                task_velocity.append({"name": display_name, "hours": 0})
+            else:
+                first_interaction = all_logs[0].created_at
+                last_interaction = all_logs[-1].created_at
+                time_diff = last_interaction - first_interaction
+                hours = round(time_diff.total_seconds() / 3600, 2)
+                
+                if hours == 0 and time_diff.total_seconds() > 0:
+                    hours = 0.01 
+                    
+                task_velocity.append({"name": display_name, "hours": hours})
+
+        return {
+            "frustration_index": frustration_index,
+            "autonomy_radar": autonomy_radar,
+            "proficiency_matrix": proficiency_matrix,
+            "task_velocity": task_velocity
         }
-        for log in logs
-    ]
-    
-    return {"chats": chat_history}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/seed-analytics-data")
+def seed_dummy_analytics_data(db: Session = Depends(get_db)):
+    try:
+        users = db.query(User).all()
+        if not users:
+            return {"message": "No users found to seed."}
 
-@router.patch("/tasks/{task_id}/toggle-completion")
-async def toggle_task_completion(
-    task_id: str,
-    payload: dict,
-    db: Session = Depends(get_db)
-):
-    """
-    Toggle a checklist item's completion status.
-    Accepts: {"is_completed": true/false}
-    
-    When is_completed=true  -> status='completed', completed_at=now
-    When is_completed=false -> status='pending',   completed_at=null
-    """
-    item = db.query(ChecklistItem).filter(ChecklistItem.id == task_id).first()
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Checklist item not found"
-        )
+        logs_to_add = []
+        base_time = datetime.utcnow() - timedelta(days=2) # Start 2 days ago
 
-    is_completed = payload.get("is_completed", False)
+        for i, user in enumerate(users):
+            session = db.query(OnboardingSession).filter(OnboardingSession.user_id == user.id).first()
+            if not session:
+                continue
+                
+            # 1. First Interaction
+            logs_to_add.append(ConversationLog(
+                session_id=session.id, role='user', 
+                content="What is my first task?", 
+                created_at=base_time
+            ))
+            
+            # 2. Time-gapped Interaction (Fixes Task Velocity)
+            # Give different users different hour gaps (e.g., User 0 takes 1 hour, User 1 takes 4 hours)
+            gap_hours = (i + 1) * 1.5 
+            second_time = base_time + timedelta(hours=gap_hours)
+            
+            # 3. Keyword Injection (Fixes Frustration Index)
+            # Alternate injecting frustration keywords
+            if i % 2 == 0:
+                msg = "I am completely stuck on this error. It is failing to build."
+            else:
+                msg = "I finished the setup. What is next?"
+                
+            logs_to_add.append(ConversationLog(
+                session_id=session.id, role='user', 
+                content=msg, 
+                created_at=second_time
+            ))
 
-    if is_completed:
-        item.status = "completed"
-        item.completed_at = datetime.now(timezone.utc)
-    else:
-        item.status = "pending"
-        item.completed_at = None
-
-    db.commit()
-    db.refresh(item)
-
-    logger.info(f"Admin toggled task {task_id} -> {'completed' if is_completed else 'pending'}")
-
-    return {
-        "id": str(item.id),
-        "title": item.title,
-        "status": item.status,
-        "completed_at": item.completed_at.isoformat() if item.completed_at else None
-    }
-
-
-@router.get("/profile", response_model=AdminProfileResponse)
-async def get_admin_profile(
-    current_user: User = Depends(get_hr_admin_user)
-):
-    """
-    Return the currently logged-in admin's profile.
-    """
-    return AdminProfileResponse(
-        id=str(current_user.id),
-        name=current_user.name or "",
-        email=current_user.email or "",
-        role=current_user.role or "hr_admin"
-    )
-
-
-@router.put("/profile", response_model=AdminProfileResponse)
-async def update_admin_profile(
-    payload: AdminProfileUpdate,
-    current_user: User = Depends(get_hr_admin_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Update the currently logged-in admin's name and/or email.
-    """
-    if payload.email and payload.email != current_user.email:
-        existing = db.query(User).filter(
-            User.email == payload.email,
-            User.id != current_user.id
-        ).first()
-        if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already in use by another account."
-            )
-        current_user.email = payload.email
-
-    if payload.name is not None:
-        current_user.name = payload.name
-
-    db.commit()
-    db.refresh(current_user)
-    logger.info(f"Admin profile updated for user {current_user.id}")
-
-    return AdminProfileResponse(
-        id=str(current_user.id),
-        name=current_user.name or "",
-        email=current_user.email or "",
-        role=current_user.role or "hr_admin"
-    )
+        db.add_all(logs_to_add)
+        db.commit()
+        return {"message": f"Successfully seeded {len(logs_to_add)} logs to populate charts."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

@@ -3,6 +3,9 @@ from app.core.database import SessionLocal
 from app.core.task_manager import get_next_task
 from app.models.user import User
 from app.models.tasks import RoleTask
+from app.models.conversation_log import ConversationLog
+from app.models.onboarding_session import OnboardingSession
+from datetime import datetime
 
 @tool("get_current_task")
 def get_current_task(user_id: str) -> str:
@@ -43,6 +46,18 @@ def mark_task_complete(user_id: str) -> str:
                 
             user.tasks_completed = current_completed + 1
             user.onboarding_progress = min(100, int((user.tasks_completed / total_tasks) * 100))
+            
+            # Log the Completion (This helps Task Velocity calculations)
+            session = db.query(OnboardingSession).filter(OnboardingSession.user_id == user.id).first()
+            if session:
+                completion_log = ConversationLog(
+                    session_id=session.id,
+                    role='system',
+                    content=f"System Check: Task marked as complete. New progress: {user.onboarding_progress}%",
+                    created_at=datetime.utcnow()
+                )
+                db.add(completion_log)
+                
             db.commit()
             
             next_task = get_next_task(db, user_id)
