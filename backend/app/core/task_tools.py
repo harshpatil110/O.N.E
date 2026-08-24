@@ -7,6 +7,7 @@ from app.models.conversation_log import ConversationLog
 from app.models.onboarding_session import OnboardingSession
 from app.models.completed_verify_task import CompletedVerifyTask
 from datetime import datetime
+import re
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -29,11 +30,10 @@ def get_current_task(user_id: str) -> str:
 def mark_task_complete(user_id: str) -> str:
     """Use this tool STRICTLY AND ONLY WHEN the user explicitly states they have finished their assigned task."""
     print(f"\n--- 🛠️ AI TOOL TRIGGERED: mark_task_complete via Chat ---")
-    print(f"User ID: {user_id}")
     
     db = SessionLocal()
     try:
-        # 1. Enforce State Machine: Find the EXACT active task from DB
+        # 1. Enforce State Machine: Find the active task
         from app.models.developer_task_state import DeveloperTaskState
         
         active_task = db.query(DeveloperTaskState).filter(
@@ -42,33 +42,55 @@ def mark_task_complete(user_id: str) -> str:
         ).first()
         
         if not active_task:
-            print("❌ No active task found for this user.")
             return "Task submission failed: You currently have no 'active' task. It may already be pending admin verification, or all tasks are completed."
 
         task_name = active_task.task_name
-        print(f"✅ Active task found: '{task_name}' (seq #{active_task.task_sequence_number})")
+        current_seq = active_task.task_sequence_number
+        print(f"✅ Active task found: '{task_name}' (Seq: {current_seq})")
 
-        # 2. Fetch recent chat logs for AI evaluation
+        # 2. Strict Timestamp Chat Isolation
+        # Find exactly when this task started by looking at when the previous task was verified.
+        previous_task = db.query(DeveloperTaskState).filter(
+            DeveloperTaskState.user_id == user_id,
+            DeveloperTaskState.task_sequence_number == current_seq - 1
+        ).first()
+        
+        # If there is a previous task, use its updated_at timestamp as the lower bound.
+        # (updated_at is set when a task transitions to 'verified')
+        start_time = previous_task.updated_at if (previous_task and previous_task.updated_at) else datetime.min
+        print(f"📅 Timestamp lower bound: {start_time}")
+
+        # Fetch strictly bounded logs via the session
         session = db.query(OnboardingSession).filter(OnboardingSession.user_id == user_id).first()
         chat_history_text = ""
         if session:
-            recent_logs = db.query(ConversationLog).filter(
-                ConversationLog.session_id == session.id
-            ).order_by(ConversationLog.created_at.desc()).limit(10).all()
-            recent_logs.reverse()
-            chat_history_text = "\n".join([f"{log.role}: {log.content}" for log in recent_logs])
-            print(f"📝 Found {len(recent_logs)} chat logs to evaluate.")
-
-        # 3. Run AI Evaluation (Speed, Learning Curve, Mistakes)
-        print("🧠 Running AI Assessment (Speed, Learning, Mistakes)...")
-        eval_sys_prompt = """You are an engineering manager evaluating a developer's task completion based on their chat history. 
-        Analyze the history and return exactly 3 sections separated by the pipe '|' character:
-        1. Speed Analysis
-        2. Learning Curve
-        3. Mistakes Made
-        Keep each section to 1 sentence."""
+            task_specific_logs = db.query(ConversationLog).filter(
+                ConversationLog.session_id == session.id,
+                ConversationLog.created_at >= start_time
+            ).order_by(ConversationLog.created_at.asc()).all()
+            
+            print(f"📄 Isolated {len(task_specific_logs)} chat logs specifically for this task via Timestamp bounding.")
+            
+            chat_history_text = "\n".join([f"{log.role}: {log.content}" for log in task_specific_logs])
         
-        eval_human_prompt = f"Task: {task_name}\nHistory:\n{chat_history_text}\n\nEvaluate using format: Speed|Learning|Mistakes"
+        if not chat_history_text.strip():
+            chat_history_text = "[No conversation history recorded for this specific task timeframe.]"
+
+        # 3. Anti-Hallucination XML Prompting
+        print("🧠 Running AI Assessment with Strict Anti-Hallucination bounds...")
+        eval_sys_prompt = """You are an engineering manager evaluating a developer's task completion based strictly on their chat history.
+        CRITICAL INSTRUCTIONS:
+        1. You MUST format your response using EXACTLY these XML tags: <speed>, <learning>, and <mistakes>.
+        2. If the chat history is empty, or if the developer only said things like "mark this as done" without asking any questions, YOU MUST NOT invent an evaluation. 
+        3. If there is insufficient data, output exactly this phrase inside the tags: "Insufficient chat data for analysis."
+
+        Example of insufficient data response:
+        <speed>Insufficient chat data for analysis.</speed>
+        <learning>Insufficient chat data for analysis.</learning>
+        <mistakes>Insufficient chat data for analysis.</mistakes>
+        """
+        
+        eval_human_prompt = f"Task: {task_name}\nHistory:\n{chat_history_text}\n\nEvaluate using the XML tags."
         
         try:
             response = evaluator_llm.invoke([
@@ -76,18 +98,21 @@ def mark_task_complete(user_id: str) -> str:
                 HumanMessage(content=eval_human_prompt)
             ])
             response_text = response.content if hasattr(response, 'content') else str(response)
-            parts = response_text.split('|')
-            print(f"✅ AI Evaluation Complete. Parts found: {len(parts)}")
-            print(f"   Raw response: {response_text[:200]}")
         except Exception as eval_err:
             print(f"⚠️ Evaluator LLM failed: {eval_err}. Using defaults.")
-            parts = []
+            response_text = ""
         
-        speed = parts[0].strip() if len(parts) > 0 else "Analysis completed rapidly."
-        learning = parts[1].strip() if len(parts) > 1 else "Demonstrated standard comprehension."
-        mistakes = parts[2].strip() if len(parts) > 2 else "No critical mistakes logged."
+        # 4. Bulletproof Regex Extraction
+        speed_match = re.search(r'<speed>(.*?)</speed>', response_text, re.DOTALL | re.IGNORECASE)
+        learning_match = re.search(r'<learning>(.*?)</learning>', response_text, re.DOTALL | re.IGNORECASE)
+        mistakes_match = re.search(r'<mistakes>(.*?)</mistakes>', response_text, re.DOTALL | re.IGNORECASE)
+        
+        # Safe fallbacks
+        speed = speed_match.group(1).strip() if speed_match else "Insufficient chat data for analysis."
+        learning = learning_match.group(1).strip() if learning_match else "Insufficient chat data for analysis."
+        mistakes = mistakes_match.group(1).strip() if mistakes_match else "Insufficient chat data for analysis."
 
-        # 4. Update the State Machine row: active -> pending_verification
+        # 5. Update State Machine & Commit
         active_task.status = 'pending_verification'
         active_task.speed_analysis = speed
         active_task.learning_curve = learning
@@ -95,23 +120,22 @@ def mark_task_complete(user_id: str) -> str:
         active_task.updated_at = datetime.utcnow()
         print(f"💾 State transition: active -> pending_verification for '{task_name}'")
 
-        # 5. Log system notification in chat
         if session:
             sys_log = ConversationLog(
                 session_id=session.id, role='system',
-                content=f"System: Task '{task_name}' submitted for Admin Verification. You will be notified once approved.",
+                content=f"System: Chat submission successful. Task '{task_name}' is pending Admin Verification.",
                 created_at=datetime.utcnow()
             )
             db.add(sys_log)
         
         db.commit()
-        print("✅ SUCCESS: Task submitted to admin dashboard via DeveloperTaskState.")
-        return f"Successfully submitted '{task_name}' for Admin verification. The status is now 'pending_verification'. Tell the user to wait for approval."
+        print("✅ SUCCESS: Evaluated and submitted to admin dashboard.")
+        return f"Successfully submitted '{task_name}' for Admin verification. The status is now pending."
         
     except Exception as e:
         db.rollback()
         print(f"❌ CRITICAL TOOL ERROR: {e}")
-        return f"System error during task submission: {str(e)}"
+        return f"Database error during submission: {str(e)}"
     finally:
         db.close()
         print("--- 🏁 TOOL EXECUTION FINISHED ---\n")
