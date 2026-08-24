@@ -12,4 +12,6 @@ class AgentState(TypedDict):
     user_role: Optional[str]
     progress: int
     current_task: Optional[str]
+    current_active_task: Optional[str]  # JIT DB-grounded active task name
     next_route: str
+

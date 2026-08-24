@@ -83,10 +83,22 @@ async def send_message(
         else:
             print("⚠️ WARNING: Duplicate message detected. Not appending.")
 
+        from app.models.developer_task_state import DeveloperTaskState
+        
+        # JIT Context Injection: Query the DB for the exact active task
+        active_task_record = db.query(DeveloperTaskState).filter(
+            DeveloperTaskState.user_id == current_user.id,
+            DeveloperTaskState.status == 'active'
+        ).first()
+        
+        current_active_task_name = active_task_record.task_name if active_task_record else "No active task available. All tasks may be completed or pending verification."
+        
+        print(f"📌 [JIT INJECTION] DB-grounded active task: '{current_active_task_name}'")
+
         # End the current transaction so connection can be recycled if needed
         db.commit()
 
-        # 4. Build State
+        # 4. Build State — current_active_task is the DB truth, current_task is legacy
         initial_state = {
             "messages": formatted_messages,
             "user_id": str(user_model.id),
@@ -94,6 +106,7 @@ async def send_message(
             "user_role": user_model.department_role,
             "progress": user_model.onboarding_progress,
             "current_task": current_task_string,
+            "current_active_task": current_active_task_name,
             "next_route": ""
         }
         

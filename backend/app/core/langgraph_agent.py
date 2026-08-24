@@ -142,19 +142,23 @@ def onboarding_node(state: AgentState) -> Dict[str, Any]:
 def task_node(state: AgentState) -> dict:
     print("🤖 [TASK NODE EXECUTING]")
     messages = state.get("messages", [])
-    current_task = state.get("current_task", "None")
+    # JIT: Prefer the DB-grounded active task over the legacy current_task field
+    active_task = state.get("current_active_task") or state.get("current_task", "None")
     user_role = state.get("user_role", "Developer")
     user_email = state.get("user_email", "a developer")
     progress = state.get("progress", 0)
     user_id = state.get("user_id", "")
 
+    print(f"📌 [TASK NODE] DB-grounded active task: '{active_task}'")
+
     try:
         sys_prompt = f"""You are O.N.E., a strict but helpful Senior Staff Engineer.
 You are talking to {user_email}.
-Their current assigned task is: '{current_task}'.
+CRITICAL SYSTEM OVERRIDE: The developer's current active task from the database is EXACTLY: '{active_task}'.
+You MUST base all task-related answers on this exact task. Do NOT reference or instruct on previously completed tasks.
 
 CRITICAL BEHAVIORAL RULES:
-1. If the user asks "What is my task?" or "Explain my task", you MUST ONLY explain the task. Break it down into smaller steps.
+1. If the user asks "What is my task?" or "Explain my task", you MUST ONLY explain the task above. Break it down into smaller steps.
 2. DO NOT assume they have finished it. DO NOT mark it as complete.
 3. End your explanation by asking: "Let me know when you have explicitly finished this, and I will mark it as complete."
 4. ONLY trigger the task completion tool if the user explicitly says "I am done", "I finished it", or "mark it complete"."""
@@ -217,11 +221,13 @@ def rag_node(state: AgentState) -> Dict[str, Any]:
     user_role = state.get("user_role", "Developer")
     user_email = state.get("user_email", "a developer")
     progress = state.get("progress", 0)
-    current_task = state.get("current_task", "No current task assigned.")
+    # JIT: Prefer the DB-grounded active task
+    active_task = state.get("current_active_task") or state.get("current_task", "No current task assigned.")
 
     prompt = SystemMessage(content=f"""You are O.N.E., a Senior Staff Engineer and onboarding mentor.
 You are talking to {user_email}. Their role is {user_role} and they are at {progress}% progress.
-Current task: {current_task}
+CRITICAL SYSTEM OVERRIDE: The developer's current active task from the database is EXACTLY: '{active_task}'.
+If the user asks about their task, you MUST refer to this exact task. Do NOT reference previously completed tasks.
 
 CRITICAL RULE: You have been given the full conversation history below. Read ALL previous messages carefully before responding. Do not repeat yourself. Do not ask questions that have already been answered. Reference what the user has already told you.
 
@@ -254,10 +260,14 @@ def general_node(state: AgentState) -> dict:
     print(f"🤖 [NODE EXECUTING] Processing {len(state['messages'])} messages in context.")
     try:
         user_name = state.get('user_email', 'Developer').split('@')[0].capitalize()
+        # JIT: Prefer the DB-grounded active task
+        active_task = state.get('current_active_task') or state.get('current_task', 'No active task')
         
         sys_prompt = f"""You are O.N.E., the Senior Onboarding AI.
 You are talking to: {user_name} ({state.get('user_email')}).
 Role: {state.get('user_role', 'Unknown')} | Progress: {state.get('progress', 0)}%.
+CRITICAL SYSTEM OVERRIDE: The developer's current active task from the database is EXACTLY: '{active_task}'.
+If they ask about their task or next steps, you MUST refer to this exact task.
 
 INSTRUCTIONS:
 1. Answer the user's latest question using the provided context.
