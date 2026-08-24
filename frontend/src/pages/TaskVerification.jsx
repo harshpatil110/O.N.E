@@ -21,7 +21,22 @@ export default function TaskVerification() {
     }
   };
 
-  useEffect(() => { loadTasks(); }, []);
+  useEffect(() => {
+    // Initial load with loading spinner
+    loadTasks();
+
+    // Silent background polling every 5 seconds
+    const intervalId = setInterval(async () => {
+      try {
+        const res = await fetchPendingVerifications();
+        if (res.status === 'success') setTasks(res.data);
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, []);
 
   const handleVerify = async (taskId) => {
     try {

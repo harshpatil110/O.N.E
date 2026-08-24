@@ -27,9 +27,24 @@ export const ChecklistPage = () => {
   };
 
   useEffect(() => {
+    // Initial load
     loadTasks();
-    const interval = setInterval(loadTasks, 10000);
-    return () => clearInterval(interval);
+    
+    // Silent background polling every 5 seconds
+    const intervalId = setInterval(async () => {
+      if (!user) return;
+      try {
+        const res = await fetchTaskStates(user.id);
+        if (res.status === 'success') {
+          setTasks(res.tasks);
+          setRole(res.role || '');
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
   }, [user]);
 
   const handleSubmitTask = async (taskId) => {
