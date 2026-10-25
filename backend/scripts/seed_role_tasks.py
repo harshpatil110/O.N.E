@@ -56,7 +56,7 @@ ROLE_TASKS_DATA = {
     "AI dev": [
         "Request Access to ML Infrastructure and Model Hubs",
         "Install Python 3.12, PyTorch, and CUDA Toolkits",
-        "Install Ollama and Pull qwen2.5:3b Local Model",
+        "Install Ollama and Pull qwen3:4b Local Model",
         "Install LangChain, LangGraph, and ChromaDB Dependencies",
         "Clone the O.N.E. AI Engine and RAG Pipeline Repository",
         "Set Up Vector Database and Local Embeddings",

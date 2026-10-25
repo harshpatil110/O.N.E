@@ -11,7 +11,7 @@ import re
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, HumanMessage
 
-evaluator_llm = ChatOllama(model="qwen2.5:3b", temperature=0.1)
+evaluator_llm = ChatOllama(model="qwen3:4b", temperature=0.1)
 
 @tool("get_current_task")
 def get_current_task(user_id: str) -> str:

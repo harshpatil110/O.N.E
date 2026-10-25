@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 router = APIRouter(prefix="/admin", tags=["Admin Analytics"])
 
 # Initialize the local LLM for analytics processing
-analytics_llm = ChatOllama(model="qwen2.5:3b", temperature=0.2)
+analytics_llm = ChatOllama(model="qwen3:4b", temperature=0.2)
 
 @router.get("/dashboard-stats")
 def get_dashboard_stats(db: Session = Depends(get_db)):

@@ -32,7 +32,7 @@ def _echo_guard(content: str, messages: list, user_email: str) -> str:
 
 # Initialize local LLM (Qwen 2.5 3B via Ollama)
 llm = ChatOllama(
-    model="qwen2.5:3b",
+    model="qwen3:4b",
     temperature=0.2,
     base_url="http://localhost:11434",
 )

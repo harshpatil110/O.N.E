@@ -15,7 +15,7 @@ from datetime import datetime
 
 router = APIRouter()
 
-evaluator_llm = ChatOllama(model="qwen2.5:3b", temperature=0.1)
+evaluator_llm = ChatOllama(model="qwen3:4b", temperature=0.1)
 
 
 # ─── Pydantic Models ───────────────────────────────────────────────

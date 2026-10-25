@@ -12,7 +12,7 @@ def get_hermes_agent():
     """
     # Initialize the local Qwen 2.5 (3B) model
     llm = ChatOllama(
-        model="qwen2.5:3b",
+        model="qwen3:4b",
         temperature=0.2, # Keep low for technical/agentic accuracy
         base_url="http://localhost:11434" # Default local Ollama port
     )

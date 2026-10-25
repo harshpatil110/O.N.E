@@ -6,7 +6,7 @@ This document outlines the standardized 20-step onboarding sequence for the **AI
 
 1. [ ] **Step 01**: Request Access to ML Infrastructure and Model Hubs
 2. [ ] **Step 02**: Install Python 3.12, PyTorch, and CUDA Toolkits
-3. [ ] **Step 03**: Install Ollama and Pull qwen2.5:3b Local Model
+3. [ ] **Step 03**: Install Ollama and Pull qwen3:4b Local Model
 4. [ ] **Step 04**: Install LangChain, LangGraph, and ChromaDB Dependencies
 5. [ ] **Step 05**: Clone the O.N.E. AI Engine and RAG Pipeline Repository
 6. [ ] **Step 06**: Set Up Vector Database and Local Embeddings
