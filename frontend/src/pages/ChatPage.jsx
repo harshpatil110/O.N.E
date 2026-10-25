@@ -105,6 +105,7 @@ const ChatPageInner = ({ sessionId, setSessionId }) => {
                   key={msg.id || msg.tempId || idx} 
                   role={msg.role} 
                   content={msg.content} 
+                  metadata={msg.metadata}
                 />
               );
             })

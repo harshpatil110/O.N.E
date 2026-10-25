@@ -10,7 +10,11 @@ export const useChat = (sessionId, onMessageComplete) => {
       const history = await getChatHistory(sid);
       const historyArray = Array.isArray(history) ? history : history.data || [];
       if (historyArray.length > 0) {
-        setMessages(historyArray.map((msg, i) => ({ ...msg, tempId: `hist-${i}` })));
+        setMessages(historyArray.map((msg, i) => ({ 
+          ...msg, 
+          metadata: msg.metadata || null, 
+          tempId: `hist-${i}` 
+        })));
       }
       return historyArray;
     } catch (error) {
@@ -39,12 +43,18 @@ export const useChat = (sessionId, onMessageComplete) => {
       
       // Robustly extract the text, handling possible structural variations and allowing empty strings
       const extractedText = response.content ?? response.reply ?? response.response ?? response.text ?? response.message ?? "FALLBACK_ERROR: No text key found in response";
+      const responseMetadata = response?.metadata || null;
       console.log("🔥 EXTRACTED TEXT =", `[${extractedText}]`, "| length:", extractedText.length);
 
       // Append the agent's reply
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: extractedText, tempId: Date.now() + 1 }
+        { 
+          role: 'assistant', 
+          content: extractedText, 
+          metadata: responseMetadata, 
+          tempId: Date.now() + 1 
+        }
       ]);
 
       // Notify parent that a full message roundtrip completed

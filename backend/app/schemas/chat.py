@@ -41,6 +41,7 @@ class MessageResponse(BaseModel):
     role: str
     content: str
     created_at: datetime
+    metadata: Optional[Dict[str, Any]] = None
 
     model_config = ConfigDict(
         json_schema_extra={

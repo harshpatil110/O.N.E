@@ -9,11 +9,17 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.graph import StateGraph, END
+from langgraph.prebuilt import ToolNode
 
 from app.core.graph_state import AgentState
 from app.core.rag_tool import search_corporate_knowledge
 from app.core.task_tools import get_current_task, mark_task_complete
 from app.core.github_tools import get_open_pull_requests, get_recent_commits, get_repository_issues
+from app.core.hermes_tool import delegate_to_hermes
+
+# Registered tools for the onboarding supervisor / agent
+tools = [get_current_task, mark_task_complete, delegate_to_hermes]
+tool_node = ToolNode(tools)
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +66,7 @@ def supervisor_node(state: AgentState) -> Dict[str, Any]:
     classification_prompt = SystemMessage(content="""You are an intent classification router for an enterprise onboarding AI mentor.
 Classify the user's message into EXACTLY ONE of the following 4 labels:
 - 'github': The user is asking about the GitHub repository, PRs, pull requests, commits, branches, codebase, or issues.
-- 'task': The user is asking about their current task, next steps, checklist item, progress, or stating they completed a task.
+- 'task': The user is asking about their current task, next steps, checklist item, progress, stating they completed a task, or external workspace tools (Slack, Notion, Vercel, Jira, Confluence).
 - 'rag': The user is asking about company policies, HR, technical documentation, coding standards, architecture, terminal commands, or documentation.
 - 'general': General greeting, casual conversation, or basic chat.
 
@@ -74,7 +80,7 @@ Respond with ONLY ONE word: 'github', 'task', 'rag', or 'general'.""")
         msg_lower = latest_msg.lower()
         if any(w in msg_lower for w in ["github", "pr", "pull request", "commit", "branch", "codebase", "issue"]):
             raw_intent = "github"
-        elif any(w in msg_lower for w in ["task", "next", "checklist", "todo", "done", "step"]):
+        elif any(w in msg_lower for w in ["task", "next", "checklist", "todo", "done", "step", "slack", "notion", "vercel", "jira", "confluence"]):
             raw_intent = "task"
         elif any(w in msg_lower for w in ["policy", "pto", "leave", "vpn", "code", "architecture", "doc", "docker", "setup", "standard"]):
             raw_intent = "rag"
@@ -161,13 +167,17 @@ CRITICAL BEHAVIORAL RULES:
 1. If the user asks "What is my task?" or "Explain my task", you MUST ONLY explain the task above. Break it down into smaller steps.
 2. DO NOT assume they have finished it. DO NOT mark it as complete.
 3. End your explanation by asking: "Let me know when you have explicitly finished this, and I will mark it as complete."
-4. ONLY trigger the task completion tool if the user explicitly says "I am done", "I finished it", or "mark it complete"."""
+4. ONLY trigger the task completion tool if the user explicitly says "I am done", "I finished it", or "mark it complete".
+
+EXTERNAL WORKSPACE INTEGRATIONS (HERMES BRIDGE):
+If the user asks about Slack messages, Notion documentation, Vercel deployment status, Jira tickets/assigned issues, or Confluence pages, YOU MUST invoke the `delegate_to_hermes` tool with their query and present the returned information clearly. Do not hallucinate external ticket statuses or deployment logs."""
         
         sys_msg = SystemMessage(content=sys_prompt)
         messages_to_pass = [sys_msg] + messages
         
-        llm_with_tools = llm.bind_tools([get_current_task, mark_task_complete])
+        llm_with_tools = llm.bind_tools(tools)
         response = llm_with_tools.invoke(messages_to_pass)
+        used_hermes = False
         
         # Check if the LLM decided to call a tool
         if hasattr(response, "tool_calls") and response.tool_calls:
@@ -180,6 +190,13 @@ CRITICAL BEHAVIORAL RULES:
                     output = get_current_task.invoke({"user_id": user_id})
                 elif tool_name == "mark_task_complete":
                     output = mark_task_complete.invoke({"user_id": user_id})
+                elif tool_name == "delegate_to_hermes":
+                    used_hermes = True
+                    query_arg = tc.get("args", {}).get("query", "")
+                    if not query_arg:
+                        last_human = next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), "")
+                        query_arg = last_human
+                    output = delegate_to_hermes.invoke({"query": query_arg})
                 else:
                     output = "Unknown tool."
                 
@@ -195,7 +212,7 @@ CRITICAL BEHAVIORAL RULES:
         # Echo Prevention Failsafe
         reply_text = _echo_guard(reply_text, messages, user_email)
 
-        return {"messages": [AIMessage(content=reply_text)], "next_route": "end"}
+        return {"messages": [AIMessage(content=reply_text)], "next_route": "end", "used_hermes": used_hermes}
         
     except Exception as e:
         print(f"❌ [TASK NODE ERROR] {e}")
@@ -272,12 +289,36 @@ If they ask about their task or next steps, you MUST refer to this exact task.
 INSTRUCTIONS:
 1. Answer the user's latest question using the provided context.
 2. NEVER repeat the user's exact phrase back to them.
-3. If they ask for their name, tell them they are {user_name}."""
+3. If they ask for their name, tell them they are {user_name}.
+
+EXTERNAL WORKSPACE INTEGRATIONS (HERMES BRIDGE):
+If the user asks about Slack messages, Notion documentation, Vercel deployment status, Jira tickets/assigned issues, or Confluence pages, YOU MUST invoke the `delegate_to_hermes` tool with their query and present the returned information clearly. Do not hallucinate external ticket statuses or deployment logs."""
 
         messages_to_pass = [SystemMessage(content=sys_prompt)] + state["messages"]
-        response = llm.invoke(messages_to_pass)
+        llm_with_tools = llm.bind_tools([delegate_to_hermes])
+        response = llm_with_tools.invoke(messages_to_pass)
+        used_hermes = False
         
-        reply_text = response.content if hasattr(response, 'content') else str(response)
+        if hasattr(response, "tool_calls") and response.tool_calls:
+            from langchain_core.messages import ToolMessage
+            tool_messages = []
+            for tc in response.tool_calls:
+                if tc["name"] == "delegate_to_hermes":
+                    used_hermes = True
+                    query_arg = tc.get("args", {}).get("query", "")
+                    if not query_arg:
+                        last_human = next((m.content for m in reversed(state["messages"]) if isinstance(m, HumanMessage)), "")
+                        query_arg = last_human
+                    output = delegate_to_hermes.invoke({"query": query_arg})
+                else:
+                    output = "Unknown tool."
+                tool_messages.append(ToolMessage(content=str(output), tool_call_id=tc["id"]))
+            final_messages = messages_to_pass + [response] + tool_messages
+            final_response = llm_with_tools.invoke(final_messages)
+            reply_text = str(final_response.content)
+        else:
+            reply_text = response.content if hasattr(response, 'content') else str(response)
+        
         last_human_msg = state["messages"][-1].content if state["messages"] else ""
         
         # 🛡️ THE ANTI-ECHO SHIELD 🛡️
@@ -286,7 +327,7 @@ INSTRUCTIONS:
             reply_text = f"I am O.N.E. You are {user_name}. I am reviewing your chat history to assist you. How can I help with your current tasks?"
 
         print(f"📤 [NODE RETURNING] {reply_text[:50]}...")
-        return {"messages": [AIMessage(content=reply_text)]}
+        return {"messages": [AIMessage(content=reply_text)], "used_hermes": used_hermes}
         
     except Exception as e:
         print(f"❌ [NODE ERROR] {e}")
@@ -369,6 +410,7 @@ workflow.add_node("task", task_node)
 workflow.add_node("rag", rag_node)
 workflow.add_node("github", github_node)
 workflow.add_node("general", general_node)
+workflow.add_node("tools", tool_node)
 
 # Set Entry Point
 workflow.set_entry_point("supervisor")
@@ -393,6 +435,7 @@ workflow.add_edge("task", END)
 workflow.add_edge("rag", END)
 workflow.add_edge("github", END)
 workflow.add_edge("general", END)
+workflow.add_edge("tools", END)
 
 # Compile Graph
 app_graph = workflow.compile()
@@ -452,11 +495,30 @@ if __name__ == "__main__":
         "progress": 50,
         "current_task": "Review Core Application Architecture",
         "next_route": "",
+        "current_active_task": "Review Core Application Architecture",
+        "used_hermes": False,
     }
     sup_res3 = supervisor_node(state_rag)
     print("Supervisor Output:", sup_res3)
     rag_res3 = rag_node(state_rag)
     print("RAG Node Response:", rag_res3["messages"][-1].content[:150])
+
+    # Test 4: External Workspace (Hermes) Delegation Routing
+    print("\n[TEST 4] Routing Test - Hermes Workspace Intent ('Check Slack messages for onboarding updates')")
+    state_hermes: AgentState = {
+        "messages": [HumanMessage(content="Check Slack messages for onboarding updates")],
+        "user_id": "test-uuid-4",
+        "user_email": "workspace@example.com",
+        "user_role": "fullstack dev",
+        "progress": 20,
+        "current_task": "Setup Slack and Notion connectors",
+        "next_route": "",
+        "current_active_task": "Setup Slack and Notion connectors",
+        "used_hermes": False,
+    }
+    sup_res4 = supervisor_node(state_hermes)
+    print("Supervisor Output:", sup_res4)
+    print("Tool registered in tool_node:", [t.name for t in tool_node.tools_by_name.values()])
 
     print("\n" + "=" * 70)
     print("      All LangGraph Agent Tests Passed 100%!")
