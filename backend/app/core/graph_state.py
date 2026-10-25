@@ -14,4 +14,5 @@ class AgentState(TypedDict):
     current_task: Optional[str]
     current_active_task: Optional[str]  # JIT DB-grounded active task name
     next_route: str
+    used_hermes: Optional[bool]
 
