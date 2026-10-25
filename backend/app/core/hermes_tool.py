@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from langchain_core.tools import tool
 
@@ -10,6 +11,18 @@ def _log(msg: str) -> None:
         print(msg)
     except UnicodeEncodeError:
         print(msg.encode("ascii", errors="replace").decode("ascii"))
+
+def format_hermes_markdown(text: str) -> str:
+    """Clean up Hermes output so collapsed single-line tables and headers render cleanly."""
+    if not text:
+        return text
+    # Strip any <think>...</think> blocks if present
+    text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+    # Fix collapsed single-line markdown tables: replace "| |" with "|\n|"
+    text = re.sub(r'\|\s*\|', '|\n|', text)
+    # Ensure headers and bold section titles have a blank line before them
+    text = re.sub(r'([^\n])\n(\*\*[A-Z][^*]+\*\*)', r'\1\n\n\2', text)
+    return text.strip()
 
 @tool("delegate_to_hermes")
 def delegate_to_hermes(query: str) -> str:
@@ -31,7 +44,16 @@ def delegate_to_hermes(query: str) -> str:
         "messages": [
             {
                 "role": "system",
-                "content": "You are the Hermes background execution engine for the O.N.E. Developer Onboarding Platform. Execute the requested lookup or action across your connected MCP tools (Slack, Notion, Vercel, Jira, Confluence) and return a clear, concise, factual response."
+                "content": (
+                    "You are the Hermes background execution engine for the O.N.E. Developer Onboarding Platform. "
+                    "Execute the requested lookup or action across your connected MCP tools (Slack, Notion, Vercel, Jira, Confluence).\n\n"
+                    "CRITICAL OUTPUT STRUCTURE RULES:\n"
+                    "1. DO NOT summarize or omit items. List every database, page, ticket, task, or deployment record in full detail.\n"
+                    "2. Organize your output into clear bold category headers (e.g., **📂 Databases**, **📄 Top-Level Pages**, **✅ Tasks / Items**).\n"
+                    "3. Under each category, list EVERY individual item as its own bullet point with its full title, status, assignee, and date:\n"
+                    "   - **[Item/Task Name]** — Status: `Status` | Due: `Date`\n"
+                    "4. NEVER output single-line pipe tables. Always use multi-line bullet lists with proper newline characters (\\n) between every single item."
+                )
             },
             {
                 "role": "user",
@@ -48,7 +70,9 @@ def delegate_to_hermes(query: str) -> str:
         data = response.json()
         
         hermes_reply = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+        hermes_reply = format_hermes_markdown(hermes_reply)
         _log(f"[HERMES] RESPONSE RECEIVED ({len(hermes_reply)} chars)")
+        _log(f"[HERMES FORMATTED PREVIEW]:\n{hermes_reply[:300]}...")
         return hermes_reply if hermes_reply else "Hermes executed the command but returned an empty response."
         
     except requests.exceptions.ConnectionError:

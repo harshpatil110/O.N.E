@@ -170,7 +170,8 @@ CRITICAL BEHAVIORAL RULES:
 4. ONLY trigger the task completion tool if the user explicitly says "I am done", "I finished it", or "mark it complete".
 
 EXTERNAL WORKSPACE INTEGRATIONS (HERMES BRIDGE):
-If the user asks about Slack messages, Notion documentation, Vercel deployment status, Jira tickets/assigned issues, or Confluence pages, YOU MUST invoke the `delegate_to_hermes` tool with their query and present the returned information clearly. Do not hallucinate external ticket statuses or deployment logs."""
+If the user asks about Slack messages, Notion documentation, Vercel deployment status, Jira tickets/assigned issues, or Confluence pages, YOU MUST invoke the `delegate_to_hermes` tool with their query and present the returned information clearly. Do not hallucinate external ticket statuses or deployment logs.
+When the delegate_to_hermes tool returns data, YOU MUST output the FULL, COMPLETE structured breakdown returned by the tool verbatim. NEVER summarize, condense, or omit individual rows, tasks, pages, or tickets from the Hermes tool output."""
         
         sys_msg = SystemMessage(content=sys_prompt)
         messages_to_pass = [sys_msg] + messages
@@ -183,6 +184,7 @@ If the user asks about Slack messages, Notion documentation, Vercel deployment s
         if hasattr(response, "tool_calls") and response.tool_calls:
             from langchain_core.messages import ToolMessage
             tool_messages = []
+            hermes_output = None
             for tc in response.tool_calls:
                 tool_name = tc["name"]
                 
@@ -197,15 +199,21 @@ If the user asks about Slack messages, Notion documentation, Vercel deployment s
                         last_human = next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), "")
                         query_arg = last_human
                     output = delegate_to_hermes.invoke({"query": query_arg})
+                    hermes_output = str(output)
                 else:
                     output = "Unknown tool."
                 
                 tool_messages.append(ToolMessage(content=str(output), tool_call_id=tc["id"]))
             
-            # Pass tool outputs back to LLM for final response
-            final_messages = messages_to_pass + [response] + tool_messages
-            final_response = llm_with_tools.invoke(final_messages)
-            reply_text = str(final_response.content)
+            # If delegate_to_hermes was invoked, directly preserve its full formatted content
+            # rather than letting qwen3:4b summarize or strip away detailed records
+            if hermes_output:
+                reply_text = hermes_output
+            else:
+                # Pass tool outputs back to LLM for final response
+                final_messages = messages_to_pass + [response] + tool_messages
+                final_response = llm_with_tools.invoke(final_messages)
+                reply_text = str(final_response.content)
         else:
             reply_text = response.content if hasattr(response, 'content') else str(response)
         
@@ -292,7 +300,8 @@ INSTRUCTIONS:
 3. If they ask for their name, tell them they are {user_name}.
 
 EXTERNAL WORKSPACE INTEGRATIONS (HERMES BRIDGE):
-If the user asks about Slack messages, Notion documentation, Vercel deployment status, Jira tickets/assigned issues, or Confluence pages, YOU MUST invoke the `delegate_to_hermes` tool with their query and present the returned information clearly. Do not hallucinate external ticket statuses or deployment logs."""
+If the user asks about Slack messages, Notion documentation, Vercel deployment status, Jira tickets/assigned issues, or Confluence pages, YOU MUST invoke the `delegate_to_hermes` tool with their query and present the returned information clearly. Do not hallucinate external ticket statuses or deployment logs.
+When the delegate_to_hermes tool returns data, YOU MUST output the FULL, COMPLETE structured breakdown returned by the tool verbatim. NEVER summarize, condense, or omit individual rows, tasks, pages, or tickets from the Hermes tool output."""
 
         messages_to_pass = [SystemMessage(content=sys_prompt)] + state["messages"]
         llm_with_tools = llm.bind_tools([delegate_to_hermes])
@@ -302,6 +311,7 @@ If the user asks about Slack messages, Notion documentation, Vercel deployment s
         if hasattr(response, "tool_calls") and response.tool_calls:
             from langchain_core.messages import ToolMessage
             tool_messages = []
+            hermes_output = None
             for tc in response.tool_calls:
                 if tc["name"] == "delegate_to_hermes":
                     used_hermes = True
@@ -310,12 +320,19 @@ If the user asks about Slack messages, Notion documentation, Vercel deployment s
                         last_human = next((m.content for m in reversed(state["messages"]) if isinstance(m, HumanMessage)), "")
                         query_arg = last_human
                     output = delegate_to_hermes.invoke({"query": query_arg})
+                    hermes_output = str(output)
                 else:
                     output = "Unknown tool."
                 tool_messages.append(ToolMessage(content=str(output), tool_call_id=tc["id"]))
-            final_messages = messages_to_pass + [response] + tool_messages
-            final_response = llm_with_tools.invoke(final_messages)
-            reply_text = str(final_response.content)
+            
+            # If delegate_to_hermes was invoked, directly preserve its full formatted content
+            # rather than letting qwen3:4b summarize or strip away detailed records
+            if hermes_output:
+                reply_text = hermes_output
+            else:
+                final_messages = messages_to_pass + [response] + tool_messages
+                final_response = llm_with_tools.invoke(final_messages)
+                reply_text = str(final_response.content)
         else:
             reply_text = response.content if hasattr(response, 'content') else str(response)
         
