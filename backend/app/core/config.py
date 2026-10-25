@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # Hermes Agent
+    HERMES_API_URL: str = "http://localhost:8642/v1/chat/completions"
+    HERMES_API_KEY: str = "hermes-local-key"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",

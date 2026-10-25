@@ -122,6 +122,10 @@ async def send_message(
         else:
             reply = "I'm sorry, I couldn't process that request."
         
+        # Check if external Hermes workspace context was used
+        used_hermes = bool(response_state.get("used_hermes", False))
+        msg_metadata = {"external_workspace": True, "source": "hermes"} if used_hermes else None
+
         # 4. Database Persistence (Save new human and AI messages)
         now = datetime.now(timezone.utc)
         
@@ -136,6 +140,8 @@ async def send_message(
             session_id=session_id,
             role="assistant",
             content=reply,
+            tool_name="delegate_to_hermes" if used_hermes else None,
+            metadata_=msg_metadata,
             created_at=now
         )
         
@@ -145,7 +151,7 @@ async def send_message(
             fresh_db.add(ai_log)
             fresh_db.commit()
         
-        return ChatMessageResponse(content=reply, session_id=session_id)
+        return ChatMessageResponse(content=reply, session_id=session_id, metadata=msg_metadata)
         
     except Exception as e:
         import traceback
@@ -179,7 +185,12 @@ async def get_chat_history(
         .all()
     
     messages = [
-        MessageResponse(role=log.role, content=log.content, created_at=log.created_at)
+        MessageResponse(
+            role=log.role, 
+            content=log.content, 
+            created_at=log.created_at,
+            metadata=log.metadata_
+        )
         for log in logs
     ]
     
