@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     # Hermes Agent
     HERMES_API_URL: str = "http://localhost:8642/v1/chat/completions"
     HERMES_API_KEY: str = "hermes-local-key"
+    HERMES_MAX_TOKENS: int = 4096
 
     model_config = SettingsConfigDict(
         env_file=".env",

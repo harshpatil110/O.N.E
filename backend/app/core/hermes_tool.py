@@ -1,10 +1,12 @@
 import os
 import re
+import time
 import requests
 from langchain_core.tools import tool
 
 HERMES_API_URL = os.getenv("HERMES_API_URL", "http://localhost:8642/v1/chat/completions")
 HERMES_API_KEY = os.getenv("HERMES_API_KEY", "hermes-local-key")
+HERMES_MAX_TOKENS = int(os.getenv("HERMES_MAX_TOKENS", "4096"))
 
 def _log(msg: str) -> None:
     try:
@@ -33,26 +35,31 @@ def delegate_to_hermes(query: str) -> str:
     """
     _log(f"\n--- [HERMES] ROUTING TO HERMES AGENT (MCP GATEWAY) ---")
     _log(f"Query: {query}")
-    
+    start_ts = time.time()
+
     headers = {
         "Authorization": f"Bearer {HERMES_API_KEY}",
         "Content-Type": "application/json"
     }
-    
+
     payload = {
         "model": "hermes-agent",
+        "max_tokens": HERMES_MAX_TOKENS,
+        "temperature": 0.2,
         "messages": [
             {
                 "role": "system",
                 "content": (
                     "You are the Hermes background execution engine for the O.N.E. Developer Onboarding Platform. "
                     "Execute the requested lookup or action across your connected MCP tools (Slack, Notion, Vercel, Jira, Confluence).\n\n"
+                    "CRITICAL EXECUTION & SPEED RULES:\n"
+                    "1. BOUNDED FETCHING: For broad queries, fetch ONLY the most recent 5 to 10 items in 1 to 2 tool rounds.\n"
+                    "2. Keep your final response under 3,500 tokens while preserving all key item details.\n\n"
                     "CRITICAL OUTPUT STRUCTURE RULES:\n"
-                    "1. DO NOT summarize or omit items. List every database, page, ticket, task, or deployment record in full detail.\n"
-                    "2. Organize your output into clear bold category headers (e.g., **📂 Databases**, **📄 Top-Level Pages**, **✅ Tasks / Items**).\n"
-                    "3. Under each category, list EVERY individual item as its own bullet point with its full title, status, assignee, and date:\n"
-                    "   - **[Item/Task Name]** — Status: `Status` | Due: `Date`\n"
-                    "4. NEVER output single-line pipe tables. Always use multi-line bullet lists with proper newline characters (\\n) between every single item."
+                    "1. Organize your output into clear bold category headers (e.g., **🚀 Recent Vercel Deployments**, **💬 Recent Slack Messages**, **📂 Notion Databases**).\n"
+                    "2. Under each category, list EVERY retrieved item as its own bullet point with its full title/project, status, URL/branch, and timestamp:\n"
+                    "   - **[Project / Item Name]** — Status: `Status` | Info: `Details` | Date: `Timestamp`\n"
+                    "3. NEVER output single-line pipe tables. Always use multi-line bullet lists with proper newline characters (\\n)."
                 )
             },
             {
@@ -62,22 +69,30 @@ def delegate_to_hermes(query: str) -> str:
         ],
         "stream": False
     }
-    
+
     try:
-        # Timeout set to 45s to allow Hermes time to execute multi-step MCP tool calls
-        response = requests.post(HERMES_API_URL, headers=headers, json=payload, timeout=45)
+        # (connect_timeout=10s, read_timeout=180s) for multi-step MCP tool execution
+        response = requests.post(HERMES_API_URL, headers=headers, json=payload, timeout=(10, 180))
         response.raise_for_status()
         data = response.json()
-        
+
+        elapsed = round(time.time() - start_ts, 2)
         hermes_reply = data.get("choices", [{}])[0].get("message", {}).get("content", "")
         hermes_reply = format_hermes_markdown(hermes_reply)
-        _log(f"[HERMES] RESPONSE RECEIVED ({len(hermes_reply)} chars)")
+        _log(f"[HERMES] RESPONSE RECEIVED in {elapsed}s ({len(hermes_reply)} chars)")
         _log(f"[HERMES FORMATTED PREVIEW]:\n{hermes_reply[:300]}...")
         return hermes_reply if hermes_reply else "Hermes executed the command but returned an empty response."
-        
+
+    except requests.exceptions.ReadTimeout:
+        elapsed = round(time.time() - start_ts, 2)
+        _log(f"[HERMES] TIMEOUT after {elapsed}s on port 8642.")
+        return (
+            "Hermes Agent timed out while waiting for the external MCP server (Slack/Vercel) to respond. "
+            "Try asking for a specific project or channel (e.g., 'Check the latest deployment for KIXX on Vercel')."
+        )
     except requests.exceptions.ConnectionError:
         _log("[HERMES] ERROR: Could not connect to Hermes Agent on port 8642.")
-        return "System Error: Unable to reach the local Hermes Agent gateway on port 8642. Ensure `hermes gateway start` is running."
+        return "System Error: Unable to reach the local Hermes Agent gateway on port 8642. Ensure `hermes gateway` is running."
     except Exception as e:
         _log(f"[HERMES] TOOL ERROR: {e}")
         return f"Error communicating with Hermes Agent: {str(e)}"

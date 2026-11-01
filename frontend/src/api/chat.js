@@ -11,9 +11,11 @@ export const getSession = async (sessionId) => {
 }
 
 export const sendMessage = async (sessionId, message) => {
-  const response = await authAxios.post(`/api/v1/chat/${sessionId}/message`, {
-    message
-  });
+  const response = await authAxios.post(
+    `/api/v1/chat/${sessionId}/message`, 
+    { message },
+    { timeout: 180000 }
+  );
   return response.data;
 };
 
