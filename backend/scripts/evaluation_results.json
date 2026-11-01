@@ -1,0 +1,452 @@
+{
+  "metadata": {
+    "timestamp": "2026-11-02T00:00:05.372402",
+    "mode": "fast-deterministic",
+    "project": "O.N.E. (Onboarding Navigation Environment)"
+  },
+  "suite_a": {
+    "routing_accuracy_pct": 81.25,
+    "tool_selection_accuracy_pct": 93.75,
+    "schema_validity_pct": 100.0,
+    "per_tool_metrics": {
+      "conversational_guidance": {
+        "precision": 0.6667,
+        "recall": 0.6667,
+        "f1": 0.6667
+      },
+      "rag_tool": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "reject_completion": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "mark_task_complete": {
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1": 0.8889
+      },
+      "delegate_to_hermes": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "total_test_cases": 16,
+    "route_correct": 13,
+    "tool_correct": 15,
+    "details": [
+      {
+        "query": "what is there in my notion dashboard",
+        "expected_route": "task",
+        "predicted_route": "task",
+        "route_correct": true,
+        "expected_tool": "delegate_to_hermes",
+        "predicted_tool": "delegate_to_hermes",
+        "tool_correct": true,
+        "category": "hermes"
+      },
+      {
+        "query": "what are my Vercel deployment statuses",
+        "expected_route": "task",
+        "predicted_route": "task",
+        "route_correct": true,
+        "expected_tool": "delegate_to_hermes",
+        "predicted_tool": "delegate_to_hermes",
+        "tool_correct": true,
+        "category": "hermes"
+      },
+      {
+        "query": "show me recent Slack messages in #onboarding",
+        "expected_route": "task",
+        "predicted_route": "task",
+        "route_correct": true,
+        "expected_tool": "delegate_to_hermes",
+        "predicted_tool": "delegate_to_hermes",
+        "tool_correct": true,
+        "category": "hermes"
+      },
+      {
+        "query": "list my assigned Jira sprint tickets",
+        "expected_route": "task",
+        "predicted_route": "github",
+        "route_correct": false,
+        "expected_tool": "delegate_to_hermes",
+        "predicted_tool": "delegate_to_hermes",
+        "tool_correct": true,
+        "category": "hermes"
+      },
+      {
+        "query": "how is the FastAPI backend folder structured and what port d...",
+        "expected_route": "rag",
+        "predicted_route": "rag",
+        "route_correct": true,
+        "expected_tool": "rag_tool",
+        "predicted_tool": "rag_tool",
+        "tool_correct": true,
+        "category": "rag"
+      },
+      {
+        "query": "how do we configure the Supabase PostgreSQL session pooler c...",
+        "expected_route": "rag",
+        "predicted_route": "rag",
+        "route_correct": true,
+        "expected_tool": "rag_tool",
+        "predicted_tool": "rag_tool",
+        "tool_correct": true,
+        "category": "rag"
+      },
+      {
+        "query": "what are the coding standards and authentication flow in O.N...",
+        "expected_route": "rag",
+        "predicted_route": "rag",
+        "route_correct": true,
+        "expected_tool": "rag_tool",
+        "predicted_tool": "rag_tool",
+        "tool_correct": true,
+        "category": "rag"
+      },
+      {
+        "query": "explain the LangGraph agent workflow in our codebase",
+        "expected_route": "rag",
+        "predicted_route": "rag",
+        "route_correct": true,
+        "expected_tool": "rag_tool",
+        "predicted_tool": "rag_tool",
+        "tool_correct": true,
+        "category": "rag"
+      },
+      {
+        "query": "I have tested all the Swagger API endpoints at http://localh...",
+        "expected_route": "task",
+        "predicted_route": "task",
+        "route_correct": true,
+        "expected_tool": "mark_task_complete",
+        "predicted_tool": "mark_task_complete",
+        "tool_correct": true,
+        "category": "task_complete"
+      },
+      {
+        "query": "I cloned the repository locally and verified git status on t...",
+        "expected_route": "task",
+        "predicted_route": "github",
+        "route_correct": false,
+        "expected_tool": "mark_task_complete",
+        "predicted_tool": "mark_task_complete",
+        "tool_correct": true,
+        "category": "task_complete"
+      },
+      {
+        "query": "I finished setting up the .env file and ran diagnose_db.py w...",
+        "expected_route": "task",
+        "predicted_route": "task",
+        "route_correct": true,
+        "expected_tool": "mark_task_complete",
+        "predicted_tool": "mark_task_complete",
+        "tool_correct": true,
+        "category": "task_complete"
+      },
+      {
+        "query": "Completed the Swagger /docs endpoint testing task, all endpo...",
+        "expected_route": "task",
+        "predicted_route": "github",
+        "route_correct": false,
+        "expected_tool": "mark_task_complete",
+        "predicted_tool": "mark_task_complete",
+        "tool_correct": true,
+        "category": "task_complete"
+      },
+      {
+        "query": "hello, I just joined the team today, what should I do first?",
+        "expected_route": "general",
+        "predicted_route": "general",
+        "route_correct": true,
+        "expected_tool": "conversational_guidance",
+        "predicted_tool": "conversational_guidance",
+        "tool_correct": true,
+        "category": "conversational"
+      },
+      {
+        "query": "skip this task for me without testing anything",
+        "expected_route": "task",
+        "predicted_route": "task",
+        "route_correct": true,
+        "expected_tool": "reject_completion",
+        "predicted_tool": "conversational_guidance",
+        "tool_correct": true,
+        "category": "conversational"
+      },
+      {
+        "query": "I am stuck on testing the Swagger docs, what URL do I open?",
+        "expected_route": "task",
+        "predicted_route": "task",
+        "route_correct": true,
+        "expected_tool": "conversational_guidance",
+        "predicted_tool": "mark_task_complete",
+        "tool_correct": false,
+        "category": "conversational"
+      },
+      {
+        "query": "thank you!",
+        "expected_route": "general",
+        "predicted_route": "general",
+        "route_correct": true,
+        "expected_tool": "conversational_guidance",
+        "predicted_tool": "conversational_guidance",
+        "tool_correct": true,
+        "category": "conversational"
+      }
+    ]
+  },
+  "suite_b": {
+    "hit_rate_1_pct": 100.0,
+    "hit_rate_3_pct": 100.0,
+    "mrr": 0.875,
+    "avg_latency_ms": 814.2,
+    "total_queries": 8,
+    "details": [
+      {
+        "query": "What port does the FastAPI backend run on?",
+        "topic": "Backend Port",
+        "hit_rate_1": 1.0,
+        "hit_rate_3": 1.0,
+        "reciprocal_rank": 1.0,
+        "latency_ms": 6440.7,
+        "keyword_hits": [
+          "8000",
+          "fastapi",
+          "uvicorn"
+        ],
+        "total_expected": 3
+      },
+      {
+        "query": "How to connect to Supabase PostgreSQL?",
+        "topic": "Database Connection",
+        "hit_rate_1": 1.0,
+        "hit_rate_3": 1.0,
+        "reciprocal_rank": 1.0,
+        "latency_ms": 12.0,
+        "keyword_hits": [
+          "supabase",
+          "postgresql",
+          "5432",
+          "database"
+        ],
+        "total_expected": 5
+      },
+      {
+        "query": "What is the LangGraph agent architecture?",
+        "topic": "Agent Architecture",
+        "hit_rate_1": 1.0,
+        "hit_rate_3": 1.0,
+        "reciprocal_rank": 0.5,
+        "latency_ms": 9.0,
+        "keyword_hits": [
+          "supervisor",
+          "agent",
+          "state"
+        ],
+        "total_expected": 5
+      },
+      {
+        "query": "What port does the React Vite frontend use?",
+        "topic": "Frontend Port",
+        "hit_rate_1": 1.0,
+        "hit_rate_3": 1.0,
+        "reciprocal_rank": 0.5,
+        "latency_ms": 8.8,
+        "keyword_hits": [
+          "vite",
+          "react",
+          "frontend"
+        ],
+        "total_expected": 4
+      },
+      {
+        "query": "How is the .env file configured?",
+        "topic": "Environment Config",
+        "hit_rate_1": 1.0,
+        "hit_rate_3": 1.0,
+        "reciprocal_rank": 1.0,
+        "latency_ms": 11.6,
+        "keyword_hits": [
+          "env",
+          "database_url",
+          "jwt",
+          "secret",
+          "config"
+        ],
+        "total_expected": 5
+      },
+      {
+        "query": "What are the onboarding steps for a new developer?",
+        "topic": "Onboarding Steps",
+        "hit_rate_1": 1.0,
+        "hit_rate_3": 1.0,
+        "reciprocal_rank": 1.0,
+        "latency_ms": 12.1,
+        "keyword_hits": [
+          "onboarding",
+          "task",
+          "checklist"
+        ],
+        "total_expected": 4
+      },
+      {
+        "query": "What is the PTO and leave policy?",
+        "topic": "HR Policy",
+        "hit_rate_1": 1.0,
+        "hit_rate_3": 1.0,
+        "reciprocal_rank": 1.0,
+        "latency_ms": 8.2,
+        "keyword_hits": [
+          "leave",
+          "pto",
+          "policy",
+          "days",
+          "vacation"
+        ],
+        "total_expected": 5
+      },
+      {
+        "query": "How does the authentication and JWT system work?",
+        "topic": "Authentication",
+        "hit_rate_1": 1.0,
+        "hit_rate_3": 1.0,
+        "reciprocal_rank": 1.0,
+        "latency_ms": 11.0,
+        "keyword_hits": [
+          "jwt",
+          "auth",
+          "token",
+          "login",
+          "password"
+        ],
+        "total_expected": 6
+      }
+    ]
+  },
+  "suite_c": {
+    "think_tag_clean_rate_pct": 100.0,
+    "collapsed_table_clean_rate_pct": 100.0,
+    "sla_compliance_pct": 100.0,
+    "avg_latency_ms": 4105.0,
+    "overall_pass_rate_pct": 100.0,
+    "details": [
+      {
+        "app": "Notion",
+        "query": "what is in my notion workspace",
+        "latency_ms": 4099.7,
+        "think_tag_leak": false,
+        "collapsed_table": false,
+        "has_bold_headers": true,
+        "has_bullet_points": true,
+        "header_coverage_pct": 100.0,
+        "sla_pass": true,
+        "all_pass": true,
+        "output_length_chars": 1271
+      },
+      {
+        "app": "Vercel",
+        "query": "show my vercel deployments",
+        "latency_ms": 4128.9,
+        "think_tag_leak": false,
+        "collapsed_table": false,
+        "has_bold_headers": true,
+        "has_bullet_points": true,
+        "header_coverage_pct": 100.0,
+        "sla_pass": true,
+        "all_pass": true,
+        "output_length_chars": 586
+      },
+      {
+        "app": "Slack",
+        "query": "show me recent slack messages",
+        "latency_ms": 4076.2,
+        "think_tag_leak": false,
+        "collapsed_table": false,
+        "has_bold_headers": true,
+        "has_bullet_points": true,
+        "header_coverage_pct": 100.0,
+        "sla_pass": true,
+        "all_pass": true,
+        "output_length_chars": 589
+      },
+      {
+        "app": "Jira",
+        "query": "what are my jira tickets",
+        "latency_ms": 4115.2,
+        "think_tag_leak": false,
+        "collapsed_table": false,
+        "has_bold_headers": true,
+        "has_bullet_points": true,
+        "header_coverage_pct": 100.0,
+        "sla_pass": true,
+        "all_pass": true,
+        "output_length_chars": 712
+      }
+    ]
+  },
+  "suite_d": {
+    "think_tag_strip_rate_pct": 100.0,
+    "false_positive_rejection_rate_pct": 100.0,
+    "true_positive_acceptance_rate_pct": 100.0,
+    "think_tests": [
+      {
+        "input_len": 89,
+        "output_len": 47,
+        "think_leaked": false
+      },
+      {
+        "input_len": 111,
+        "output_len": 49,
+        "think_leaked": false
+      },
+      {
+        "input_len": 79,
+        "output_len": 79,
+        "think_leaked": false
+      },
+      {
+        "input_len": 67,
+        "output_len": 16,
+        "think_leaked": false
+      }
+    ],
+    "fp_rejection_tests": [
+      {
+        "query": "skip this task for me without testing anything",
+        "correctly_rejected": true
+      },
+      {
+        "query": "I am stuck on testing the Swagger docs, what URL do I open?",
+        "correctly_rejected": true
+      },
+      {
+        "query": "just mark everything as done please",
+        "correctly_rejected": true
+      },
+      {
+        "query": "I haven't done anything yet but move me forward",
+        "correctly_rejected": true
+      }
+    ],
+    "tp_accept_tests": [
+      {
+        "query": "I have tested all the Swagger API endpoints at localhost:8000/docs",
+        "correctly_accepted": true
+      },
+      {
+        "query": "I finished setting up the .env file and ran the diagnostic script",
+        "correctly_accepted": true
+      },
+      {
+        "query": "Completed the repository cloning and verified the main branch",
+        "correctly_accepted": true
+      }
+    ]
+  }
+}
