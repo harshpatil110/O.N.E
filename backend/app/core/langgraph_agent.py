@@ -157,6 +157,23 @@ def task_node(state: AgentState) -> dict:
 
     print(f"📌 [TASK NODE] DB-grounded active task: '{active_task}'")
 
+    # ─── FAST-PATH: Detect Hermes-bound queries and short-circuit LLM ─────
+    # If the user's message mentions an external workspace app, call delegate_to_hermes
+    # directly and return the structured Markdown WITHOUT a second qwen3:4b pass.
+    latest_msg = messages[-1].content if messages and hasattr(messages[-1], "content") else ""
+    msg_lower = latest_msg.lower()
+    hermes_keywords = ["slack", "notion", "vercel", "deploy", "jira", "confluence",
+                       "ticket", "sprint", "wiki", "channel", "message", "workspace"]
+
+    if any(kw in msg_lower for kw in hermes_keywords):
+        print("⚡ [TASK NODE] FAST-PATH: Hermes keyword detected, bypassing LLM tool-call overhead.")
+        hermes_output = delegate_to_hermes.invoke({"query": latest_msg})
+        hermes_text = str(hermes_output)
+        # Append active task footer
+        task_footer = f"\n\n---\n*📌 **Active Onboarding Task:** {active_task} — Let me know once you have completed this step!*"
+        reply_text = hermes_text + task_footer
+        return {"messages": [AIMessage(content=reply_text)], "next_route": "end", "used_hermes": True}
+
     try:
         sys_prompt = f"""You are O.N.E., a strict but helpful Senior Staff Engineer.
 You are talking to {user_email}.
@@ -205,12 +222,14 @@ When the delegate_to_hermes tool returns data, YOU MUST output the FULL, COMPLET
                 
                 tool_messages.append(ToolMessage(content=str(output), tool_call_id=tc["id"]))
             
-            # If delegate_to_hermes was invoked, directly preserve its full formatted content
-            # rather than letting qwen3:4b summarize or strip away detailed records
+            # SHORT-CIRCUIT: If delegate_to_hermes was invoked, return its full output
+            # directly with the active task footer — skip the second LLM generation pass
             if hermes_output:
-                reply_text = hermes_output
+                task_footer = f"\n\n---\n*📌 **Active Onboarding Task:** {active_task} — Let me know once you have completed this step!*"
+                reply_text = hermes_output + task_footer
+                return {"messages": [AIMessage(content=reply_text)], "next_route": "end", "used_hermes": True}
             else:
-                # Pass tool outputs back to LLM for final response
+                # Pass tool outputs back to LLM for final response (get_current_task, mark_task_complete)
                 final_messages = messages_to_pass + [response] + tool_messages
                 final_response = llm_with_tools.invoke(final_messages)
                 reply_text = str(final_response.content)
@@ -287,7 +306,22 @@ def general_node(state: AgentState) -> dict:
         user_name = state.get('user_email', 'Developer').split('@')[0].capitalize()
         # JIT: Prefer the DB-grounded active task
         active_task = state.get('current_active_task') or state.get('current_task', 'No active task')
-        
+
+        # ─── FAST-PATH: Detect Hermes-bound queries and short-circuit LLM ─────
+        latest_msg = state["messages"][-1].content if state["messages"] and hasattr(state["messages"][-1], "content") else ""
+        msg_lower = latest_msg.lower()
+        hermes_keywords = ["slack", "notion", "vercel", "deploy", "jira", "confluence",
+                           "ticket", "sprint", "wiki", "channel", "message", "workspace"]
+
+        if any(kw in msg_lower for kw in hermes_keywords):
+            print("⚡ [GENERAL NODE] FAST-PATH: Hermes keyword detected, bypassing LLM tool-call overhead.")
+            hermes_output = delegate_to_hermes.invoke({"query": latest_msg})
+            hermes_text = str(hermes_output)
+            task_footer = f"\n\n---\n*📌 **Active Onboarding Task:** {active_task} — Let me know once you have completed this step!*"
+            reply_text = hermes_text + task_footer
+            print(f"📤 [NODE RETURNING] {reply_text[:50]}...")
+            return {"messages": [AIMessage(content=reply_text)], "used_hermes": True}
+
         sys_prompt = f"""You are O.N.E., the Senior Onboarding AI.
 You are talking to: {user_name} ({state.get('user_email')}).
 Role: {state.get('user_role', 'Unknown')} | Progress: {state.get('progress', 0)}%.
@@ -325,10 +359,10 @@ When the delegate_to_hermes tool returns data, YOU MUST output the FULL, COMPLET
                     output = "Unknown tool."
                 tool_messages.append(ToolMessage(content=str(output), tool_call_id=tc["id"]))
             
-            # If delegate_to_hermes was invoked, directly preserve its full formatted content
-            # rather than letting qwen3:4b summarize or strip away detailed records
+            # SHORT-CIRCUIT: If delegate_to_hermes was invoked, return immediately
             if hermes_output:
-                reply_text = hermes_output
+                task_footer = f"\n\n---\n*📌 **Active Onboarding Task:** {active_task} — Let me know once you have completed this step!*"
+                reply_text = hermes_output + task_footer
             else:
                 final_messages = messages_to_pass + [response] + tool_messages
                 final_response = llm_with_tools.invoke(final_messages)
