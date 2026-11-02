@@ -323,7 +323,8 @@ def get_pending_verifications(db: Session = Depends(get_db)):
         for task, user in tasks:
             result.append({
                 "task_id": task.id,
-                "user_name": user.email.split('@')[0],
+                "user_name": user.name or user.email.split('@')[0],
+                "user_email": user.email,
                 "user_id": str(user.id),
                 "task_name": task.task_name,
                 "sequence": task.task_sequence_number,
