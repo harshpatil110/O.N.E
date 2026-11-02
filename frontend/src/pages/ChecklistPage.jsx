@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { fetchTaskStates, submitTaskForVerification } from '../services/userService';
+import { TaskProofModal } from '../components/TaskProofModal';
 
 export const ChecklistPage = () => {
   const { user } = useAuth();
@@ -9,6 +10,7 @@ export const ChecklistPage = () => {
   const [role, setRole] = useState('');
   const [loading, setLoading] = useState(true);
   const [submittingId, setSubmittingId] = useState(null);
+  const [proofModalTask, setProofModalTask] = useState(null);
   const [error, setError] = useState(null);
 
   const loadTasks = async () => {
@@ -47,18 +49,26 @@ export const ChecklistPage = () => {
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, [user]);
 
-  const handleSubmitTask = async (taskId) => {
+  const handleOpenProofModal = (task) => {
+    setError(null);
+    setProofModalTask(task);
+  };
+
+  const handleConfirmProofSubmit = async (proofData) => {
+    if (!proofModalTask) return;
+    const taskId = proofModalTask.id;
     setSubmittingId(taskId);
     setError(null);
     try {
-      await submitTaskForVerification(taskId);
+      await submitTaskForVerification(taskId, proofData);
       // Immediately reflect in UI
       setTasks(prev => prev.map(t => 
         t.id === taskId ? { ...t, status: 'pending_verification' } : t
       ));
+      setProofModalTask(null);
     } catch (err) {
       setError(err.message);
-      console.error('Failed to submit task', err);
+      console.error('Failed to submit task with proof', err);
     } finally {
       setSubmittingId(null);
     }
@@ -167,7 +177,7 @@ export const ChecklistPage = () => {
                 {/* Active: Show clickable button */}
                 {isActive && (
                   <button 
-                    onClick={() => handleSubmitTask(task.id)}
+                    onClick={() => handleOpenProofModal(task)}
                     disabled={submittingId === task.id}
                     className={`shrink-0 px-5 py-2.5 text-[10px] font-mono uppercase tracking-widest transition-colors rounded-sm shadow-sm ${
                       submittingId === task.id
@@ -199,6 +209,16 @@ export const ChecklistPage = () => {
           })}
         </div>
       </div>
+
+      {/* Proof-of-Work & 6-Tier Verification Modal */}
+      <TaskProofModal
+        isOpen={Boolean(proofModalTask)}
+        onClose={() => setProofModalTask(null)}
+        task={proofModalTask}
+        userEmail={user?.email}
+        onSubmit={handleConfirmProofSubmit}
+        submitting={submittingId === proofModalTask?.id}
+      />
     </div>
   );
 };

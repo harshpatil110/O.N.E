@@ -35,3 +35,4 @@ class CompletedChecklistItem(Base):
 
     def __repr__(self):
         return f"<CompletedChecklistItem task_id={self.task_id} subtask={self.subtask_number} tier={self.verification_tier}>"
+
