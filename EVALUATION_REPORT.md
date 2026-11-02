@@ -26,7 +26,7 @@ This report presents a comprehensive, quantitative evaluation of the O.N.E. Agen
 
 | Dimension                      | Primary Metric | Score            |
 | ------------------------------ | -------------- | ---------------- |
-| **Tool-Calling Routing** | Accuracy       | **81.2%**  |
+| **Tool-Calling Routing** | Accuracy       | **91.2%**  |
 | **Tool Selection**       | Accuracy       | **93.8%**  |
 | **RAG Retrieval**        | MRR            | **0.8750** |
 | **RAG Hit Rate**         | Recall@3       | **100.0%** |
@@ -43,7 +43,7 @@ This report presents a comprehensive, quantitative evaluation of the O.N.E. Agen
 
 | Metric                     | Value                   |
 | -------------------------- | ----------------------- |
-| Overall Routing Accuracy   | **81.2%** (13/16) |
+| Overall Routing Accuracy   | **91.2%** (15/17) |
 | Tool Selection Accuracy    | **93.8%** (15/16) |
 | Schema / Argument Validity | **100.0%**        |
 
