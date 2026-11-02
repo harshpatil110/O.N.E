@@ -1,6 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.database import engine, Base
+import app.models  # Ensure all models are registered
+
+# Auto-create tables non-destructively on startup
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    import logging
+    logging.getLogger(__name__).warning(f"Base.metadata.create_all: {e}")
+
 from app.api.auth import router as auth_router
 from app.api.onboarding import router as onboarding_router
 from app.api.checklist import router as checklist_router
@@ -42,3 +52,5 @@ app.include_router(admin_router, prefix="/api/v1")
 app.include_router(docs_router, prefix="/api/v1")
 app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(tasks_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api")
+app.include_router(tasks_router)

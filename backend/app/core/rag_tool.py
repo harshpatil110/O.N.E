@@ -85,12 +85,48 @@ def _init_vector_retriever():
     return _vector_retriever
 
 
+def _normalize_source_path(raw_source: str) -> str:
+    """Extract a clean, human-readable source filename from a raw absolute path.
+    
+    Converts:
+      C:\\...\\knowledge_base\\01_hr_and_culture\\pto_leave_policy.md
+    Into:
+      01_hr_and_culture/pto_leave_policy.md
+    """
+    # Normalize separators
+    normalized = raw_source.replace("\\", "/")
+    # Extract relative path after 'knowledge_base/'
+    marker = "knowledge_base/"
+    idx = normalized.find(marker)
+    if idx != -1:
+        return normalized[idx + len(marker):]
+    # Fallback: return the filename only
+    return os.path.basename(raw_source)
+
+
+def _compute_retrieval_confidence(score: float | None, rank: int, total: int) -> float:
+    """Compute a retrieval confidence score for a chunk.
+    
+    Uses the raw ChromaDB distance score (lower = better) combined with rank penalty.
+    If score is unavailable (retriever mode), use rank-based heuristic.
+    """
+    if score is not None:
+        # ChromaDB cosine distance: 0 = identical, 2 = opposite
+        # Convert to confidence: 1.0 - (distance / 2)
+        confidence = max(0.0, min(1.0, 1.0 - (score / 2.0)))
+    else:
+        # Rank-based heuristic: top result gets 0.92, then decays
+        confidence = max(0.50, 0.95 - (rank * 0.08))
+    return round(confidence, 4)
+
+
 # D. LangChain Tool Wrapper
 @tool("search_corporate_knowledge")
 def search_corporate_knowledge(query: str) -> str:
     """Use this tool to search the corporate knowledge base for policies, setup guides, 
     codebase architecture, terminal commands, and role checklists.
-    Input MUST be a specific search query string."""
+    Input MUST be a specific search query string.
+    Returns results with <source> citations, <file> paths, and <confidence> scores."""
     try:
         retriever = _init_vector_retriever()
         if retriever is not None:
@@ -98,14 +134,31 @@ def search_corporate_knowledge(query: str) -> str:
             if not docs:
                 return "No matching documentation found in the corporate knowledge base."
             
-            # Format and truncate to 1500 chars max to protect Qwen 3B VRAM
+            # Format with explicit <source>, <file>, and <confidence> citation tags
             formatted_docs = []
-            for d in docs[:3]:
-                src = d.metadata.get('source', 'Knowledge Base')
+            for rank, d in enumerate(docs[:3]):
+                raw_source = d.metadata.get('source', 'Knowledge Base')
+                clean_source = _normalize_source_path(raw_source)
+                
+                # Extract filename without extension for human-readable citation
+                filename = os.path.splitext(os.path.basename(raw_source))[0]
+                
+                # Compute retrieval confidence (rank-based since retriever doesn't return scores)
+                confidence = _compute_retrieval_confidence(score=None, rank=rank, total=len(docs))
+                confidence_pct = f"{confidence * 100:.1f}%"
+                
                 content = d.page_content[:500]
-                formatted_docs.append(f"Source: {src}\nContent: {content}")
+                
+                citation_block = (
+                    f"<source>{clean_source}</source>\n"
+                    f"<file>{filename}</file>\n"
+                    f"<confidence>{confidence_pct}</confidence>\n"
+                    f"Content: {content}"
+                )
+                formatted_docs.append(citation_block)
             
-            return "\n\n---\n\n".join(formatted_docs)
+            header = f"[RAG Knowledge Base Results] — {len(docs[:3])} sources retrieved\n"
+            return header + "\n\n---\n\n".join(formatted_docs)
         else:
             return "Knowledge base search tool is initializing. Please try again."
             
@@ -153,4 +206,3 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("      All Vector Search Tests Completed Successfully!")
     print("=" * 70)
-

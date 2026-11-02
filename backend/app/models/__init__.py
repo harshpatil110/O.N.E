@@ -9,6 +9,7 @@ from app.models.checklist_template import ChecklistTemplate
 from app.models.tasks import RoleTask
 from app.models.completed_verify_task import CompletedVerifyTask
 from app.models.developer_task_state import DeveloperTaskState
+from app.models.completed_checklist_item import CompletedChecklistItem
 
 __all__ = [
     "User",
@@ -19,4 +20,5 @@ __all__ = [
     "RoleTask",
     "CompletedVerifyTask",
     "DeveloperTaskState",
+    "CompletedChecklistItem",
 ]

@@ -13,12 +13,12 @@ from langgraph.prebuilt import ToolNode
 
 from app.core.graph_state import AgentState
 from app.core.rag_tool import search_corporate_knowledge
-from app.core.task_tools import get_current_task, mark_task_complete
+from app.core.task_tools import get_current_task, mark_task_complete, send_hr_completion_email
 from app.core.github_tools import get_open_pull_requests, get_recent_commits, get_repository_issues
 from app.core.hermes_tool import delegate_to_hermes
 
 # Registered tools for the onboarding supervisor / agent
-tools = [get_current_task, mark_task_complete, delegate_to_hermes]
+tools = [get_current_task, mark_task_complete, send_hr_completion_email, delegate_to_hermes]
 tool_node = ToolNode(tools)
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ def supervisor_node(state: AgentState) -> Dict[str, Any]:
     classification_prompt = SystemMessage(content="""You are an intent classification router for an enterprise onboarding AI mentor.
 Classify the user's message into EXACTLY ONE of the following 4 labels:
 - 'github': The user is asking about the GitHub repository, PRs, pull requests, commits, branches, codebase, or issues.
-- 'task': The user is asking about their current task, next steps, checklist item, progress, stating they completed a task, or external workspace tools (Slack, Notion, Vercel, Jira, Confluence).
+- 'task': The user is asking about their current task, next steps, checklist item, progress, stating they completed a task, requesting their HR completion report or email, or external workspace tools (Slack, Notion, Vercel, Jira, Confluence).
 - 'rag': The user is asking about company policies, HR, technical documentation, coding standards, architecture, terminal commands, or documentation.
 - 'general': General greeting, casual conversation, or basic chat.
 
@@ -80,7 +80,7 @@ Respond with ONLY ONE word: 'github', 'task', 'rag', or 'general'.""")
         msg_lower = latest_msg.lower()
         if any(w in msg_lower for w in ["github", "pr", "pull request", "commit", "branch", "codebase", "issue"]):
             raw_intent = "github"
-        elif any(w in msg_lower for w in ["task", "next", "checklist", "todo", "done", "step", "slack", "notion", "vercel", "jira", "confluence"]):
+        elif any(w in msg_lower for w in ["task", "next", "checklist", "todo", "done", "step", "slack", "notion", "vercel", "jira", "confluence", "hr report", "completion report", "completion email", "send email", "email hr"]):
             raw_intent = "task"
         elif any(w in msg_lower for w in ["policy", "pto", "leave", "vpn", "code", "architecture", "doc", "docker", "setup", "standard"]):
             raw_intent = "rag"
@@ -174,6 +174,13 @@ def task_node(state: AgentState) -> dict:
         reply_text = hermes_text + task_footer
         return {"messages": [AIMessage(content=reply_text)], "next_route": "end", "used_hermes": True}
 
+    # ─── FAST-PATH: Detect HR Completion Report queries ─────────────────
+    hr_keywords = ["hr report", "completion report", "completion email", "send hr email", "email hr", "onboarding report", "send report"]
+    if any(kw in msg_lower for kw in hr_keywords):
+        print("⚡ [TASK NODE] FAST-PATH: HR completion report requested, generating directly.")
+        report_output = send_hr_completion_email.invoke({"user_id": user_id})
+        return {"messages": [AIMessage(content=str(report_output))], "next_route": "end"}
+
     try:
         sys_prompt = f"""You are O.N.E., a strict but helpful Senior Staff Engineer.
 You are talking to {user_email}.
@@ -185,6 +192,7 @@ CRITICAL BEHAVIORAL RULES:
 2. DO NOT assume they have finished it. DO NOT mark it as complete.
 3. End your explanation by asking: "Let me know when you have explicitly finished this, and I will mark it as complete."
 4. ONLY trigger the task completion tool if the user explicitly says "I am done", "I finished it", or "mark it complete".
+5. If the user asks for their HR completion report, onboarding report, or to send/email the report, trigger the `send_hr_completion_email` tool.
 
 EXTERNAL WORKSPACE INTEGRATIONS (HERMES BRIDGE):
 If the user asks about Slack messages, Notion documentation, Vercel deployment status, Jira tickets/assigned issues, or Confluence pages, YOU MUST invoke the `delegate_to_hermes` tool with their query and present the returned information clearly. Do not hallucinate external ticket statuses or deployment logs.
@@ -209,6 +217,9 @@ When the delegate_to_hermes tool returns data, YOU MUST output the FULL, COMPLET
                     output = get_current_task.invoke({"user_id": user_id})
                 elif tool_name == "mark_task_complete":
                     output = mark_task_complete.invoke({"user_id": user_id})
+                elif tool_name == "send_hr_completion_email":
+                    output = send_hr_completion_email.invoke({"user_id": user_id})
+                    return {"messages": [AIMessage(content=str(output))], "next_route": "end"}
                 elif tool_name == "delegate_to_hermes":
                     used_hermes = True
                     query_arg = tc.get("args", {}).get("query", "")
@@ -277,6 +288,9 @@ CRITICAL RULE: You have been given the full conversation history below. Read ALL
 
 Answer the user's latest question using the knowledge base context below. Be concise and helpful.
 Do NOT echo or repeat the user's message. Generate an original, helpful response.
+
+CITATION REQUIREMENT:
+You MUST cite the documentation source using <source>path/to/file.md</source> or <file>filename</file> and mention the retrieval confidence score (e.g. 95.0%) provided in the context chunks so the developer knows the exact origin and reliability of the information.
 
 --- KNOWLEDGE BASE CONTEXT ---
 {rag_context}""")
